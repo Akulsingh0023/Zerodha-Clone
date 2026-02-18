@@ -204,6 +204,12 @@ const Menu = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
 
+  // ✅ Logout Function
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // remove token
+    window.location.href = "http://localhost:5173"; // redirect to login
+  };
+
   const menuClass = "menu";
   const activeMenuClass = "menu selected";
 
@@ -213,7 +219,6 @@ const Menu = () => {
 
       <div className="menus">
         <ul>
-          {/* Dashboard */}
           <li>
             <Link to="/" style={{ textDecoration: "none" }} onClick={() => handleMenuClick(0)}>
               <p className={selectedMenu === 0 ? activeMenuClass : menuClass}>
@@ -222,7 +227,6 @@ const Menu = () => {
             </Link>
           </li>
 
-          {/* Orders */}
           <li>
             <Link to="/orders" style={{ textDecoration: "none" }} onClick={() => handleMenuClick(1)}>
               <p className={selectedMenu === 1 ? activeMenuClass : menuClass}>
@@ -231,18 +235,6 @@ const Menu = () => {
             </Link>
           </li>
 
-          {/* ❌ Sell Orders (Temporarily Disabled) */}
-          {/*
-          <li>
-            <Link to="/sell-orders" style={{ textDecoration: "none" }} onClick={() => handleMenuClick(2)}>
-              <p className={selectedMenu === 2 ? activeMenuClass : menuClass}>
-                Sell Orders
-              </p>
-            </Link>
-          </li>
-          */}
-
-          {/* Holdings */}
           <li>
             <Link to="/holdings" style={{ textDecoration: "none" }} onClick={() => handleMenuClick(2)}>
               <p className={selectedMenu === 2 ? activeMenuClass : menuClass}>
@@ -251,7 +243,6 @@ const Menu = () => {
             </Link>
           </li>
 
-          {/* Positions */}
           <li>
             <Link to="/positions" style={{ textDecoration: "none" }} onClick={() => handleMenuClick(3)}>
               <p className={selectedMenu === 3 ? activeMenuClass : menuClass}>
@@ -268,6 +259,24 @@ const Menu = () => {
           <div className="avatar">AS</div>
           <p className="username">USERID</p>
         </div>
+
+        {/* ✅ Dropdown */}
+        {isProfileDropdownOpen && (
+          <div className="dropdown-menu">
+            <button
+              onClick={handleLogout}
+              style={{
+                background: "none",
+                border: "none",
+                color: "red",
+                cursor: "pointer",
+                padding: "8px 12px"
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
