@@ -697,53 +697,30 @@ app.get("/newOrder", async (req, res) => {
 /* =====================================================
    🔥 LIVE PRICE API (NSE – SAME AS YOUR CODE)
    ===================================================== */
-// app.get("/api/live-price/:symbol", async (req, res) => {
-//   try {
-//     const symbol = req.params.symbol.toUpperCase();
-
-//     const response = await axios.get(
-//       `https://www.nseindia.com/api/quote-equity?symbol=${symbol}`,
-//       {
-//         headers: {
-//           "User-Agent": "Mozilla/5.0",
-//           Accept: "application/json",
-//           Referer: "https://www.nseindia.com/",
-//         },
-//       }
-//     );
-
-//     const priceInfo = response.data.priceInfo;
-
-//     res.json({
-//       symbol,
-//       ltp: priceInfo.lastPrice,
-//       change: priceInfo.change,
-//       changePercent: priceInfo.pChange,
-//     });
-//   } catch (err) {
-//     res.status(500).json({ error: "Price fetch failed" });
-//   }
-// });
-
 app.get("/api/live-price/:symbol", async (req, res) => {
   try {
-    const symbol = req.params.symbol.toUpperCase() + ".NS";
+    const symbol = req.params.symbol.toUpperCase();
 
     const response = await axios.get(
-      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`
+      `https://www.nseindia.com/api/quote-equity?symbol=${symbol}`,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          Accept: "application/json",
+          Referer: "https://www.nseindia.com/",
+        },
+      }
     );
 
-    const result = response.data.quoteResponse.result[0];
+    const priceInfo = response.data.priceInfo;
 
     res.json({
-      symbol: req.params.symbol.toUpperCase(),
-      ltp: result.regularMarketPrice,
-      change: result.regularMarketChange,
-      changePercent: result.regularMarketChangePercent,
+      symbol,
+      ltp: priceInfo.lastPrice,
+      change: priceInfo.change,
+      changePercent: priceInfo.pChange,
     });
-
   } catch (err) {
-    console.log("ERROR:", err.message);
     res.status(500).json({ error: "Price fetch failed" });
   }
 });
