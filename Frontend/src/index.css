@@ -66,7 +66,7 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 } */
-.nav-link {
+/* .nav-link {
   margin-left: 40px;
 }
 #supportHero {
@@ -87,4 +87,133 @@ button:focus-visible {
   font-size: 20px;
   border-radius: 10px;
   border: none;
+} */
+
+
+
+
+/* ================= NAVBAR ================= */
+
+.nav-link {
+  margin-left: 40px;
+}
+
+/* ================= SUPPORT HERO ================= */
+
+#supportHero {
+  background-color: rgb(56, 126, 209);
+  color: white;
+}
+
+#supportHero a {
+  color: white;
+}
+
+#supportWrapper {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 150px;
+}
+
+#supportHero input {
+  padding: 20px 50px;
+  width: 100%;
+  font-size: 20px;
+  border-radius: 10px;
+  border: none;
+}
+
+/* ================= GLOBAL RESPONSIVE FIX ================= */
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+button {
+  white-space: nowrap;
+}
+
+/* ================= MOBILE (≤576px) ================= */
+
+@media (max-width: 576px) {
+
+  /* Navbar */
+  .nav-link {
+    margin-left: 0;
+    text-align: center;
+  }
+
+  /* Support Section */
+  #supportWrapper {
+    flex-direction: column;
+    margin: 0 20px;
+    gap: 20px;
+    text-align: center;
+  }
+
+  #supportHero input {
+    padding: 15px;
+    font-size: 16px;
+  }
+
+  /* Headings */
+  h1 {
+    font-size: 1.7rem !important;
+  }
+
+  h2 {
+    font-size: 1.3rem !important;
+  }
+
+  p {
+    font-size: 0.95rem;
+  }
+
+  /* Buttons */
+  button {
+    width: 100% !important;
+  }
+
+  .row {
+    text-align: center;
+  }
+}
+
+/* ================= TABLET (≤768px) ================= */
+
+@media (max-width: 768px) {
+
+  .nav-link {
+    margin-left: 10px;
+  }
+
+  #supportWrapper {
+    margin: 0 50px;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  .col-6,
+  .col-4,
+  .col-3 {
+    width: 100% !important;
+  }
+}
+
+/* ================= SMALL LAPTOP (≤992px) ================= */
+
+@media (max-width: 992px) {
+
+  #supportWrapper {
+    margin: 0 80px;
+  }
+
+  .navbar-nav {
+    text-align: center;
+  }
 }

@@ -914,5 +914,120 @@ hr {
   background-color: rgb(212, 212, 212);
 }
 
+/* ===================== RESPONSIVE ===================== */
+
+/* -------- TABLET & SMALL LAPTOP -------- */
+@media (max-width: 992px) {
+
+  .dashboard-container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .watchlist-container,
+  .indices-container,
+  .menu-container,
+  .content {
+    flex-basis: 100%;
+    width: 100%;
+  }
+
+  .row {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .col {
+    flex-basis: 100%;
+  }
+
+  .data {
+    width: 100%;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .watchlist-number {
+    position: static;
+    width: 100%;
+  }
+}
+
+/* -------- MOBILE -------- */
+@media (max-width: 576px) {
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .topbar-container {
+    flex-direction: column;
+    height: auto;
+    padding: 10px 0;
+  }
+
+  .indices-container {
+    border-right: none;
+    border-bottom: 1px solid rgb(224, 224, 224);
+  }
+
+  .menus ul {
+    padding: 0;
+  }
+
+  .menus li {
+    margin-right: 10px;
+    font-size: 0.7rem;
+  }
+
+  .profile .username {
+    display: none;
+  }
+
+  .dashboard-container {
+    flex-direction: column;
+  }
+
+  .watchlist-container {
+    height: auto;
+  }
+
+  .content {
+    padding: 5%;
+  }
+
+  .order-table {
+    overflow-x: auto;
+  }
+
+  .order-table table {
+    min-width: 600px;
+  }
+
+  .row {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .col h5 {
+    font-size: 1.4rem;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .watchlist-number ul li {
+    padding: 8px 10px;
+    font-size: 0.7rem;
+  }
+}
+
+/* -------- EXTRA SAFETY -------- */
+img {
+  max-width: 100%;
+  height: auto;
+}
 
 
