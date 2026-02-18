@@ -136,7 +136,7 @@ export default function Login() {
             <button
               className="btn-close position-absolute"
               style={{ top: "15px", right: "15px" }}
-              onClick={() => window.location.href = "http://localhost:5174"}
+              onClick={() => window.location.href = "http://localhost:5173"}
             ></button>
 
             <h2 className="text-center mb-4 text-success">Login</h2>
