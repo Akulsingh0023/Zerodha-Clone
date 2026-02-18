@@ -697,29 +697,48 @@ app.get("/newOrder", async (req, res) => {
 /* =====================================================
    🔥 LIVE PRICE API (NSE – SAME AS YOUR CODE)
    ===================================================== */
+// app.get("/api/live-price/:symbol", async (req, res) => {
+//   try {
+//     const symbol = req.params.symbol.toUpperCase();
+
+//     const response = await axios.get(
+//       `https://www.nseindia.com/api/quote-equity?symbol=${symbol}`,
+//       {
+//         headers: {
+//           "User-Agent": "Mozilla/5.0",
+//           Accept: "application/json",
+//           Referer: "https://www.nseindia.com/",
+//         },
+//       }
+//     );
+
+//     const priceInfo = response.data.priceInfo;
+
+//     res.json({
+//       symbol,
+//       ltp: priceInfo.lastPrice,
+//       change: priceInfo.change,
+//       changePercent: priceInfo.pChange,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ error: "Price fetch failed" });
+//   }
+// });
+const yahooFinance = require("yahoo-finance2").default;
+
 app.get("/api/live-price/:symbol", async (req, res) => {
   try {
-    const symbol = req.params.symbol.toUpperCase();
+    const symbol = req.params.symbol.toUpperCase() + ".NS";
 
-    const response = await axios.get(
-      `https://www.nseindia.com/api/quote-equity?symbol=${symbol}`,
-      {
-        headers: {
-          "User-Agent": "Mozilla/5.0",
-          Accept: "application/json",
-          Referer: "https://www.nseindia.com/",
-        },
-      }
-    );
-
-    const priceInfo = response.data.priceInfo;
+    const quote = await yahooFinance.quote(symbol);
 
     res.json({
-      symbol,
-      ltp: priceInfo.lastPrice,
-      change: priceInfo.change,
-      changePercent: priceInfo.pChange,
+      symbol: req.params.symbol.toUpperCase(),
+      ltp: quote.regularMarketPrice,
+      change: quote.regularMarketChange,
+      changePercent: quote.regularMarketChangePercent,
     });
+
   } catch (err) {
     res.status(500).json({ error: "Price fetch failed" });
   }
