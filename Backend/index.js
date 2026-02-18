@@ -724,22 +724,26 @@ app.get("/newOrder", async (req, res) => {
 //     res.status(500).json({ error: "Price fetch failed" });
 //   }
 // });
-const yahooFinance = require("yahoo-finance2").default;
 
 app.get("/api/live-price/:symbol", async (req, res) => {
   try {
     const symbol = req.params.symbol.toUpperCase() + ".NS";
 
-    const quote = await yahooFinance.quote(symbol);
+    const response = await axios.get(
+      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`
+    );
+
+    const result = response.data.quoteResponse.result[0];
 
     res.json({
       symbol: req.params.symbol.toUpperCase(),
-      ltp: quote.regularMarketPrice,
-      change: quote.regularMarketChange,
-      changePercent: quote.regularMarketChangePercent,
+      ltp: result.regularMarketPrice,
+      change: result.regularMarketChange,
+      changePercent: result.regularMarketChangePercent,
     });
 
   } catch (err) {
+    console.log("ERROR:", err.message);
     res.status(500).json({ error: "Price fetch failed" });
   }
 });
