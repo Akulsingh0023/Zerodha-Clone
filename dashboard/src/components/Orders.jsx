@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import BASE_URL from "../config";
+
+
 
 const Orders = () => {
   const [allOrders, setAllOrders] = useState([]);
 
   useEffect(() => {
     axios
-      .get("http://localhost:4000/newOrder") // backend endpoint
+      .get(`${BASE_URL}/newOrder`) // backend endpoint
       .then((res) => {
         console.log("Orders fetched:", res.data);
         setAllOrders(res.data);

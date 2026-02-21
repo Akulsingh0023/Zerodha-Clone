@@ -12,7 +12,11 @@ export default function Signup() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:4000/api/auth/signup", form);
+     const res = await axios.post(
+  "http://localhost:4000/api/auth/signup",
+  form
+);
+
       toast.success(res.data.message);
       setForm({ fullname: "", email: "", password: "" });
       // Optionally navigate to login page after signup

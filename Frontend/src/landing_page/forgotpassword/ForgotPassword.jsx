@@ -14,9 +14,9 @@ export default function ForgotPassword() {
 
     try {
       const res = await axios.post(
-        "http://localhost:4000/api/auth/forgot-password",
-        { email }
-      );
+  "http://localhost:4000/api/auth/forgot-password",
+  { email }
+);
 
       toast.success(
         res.data.message ||

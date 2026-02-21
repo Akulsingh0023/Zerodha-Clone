@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import BASE_URL from "../config";
+
 // import { positions } from "../data/data";
 const Positions = () => {
     const [allpositions, setAllPositions] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:4000/allPositions").then((res) => {
+    axios.get(`${BASE_URL}/allPositions`)
+    .then((res) => {
       console.log(res.data);
       setAllPositions(res.data);
     });
@@ -64,13 +67,15 @@ export default Positions;
 //   useEffect(() => {
 //     const fetchPositions = async () => {
 //       try {
-//         const res = await axios.get("http://localhost:4000/allPositions");
+//         const res = await axios.get("
+//http://localhost:4000/allPositions");
 
 //         const updated = await Promise.all(
 //           res.data.map(async (stock) => {
 //             try {
 //               const priceRes = await axios.get(
-//                 `http://localhost:4000/api/live-price/${stock.name}`
+//                 `
+//http://localhost:4000/api/live-price/${stock.name}`
 //               );
 
 //               const { ltp, changePercent } = priceRes.data;

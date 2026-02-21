@@ -12,7 +12,8 @@
 //     e.preventDefault();
 //     setLoading(true);
 //     try {
-//       const res = await axios.post("http://localhost:4000/api/auth/login", form);
+//       const res = await axios.post("http://localhost:4000
+//api/auth/login", form);
 //       toast.success(res.data.message);
 //       localStorage.setItem("token", res.data.token);
 //       setForm({ email: "", password: "" });
@@ -110,7 +111,6 @@ export default function Login() {
         "http://localhost:4000/api/auth/login",
         form
       );
-
       toast.success(res.data.message);
       localStorage.setItem("token", res.data.token);
       setForm({ email: "", password: "" });

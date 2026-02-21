@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import BASE_URL from "../config";
 import { VerticalGraph } from "./VerticalGraph";
 
 const Holdings = () => {
@@ -7,7 +8,7 @@ const Holdings = () => {
 
 useEffect(() => {
   const fetchHoldings = async () => {
-    const res = await axios.get("http://localhost:4000/allHoldings");
+    const res = await axios.get(`${BASE_URL}/allHoldings`);
     setAllHoldings(res.data);
 
     // 🔥 live price attach
