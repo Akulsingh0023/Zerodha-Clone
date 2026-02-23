@@ -12,16 +12,18 @@ export default function Signup() {
     e.preventDefault();
     setLoading(true);
     try {
-     const res = await axios.post(
+      
+    const res = await axios.post(
   "http://localhost:4000/api/auth/signup",
-  form
+  form,
+  { withCredentials: true }
 );
+
 
       toast.success(res.data.message);
       setForm({ fullname: "", email: "", password: "" });
       // Optionally navigate to login page after signup
-     window.location.href = "http://localhost:5174/";
-
+    navigate("/login");
     } catch (err) {
       toast.error(err.response?.data?.message || "Signup failed");
     }

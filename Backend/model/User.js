@@ -21,25 +21,36 @@
 // export default User;
 import mongoose from "mongoose";
 
-const userSchema = mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     fullname: {
       type: String,
       required: true,
+      trim: true,
     },
 
     email: {
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
+      trim: true,
     },
 
     password: {
       type: String,
       required: true,
+      minlength: 6,
     },
 
-    // 🔐 Forgot Password Fields
+    // 🔐 Role Based Access
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+
+    // 🔐 Forgot Password
     resetToken: {
       type: String,
       default: null,

@@ -644,18 +644,190 @@
 // app.listen(PORT, () => {
 //   console.log(`🚀 Server running on port ${PORT}`);
 // });
+//bhai
+// require("dotenv").config();
+// const axios = require("axios");
+// const express = require("express");
+// const mongoose = require("mongoose");
+// const bodyParser = require("body-parser");
+// const cors = require("cors");
 
-require("dotenv").config();
-const axios = require("axios");
-const express = require("express");
-const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-const cors = require("cors");
+// const { HoldingsModel } = require("./model/HoldingsModel.js");
+// const { PositionsModel } = require("./model/PositionsModel.js");
+// const { OrdersModel } = require("./model/OrdersModel.js");
+// const authRoutes = require("./routes/authRoutes.js");
 
-const { HoldingsModel } = require("./model/HoldingsModel.js");
-const { PositionsModel } = require("./model/PositionsModel.js");
-const { OrdersModel } = require("./model/OrdersModel.js");
-const authRoutes = require("./routes/authRoutes.js");
+// const app = express();
+
+// /* ================= CONFIG ================= */
+// const PORT = process.env.PORT || 4000;
+
+// /* ================= MIDDLEWARE ================= */
+// app.use(express.json());
+// app.use(cors());
+// app.use(bodyParser.json());
+// app.use("/api/auth", authRoutes);
+
+// /* ================= DB CONNECT ================= */
+// mongoose
+//   .connect(process.env.MONGO_URL)
+//   .then(() => console.log("✅ DB connected"))
+//   .catch((err) => console.log("❌ DB error:", err));
+
+// /* ================= ROUTES ================= */
+
+// /* 🔹 GET HOLDINGS */
+// app.get("/allHoldings", async (req, res) => {
+//   const holdings = await HoldingsModel.find({});
+//   res.json(holdings);
+// });
+
+// /* 🔹 GET POSITIONS */
+// app.get("/allPositions", async (req, res) => {
+//   const positions = await PositionsModel.find({});
+//   res.json(positions);
+// });
+
+// /* 🔹 GET ORDERS */
+// app.get("/newOrder", async (req, res) => {
+//   const orders = await OrdersModel.find({});
+//   res.json(orders);
+// });
+
+// /* =====================================================
+//    🔥 LIVE PRICE API (NSE – SAME AS YOUR CODE)
+//    ===================================================== */
+// app.get("/api/live-price/:symbol", async (req, res) => {
+//   try {
+//     const symbol = req.params.symbol.toUpperCase();
+
+//     const response = await axios.get(
+//       `https://www.nseindia.com/api/quote-equity?symbol=${symbol}`,
+//       {
+//         headers: {
+//           "User-Agent": "Mozilla/5.0",
+//           Accept: "application/json",
+//           Referer: "https://www.nseindia.com/",
+//         },
+//       }
+//     );
+
+//     const priceInfo = response.data.priceInfo;
+
+//     res.json({
+//       symbol,
+//       ltp: priceInfo.lastPrice,
+//       change: priceInfo.change,
+//       changePercent: priceInfo.pChange,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ error: "Price fetch failed" });
+//   }
+// });
+
+// /* =====================================================
+//    🔹 BUY + SELL ORDER (FIXED PROPERLY)
+//    ===================================================== */
+// app.post("/newOrder", async (req, res) => {
+//   try {
+//     const { name, qty, price, mode } = req.body;
+
+//     /* 1️⃣ SAVE ORDER (BUY + SELL BOTH) */
+//     const newOrder = new OrdersModel({
+//       name,
+//       qty,
+//       price,
+//       mode,
+//     });
+//     await newOrder.save();
+
+//     /* ================= BUY LOGIC ================= */
+//     if (mode === "BUY") {
+//       const existingHolding = await HoldingsModel.findOne({ name });
+
+//       if (existingHolding) {
+//         const totalQty = existingHolding.qty + Number(qty);
+//         const totalCost =
+//           existingHolding.qty * existingHolding.avg +
+//           Number(qty) * Number(price);
+
+//         existingHolding.qty = totalQty;
+//         existingHolding.avg = totalCost / totalQty;
+//         existingHolding.price = price;
+
+//         await existingHolding.save();
+//       } else {
+//         const newHolding = new HoldingsModel({
+//           name,
+//           qty,
+//           avg: price,
+//           price,
+//           net: "+0.00%",
+//           day: "+0.00%",
+//         });
+//         await newHolding.save();
+//       }
+//     }
+
+//     /* ================= SELL LOGIC (🔥 FIXED) ================= */
+//     if (mode === "SELL") {
+//       const existingHolding = await HoldingsModel.findOne({ name });
+
+//       if (!existingHolding) {
+//         return res.status(400).json({
+//           success: false,
+//           message: "No holdings found to sell",
+//         });
+//       }
+
+//       if (existingHolding.qty < qty) {
+//         return res.status(400).json({
+//           success: false,
+//           message: "Not enough quantity to sell",
+//         });
+//       }
+
+//       /* Reduce qty */
+//       existingHolding.qty -= Number(qty);
+
+//       /* If qty becomes 0 → delete holding */
+//       if (existingHolding.qty === 0) {
+//         await HoldingsModel.deleteOne({ name });
+//       } else {
+//         await existingHolding.save();
+//       }
+//     }
+
+//     res.json({
+//       success: true,
+//       message: "Order placed successfully",
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ success: false });
+//   }
+// });
+
+// /* ================= SERVER ================= */
+// app.listen(PORT, () => {
+//   console.log(`🚀 Server running on port ${PORT}`);
+// });
+
+import dotenv from "dotenv";
+import axios from "axios";
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+
+import  HoldingsModel  from "./model/HoldingsModel.js";
+import  PositionsModel  from "./model/PositionsModel.js";
+import  OrdersModel  from "./model/OrdersModel.js";
+import authRoutes from "./routes/authRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
+
+dotenv.config();
 
 const app = express();
 
@@ -663,11 +835,23 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 /* ================= MIDDLEWARE ================= */
-app.use(express.json());
-app.use(cors());
-app.use(bodyParser.json());
-app.use("/api/auth", authRoutes);
 
+// CORS for multiple frontend ports
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:5174"],
+    credentials: true,
+  })
+);
+
+app.use(express.json());
+app.use(cookieParser());
+
+
+/* ================= AUTH ROUTES ================= */
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api", profileRoutes);
 /* ================= DB CONNECT ================= */
 mongoose
   .connect(process.env.MONGO_URL)
@@ -678,25 +862,37 @@ mongoose
 
 /* 🔹 GET HOLDINGS */
 app.get("/allHoldings", async (req, res) => {
-  const holdings = await HoldingsModel.find({});
-  res.json(holdings);
+  try {
+    const holdings = await HoldingsModel.find({});
+    res.json(holdings);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch holdings" });
+  }
 });
 
 /* 🔹 GET POSITIONS */
 app.get("/allPositions", async (req, res) => {
-  const positions = await PositionsModel.find({});
-  res.json(positions);
+  try {
+    const positions = await PositionsModel.find({});
+    res.json(positions);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch positions" });
+  }
 });
 
 /* 🔹 GET ORDERS */
 app.get("/newOrder", async (req, res) => {
-  const orders = await OrdersModel.find({});
-  res.json(orders);
+  try {
+    const orders = await OrdersModel.find({});
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
 });
 
 /* =====================================================
-   🔥 LIVE PRICE API (NSE – SAME AS YOUR CODE)
-   ===================================================== */
+   🔥 LIVE PRICE API (NSE)
+===================================================== */
 app.get("/api/live-price/:symbol", async (req, res) => {
   try {
     const symbol = req.params.symbol.toUpperCase();
@@ -726,22 +922,22 @@ app.get("/api/live-price/:symbol", async (req, res) => {
 });
 
 /* =====================================================
-   🔹 BUY + SELL ORDER (FIXED PROPERLY)
-   ===================================================== */
+   🔹 BUY + SELL ORDER
+===================================================== */
 app.post("/newOrder", async (req, res) => {
   try {
     const { name, qty, price, mode } = req.body;
 
-    /* 1️⃣ SAVE ORDER (BUY + SELL BOTH) */
     const newOrder = new OrdersModel({
       name,
       qty,
       price,
       mode,
     });
+
     await newOrder.save();
 
-    /* ================= BUY LOGIC ================= */
+    /* BUY LOGIC */
     if (mode === "BUY") {
       const existingHolding = await HoldingsModel.findOne({ name });
 
@@ -757,7 +953,7 @@ app.post("/newOrder", async (req, res) => {
 
         await existingHolding.save();
       } else {
-        const newHolding = new HoldingsModel({
+        await HoldingsModel.create({
           name,
           qty,
           avg: price,
@@ -765,11 +961,10 @@ app.post("/newOrder", async (req, res) => {
           net: "+0.00%",
           day: "+0.00%",
         });
-        await newHolding.save();
       }
     }
 
-    /* ================= SELL LOGIC (🔥 FIXED) ================= */
+    /* SELL LOGIC */
     if (mode === "SELL") {
       const existingHolding = await HoldingsModel.findOne({ name });
 
@@ -787,10 +982,8 @@ app.post("/newOrder", async (req, res) => {
         });
       }
 
-      /* Reduce qty */
       existingHolding.qty -= Number(qty);
 
-      /* If qty becomes 0 → delete holding */
       if (existingHolding.qty === 0) {
         await HoldingsModel.deleteOne({ name });
       } else {
@@ -812,8 +1005,6 @@ app.post("/newOrder", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
-
 
 // require("dotenv").config();
 // const express = require("express");

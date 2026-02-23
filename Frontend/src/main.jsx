@@ -46,10 +46,14 @@ import Navbar from "./landing_page/Navbar";
 import Footer from "./landing_page/Footer";
 import NotFound from "./landing_page/NotFound";
 import Login from "./landing_page/login/Login";
+import AdminRoute from "./landing_page/adminroute/AdminRoute";
 
 // ✅ New Import
 import ForgotPassword from "./landing_page/forgotpassword/ForgotPassword";
 import ResetPassword from "./landing_page/resetpassword/ResetPassword";
+import axios from "axios";
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = "http://localhost:4000";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -66,6 +70,7 @@ createRoot(document.getElementById("root")).render(
       <Route path="/products" element={<ProductsPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/support" element={<SupportPage />} />
+      <Route path="/adminroute" element={<AdminRoute/>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
     <Footer />

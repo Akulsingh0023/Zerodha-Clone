@@ -189,29 +189,64 @@
 
 // export default Menu;
 
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
+
+const BASE_URL = "http://localhost:4000";
 
 const Menu = () => {
-  const [selectedMenu, setSelectedMenu] = useState(0);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
-  const handleMenuClick = (index) => {
-    setSelectedMenu(index);
-  };
+  const dropdownRef = useRef();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleProfileClick = () => {
-    setIsProfileDropdownOpen(!isProfileDropdownOpen);
-  };
+  const menuClass = "menu";
+  const activeMenuClass = "menu selected";
 
-  // ✅ Logout Function
+  /* ================= FETCH USER ================= */
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/api/profile`,
+          { withCredentials: true }
+        );
+        setUser(res.data);
+      } catch (error) {
+        if (error.response?.status === 401) {
+          window.location.href = "http://localhost:5173/login";
+        }
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  /* ================= CLOSE DROPDOWN ================= */
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  /* ================= LOGOUT ================= */
   const handleLogout = () => {
     localStorage.removeItem("token"); // remove token
     window.location.href = "http://localhost:5173"; // redirect to login
   };
 
-  const menuClass = "menu";
-  const activeMenuClass = "menu selected";
 
   return (
     <div className="menu-container">
@@ -220,32 +255,32 @@ const Menu = () => {
       <div className="menus">
         <ul>
           <li>
-            <Link to="/" style={{ textDecoration: "none" }} onClick={() => handleMenuClick(0)}>
-              <p className={selectedMenu === 0 ? activeMenuClass : menuClass}>
+            <Link to="/">
+              <p className={location.pathname === "/" ? activeMenuClass : menuClass}>
                 Dashboard
               </p>
             </Link>
           </li>
 
           <li>
-            <Link to="/orders" style={{ textDecoration: "none" }} onClick={() => handleMenuClick(1)}>
-              <p className={selectedMenu === 1 ? activeMenuClass : menuClass}>
+            <Link to="/orders">
+              <p className={location.pathname === "/orders" ? activeMenuClass : menuClass}>
                 Orders
               </p>
             </Link>
           </li>
 
           <li>
-            <Link to="/holdings" style={{ textDecoration: "none" }} onClick={() => handleMenuClick(2)}>
-              <p className={selectedMenu === 2 ? activeMenuClass : menuClass}>
+            <Link to="/holdings">
+              <p className={location.pathname === "/holdings" ? activeMenuClass : menuClass}>
                 Holdings
               </p>
             </Link>
           </li>
 
           <li>
-            <Link to="/positions" style={{ textDecoration: "none" }} onClick={() => handleMenuClick(3)}>
-              <p className={selectedMenu === 3 ? activeMenuClass : menuClass}>
+            <Link to="/positions">
+              <p className={location.pathname === "/positions" ? activeMenuClass : menuClass}>
                 Positions
               </p>
             </Link>
@@ -254,30 +289,73 @@ const Menu = () => {
 
         <hr />
 
-        {/* Profile Section */}
-        <div className="profile" onClick={handleProfileClick}>
-          <div className="avatar">AS</div>
-          <p className="username">USERID</p>
-        </div>
-
-        {/* ✅ Dropdown */}
-        {isProfileDropdownOpen && (
-          <div className="dropdown-menu">
-            <button
-              onClick={handleLogout}
-              style={{
-                background: "none",
-                border: "none",
-                color: "red",
-                cursor: "pointer",
-                padding: "8px 12px"
-              }}
-            >
-              Logout
-            </button>
+        {/* ================= PROFILE ================= */}
+        <div
+          className="profile"
+          onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+          ref={dropdownRef}
+          style={{ cursor: "pointer", position: "relative" }}
+        >
+          <div className="avatar">
+            {user?.name
+              ? user.name.substring(0, 2).toUpperCase()
+              : "US"}
           </div>
-        )}
+
+          <p className="username">
+            {user?.name || "Loading..."}
+          </p>
+
+          {isProfileDropdownOpen && (
+            <div className="dropdown">
+              <Link
+                to="/profile"
+                className="dropdown-item"
+                onClick={() => setIsProfileDropdownOpen(false)}
+              >
+                My Profile
+              </Link>
+
+              <div
+                className="dropdown-item"
+                onClick={handleLogout}
+              >
+                Log Out
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* ================= STYLE ================= */}
+      <style>{`
+        .dropdown {
+          position: absolute;
+          top: 50px;
+          right: 0;
+          width: 200px;
+          background: black;
+          border-radius: 6px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+          overflow: hidden;
+          z-index: 1000;
+        }
+
+        .dropdown-item {
+          display: block;
+          padding: 12px;
+          text-decoration: none;
+          color: white;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+          background: white;
+          color: black;
+        }
+      `}</style>
+
     </div>
   );
 };

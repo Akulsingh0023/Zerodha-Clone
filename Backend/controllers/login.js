@@ -22,16 +22,21 @@
 //     }
 // }
 import User from "../model/User.js";
-import bcryptjs from "bcryptjs";
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import jwt from "jsonwebtoken";
 
 /* =========================
-   LOGIN
+   LOGIN (JWT + COOKIE)
 ========================= */
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "All fields required" });
+    }
 
     const user = await User.findOne({ email });
 
@@ -41,7 +46,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const isMatch = await bcryptjs.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -49,18 +54,72 @@ export const login = async (req, res) => {
       });
     }
 
+    // 🔐 Create JWT
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // 🍪 Set Cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, // true in production (HTTPS)
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
-      message: "Login successfully",
+      message: "Login successful",
+      token, // 🔥 important for frontend if using localStorage
       user: {
-        _id: user._id,
+        id: user._id,
         fullname: user.fullname,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (error) {
-    console.log("Error: " + error.message);
+    console.log("Login Error:", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
+};
+
+/* =========================
+   GET PROFILE (🔥 NEW)
+========================= */
+export const getProfile = async (req, res) => {
+  try {
+    res.status(200).json({
+      user: {
+        id: req.user._id,
+        fullname: req.user.fullname,
+        email: req.user.email,
+        role: req.user.role,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* =========================
+   LOGOUT
+========================= */
+export const logout = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false, // agar https nahi use kar rahe
+    path: "/"
+  });
+
+  return res.status(200).json({
+    message: "Logged out successfully"
+  });
 };
 
 /* =========================
@@ -72,7 +131,6 @@ export const forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ email });
 
-    // Same response for security
     if (!user) {
       return res.status(200).json({
         message:
@@ -80,14 +138,13 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
-    // Generate token
     const resetToken = crypto.randomBytes(32).toString("hex");
 
     user.resetToken = resetToken;
-    user.resetTokenExpiry = Date.now() + 15 * 60 * 1000; // 15 min
+    user.resetTokenExpiry = Date.now() + 15 * 60 * 1000;
+
     await user.save();
 
-    // Email setup
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -104,7 +161,7 @@ export const forgotPassword = async (req, res) => {
       subject: "Password Reset Request",
       html: `
         <h3>Password Reset</h3>
-        <p>Click below link to reset your password:</p>
+        <p>Click the link below to reset your password:</p>
         <a href="${resetLink}">${resetLink}</a>
         <p>This link will expire in 15 minutes.</p>
       `,
@@ -115,7 +172,7 @@ export const forgotPassword = async (req, res) => {
         "If this email is registered, you will receive a reset link.",
     });
   } catch (error) {
-    console.log("Forgot Password Error: " + error.message);
+    console.log("Forgot Password Error:", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -126,6 +183,10 @@ export const forgotPassword = async (req, res) => {
 export const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "All fields required" });
+    }
 
     const user = await User.findOne({
       resetToken: token,
@@ -138,7 +199,7 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcryptjs.hash(newPassword, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     user.password = hashedPassword;
     user.resetToken = null;
@@ -150,7 +211,7 @@ export const resetPassword = async (req, res) => {
       message: "Password reset successfully",
     });
   } catch (error) {
-    console.log("Reset Password Error: " + error.message);
+    console.log("Reset Password Error:", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };

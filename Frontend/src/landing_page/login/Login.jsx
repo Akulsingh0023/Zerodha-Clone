@@ -109,14 +109,22 @@ export default function Login() {
     try {
       const res = await axios.post(
         "http://localhost:4000/api/auth/login",
-        form
+        form,
+        { withCredentials: true }
       );
+
       toast.success(res.data.message);
-      localStorage.setItem("token", res.data.token);
+
+      // Store token in localStorage
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+      }
+
+      // Reset form
       setForm({ email: "", password: "" });
 
-      // 🔥 Redirect to Dashboard (Port 5174)
-      window.location.href = "http://localhost:5174";
+      // Redirect to Dashboard
+      window.location.href = "http://localhost:5174/";
 
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
@@ -132,7 +140,7 @@ export default function Login() {
         <div className="col-md-6 col-lg-5">
           <div className="card shadow-lg p-5 position-relative">
 
-            {/* Cross button */}
+            {/* Close button */}
             <button
               className="btn-close position-absolute"
               style={{ top: "15px", right: "15px" }}
