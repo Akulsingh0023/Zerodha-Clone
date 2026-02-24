@@ -17,8 +17,10 @@ router.get("/me", protect, async (req, res) => {
 
     res.json({
       _id: user._id,
-      name: user.fullname,   // 🔥 FIXED HERE
-      email: user.email
+      name: user.fullname,
+      fullname: user.fullname,
+      email: user.email,
+      role: user.role,
     });
 
   } catch (error) {

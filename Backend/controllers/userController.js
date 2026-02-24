@@ -9,7 +9,13 @@ export const getProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json(user);
+    res.json({
+      _id: user._id,
+      fullname: user.fullname,
+      name: user.fullname,
+      email: user.email,
+      role: user.role,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

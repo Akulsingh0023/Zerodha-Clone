@@ -211,7 +211,7 @@ const Menu = () => {
     const fetchUser = async () => {
       try {
         const res = await axios.get(
-          `${BASE_URL}/api/profile`,
+          `${BASE_URL}/api/auth/profile`,
           { withCredentials: true }
         );
         setUser(res.data);
@@ -285,6 +285,17 @@ const Menu = () => {
               </p>
             </Link>
           </li>
+
+          {/* ================= ADMIN PANEL TAB ================= */}
+          {user?.role === "admin" && (
+            <li>
+              <Link to="/admin">
+                <p className={location.pathname === "/admin" ? activeMenuClass : menuClass}>
+                   Admin Panel
+                </p>
+              </Link>
+            </li>
+          )}
         </ul>
 
         <hr />

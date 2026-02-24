@@ -71,7 +71,7 @@
 // export default Dashboard;
 
 import React from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 
 import ProtectedRoute from "./ProtectedRoute";
 import AdminRoute from "./AdminRoute";
@@ -87,14 +87,19 @@ import AdminDashboard from "./AdminDashboard";
 import Profile from "./Profile";
 
 const Dashboard = () => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname === "/admin" || location.pathname.startsWith("/admin/");
+
   return (
     <ProtectedRoute>
       <div className="dashboard-container">
-        <GeneralContextProvider>
-          <WatchList />
-        </GeneralContextProvider>
+        {!isAdminRoute && (
+          <GeneralContextProvider>
+            <WatchList />
+          </GeneralContextProvider>
+        )}
 
-        <div className="content">
+        <div className={`content ${isAdminRoute ? "admin-full" : ""}`}>
           <Routes>
             <Route path="/" element={<Summary />} />
             <Route path="/orders" element={<Orders />} />
@@ -104,7 +109,7 @@ const Dashboard = () => {
             <Route path="/apps" element={<Apps />} />
             <Route path="/profile" element={<Profile />} />
             <Route
-              path="/admin"
+              path="/admin/*"
               element={
                 <AdminRoute>
                   <AdminDashboard />
