@@ -1,21 +1,25 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import BASE_URL from "../config";
-import GeneralContext from "./GeneralContext";
 import "./BuyActionWindow.css";
 
-const BuyActionWindow = ({ uid }) => {
-  const [stockQuantity, setStockQuantity] = useState(1); // ✅ 0 se start
-  const [stockPrice, setStockPrice] = useState(0.0); // ✅ 0 se start
+const BuyActionWindow = ({ stock, closeBuyWindow }) => {
+  const [stockQuantity, setStockQuantity] = useState(1);
+  const stockPrice = stock.price; // Auto-filled from selected stock
 
-  const { closeBuyWindow } = useContext(GeneralContext);
+  // Convert quantity to number for calculation
+  const qty = Number(stockQuantity) || 0;
+  
+  // Calculate total amount
+  const totalAmount = (stockPrice * qty).toFixed(2);
+  const marginRequired = totalAmount; // For delivery, margin = total amount
 
   const handleBuyClick = () => {
     axios.post(`${BASE_URL}/newOrder`, {
-      name: uid,
-     qty: Number(stockQuantity),   // 🔥 FIX
-    price: Number(stockPrice),    // 🔥 FIX
+      name: stock.name,
+      qty: Number(stockQuantity),
+      price: Number(stockPrice),
       mode: "BUY",
     });
 
@@ -29,6 +33,11 @@ const BuyActionWindow = ({ uid }) => {
   return (
     <div className="container" id="buy-window" draggable="true">
       <div className="regular-order">
+        <div className="stock-info">
+          <h4>{stock.name}</h4>
+          <p>Price: ₹{stockPrice.toFixed(2)}</p>
+        </div>
+
         <div className="inputs">
           <fieldset>
             <legend>Qty.</legend>
@@ -36,26 +45,27 @@ const BuyActionWindow = ({ uid }) => {
               type="number"
               name="qty"
               id="qty"
+              min="1"
               onChange={(e) => setStockQuantity(e.target.value)}
               value={stockQuantity}
             />
           </fieldset>
+
           <fieldset>
-            <legend>Price</legend>
+            <legend>Total (₹)</legend>
             <input
-              type="number"
-              name="price"
-              id="price"
-              step="0.05"
-              onChange={(e) => setStockPrice(e.target.value)}
-              value={stockPrice}
+              type="text"
+              name="total"
+              id="total"
+              readOnly
+              value={totalAmount}
             />
           </fieldset>
         </div>
       </div>
 
       <div className="buttons">
-        <span>Margin required ₹140.65</span>
+        <span>Margin required ₹{marginRequired}</span>
         <div>
           <Link className="btn btn-blue" onClick={handleBuyClick}>
             Buy

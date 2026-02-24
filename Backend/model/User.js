@@ -50,7 +50,13 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
 
-    // 🔐 Forgot Password
+    // � Trading Wallet
+    wallet: {
+      type: Number,
+      default: 100000, // Start with ₹1,00,000
+    },
+
+    // �🔐 Forgot Password
     resetToken: {
       type: String,
       default: null,

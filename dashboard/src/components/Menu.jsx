@@ -243,10 +243,9 @@ const Menu = () => {
 
   /* ================= LOGOUT ================= */
   const handleLogout = () => {
-    localStorage.removeItem("token"); // remove token
-    window.location.href = "http://localhost:5173"; // redirect to login
+    localStorage.removeItem("token");
+    window.location.href = "http://localhost:5173";
   };
-
 
   return (
     <div className="menu-container">
@@ -255,7 +254,7 @@ const Menu = () => {
       <div className="menus">
         <ul>
           <li>
-            <Link to="/">
+            <Link to="/" className="link">
               <p className={location.pathname === "/" ? activeMenuClass : menuClass}>
                 Dashboard
               </p>
@@ -263,7 +262,7 @@ const Menu = () => {
           </li>
 
           <li>
-            <Link to="/orders">
+            <Link to="/orders" className="link">
               <p className={location.pathname === "/orders" ? activeMenuClass : menuClass}>
                 Orders
               </p>
@@ -271,7 +270,7 @@ const Menu = () => {
           </li>
 
           <li>
-            <Link to="/holdings">
+            <Link to="/holdings" className="link">
               <p className={location.pathname === "/holdings" ? activeMenuClass : menuClass}>
                 Holdings
               </p>
@@ -279,7 +278,7 @@ const Menu = () => {
           </li>
 
           <li>
-            <Link to="/positions">
+            <Link to="/positions" className="link">
               <p className={location.pathname === "/positions" ? activeMenuClass : menuClass}>
                 Positions
               </p>
@@ -289,17 +288,18 @@ const Menu = () => {
           {/* ================= ADMIN PANEL TAB ================= */}
           {user?.role === "admin" && (
             <li>
-              <Link to="/admin">
+              <Link to="/admin" className="link">
                 <p className={location.pathname === "/admin" ? activeMenuClass : menuClass}>
-                   Admin Panel
+                  Admin Panel
                 </p>
               </Link>
             </li>
           )}
         </ul>
 
-        <hr />
-
+        {/* ❌ <hr /> REMOVED */}
+        {/* underline yahin se aa rahi thi */}
+        
         {/* ================= PROFILE ================= */}
         <div
           className="profile"
@@ -340,6 +340,10 @@ const Menu = () => {
 
       {/* ================= STYLE ================= */}
       <style>{`
+        .link {
+          text-decoration: none;
+        }
+
         .dropdown {
           position: absolute;
           top: 50px;
@@ -366,7 +370,6 @@ const Menu = () => {
           color: black;
         }
       `}</style>
-
     </div>
   );
 };

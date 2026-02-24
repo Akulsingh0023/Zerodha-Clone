@@ -823,6 +823,8 @@ import cookieParser from "cookie-parser";
 import  HoldingsModel  from "./model/HoldingsModel.js";
 import  PositionsModel  from "./model/PositionsModel.js";
 import  OrdersModel  from "./model/OrdersModel.js";
+import User from "./model/User.js";
+import { protect } from "./middleware/authMiddleware.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
@@ -922,50 +924,142 @@ app.get("/api/live-price/:symbol", async (req, res) => {
 });
 
 /* =====================================================
-   🔹 BUY + SELL ORDER
+   🔹 GET ALL ORDERS
 ===================================================== */
-app.post("/newOrder", async (req, res) => {
+app.get("/newOrder", async (req, res) => {
+  try {
+    const orders = await OrdersModel.find({}).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Failed to fetch orders" });
+  }
+});
+
+/* =====================================================
+   � GET USER WALLET
+===================================================== */
+app.get("/wallet", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("wallet");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      wallet: user.wallet || 100000,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch wallet",
+    });
+  }
+});
+
+/* =====================================================
+   �🔹 BUY + SELL ORDER
+===================================================== */
+app.post("/newOrder", protect, async (req, res) => {
   try {
     const { name, qty, price, mode } = req.body;
+    const userId = req.user._id;
 
-    const newOrder = new OrdersModel({
-      name,
-      qty,
-      price,
-      mode,
-    });
+    // 🔧 Validation
+    if (!name || !qty || !price || !mode) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
+    }
 
-    await newOrder.save();
+    const quantityNum = Number(qty);
+    const priceNum = Number(price);
+    const BROKERAGE_PERCENTAGE = 0.05; // 0.05% brokerage
 
-    /* BUY LOGIC */
+    // 🔥 BUY Logic
     if (mode === "BUY") {
+      // Step 1: Calculate total amount with charges
+      const totalValue = quantityNum * priceNum;
+      const charges = totalValue * (BROKERAGE_PERCENTAGE / 100);
+      const finalAmount = totalValue + charges;
+
+      // Step 2: Get user and check wallet
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      if (user.wallet < finalAmount) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient balance. Required: ₹${finalAmount.toFixed(2)}, Available: ₹${user.wallet.toFixed(2)}`,
+        });
+      }
+
+      // Step 3: Deduct from wallet
+      user.wallet -= finalAmount;
+      await user.save();
+
+      // Step 4: Update Holdings
       const existingHolding = await HoldingsModel.findOne({ name });
 
       if (existingHolding) {
-        const totalQty = existingHolding.qty + Number(qty);
+        const totalQty = existingHolding.qty + quantityNum;
         const totalCost =
-          existingHolding.qty * existingHolding.avg +
-          Number(qty) * Number(price);
+          existingHolding.qty * existingHolding.avg + totalValue;
 
         existingHolding.qty = totalQty;
         existingHolding.avg = totalCost / totalQty;
-        existingHolding.price = price;
+        existingHolding.price = priceNum;
 
         await existingHolding.save();
       } else {
         await HoldingsModel.create({
           name,
-          qty,
-          avg: price,
-          price,
+          qty: quantityNum,
+          avg: priceNum,
+          price: priceNum,
           net: "+0.00%",
           day: "+0.00%",
         });
       }
+
+      // Step 5: Save Order
+      const newOrder = new OrdersModel({
+        name,
+        qty: quantityNum,
+        price: priceNum,
+        mode: "BUY",
+      });
+
+      await newOrder.save();
+
+      return res.json({
+        success: true,
+        message: "BUY order placed successfully",
+        details: {
+          totalValue: totalValue.toFixed(2),
+          charges: charges.toFixed(2),
+          finalAmount: finalAmount.toFixed(2),
+          remainingWallet: user.wallet.toFixed(2),
+        },
+      });
     }
 
-    /* SELL LOGIC */
+    // 🔴 SELL Logic
     if (mode === "SELL") {
+      // Step 1: Check holdings
       const existingHolding = await HoldingsModel.findOne({ name });
 
       if (!existingHolding) {
@@ -975,29 +1069,73 @@ app.post("/newOrder", async (req, res) => {
         });
       }
 
-      if (existingHolding.qty < qty) {
+      if (existingHolding.qty < quantityNum) {
         return res.status(400).json({
           success: false,
-          message: "Not enough quantity to sell",
+          message: `Not enough shares to sell. Available: ${existingHolding.qty}, Requested: ${quantityNum}`,
         });
       }
 
-      existingHolding.qty -= Number(qty);
+      // Step 2: Calculate net amount (after charges)
+      const totalValue = quantityNum * priceNum;
+      const charges = totalValue * (BROKERAGE_PERCENTAGE / 100);
+      const netAmount = totalValue - charges;
+
+      // Step 3: Add money to wallet
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      user.wallet += netAmount;
+      await user.save();
+
+      // Step 4: Reduce holding quantity
+      existingHolding.qty -= quantityNum;
 
       if (existingHolding.qty === 0) {
         await HoldingsModel.deleteOne({ name });
       } else {
         await existingHolding.save();
       }
+
+      // Step 5: Save Order
+      const newOrder = new OrdersModel({
+        name,
+        qty: quantityNum,
+        price: priceNum,
+        mode: "SELL",
+      });
+
+      await newOrder.save();
+
+      return res.json({
+        success: true,
+        message: "SELL order placed successfully",
+        details: {
+          totalValue: totalValue.toFixed(2),
+          charges: charges.toFixed(2),
+          netAmount: netAmount.toFixed(2),
+          receivedWallet: user.wallet.toFixed(2),
+        },
+      });
     }
 
-    res.json({
-      success: true,
-      message: "Order placed successfully",
+    res.status(400).json({
+      success: false,
+      message: "Invalid mode. Use BUY or SELL",
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ success: false });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 });
 

@@ -43,26 +43,26 @@ import SellActionWindow from "./SellActionWindow";
 const GeneralContext = createContext();
 
 export const GeneralContextProvider = ({ children }) => {
-  const [buyUID, setBuyUID] = useState(null);
-  const [sellUID, setSellUID] = useState(null);
+  const [buyStock, setBuyStock] = useState(null);
+  const [sellStock, setSellStock] = useState(null);
 
   return (
     <GeneralContext.Provider
       value={{
-        openBuyWindow: (uid) => setBuyUID(uid),
-        openSellWindow: (uid) => setSellUID(uid),
+        openBuyWindow: (stock) => setBuyStock(stock),
+        openSellWindow: (stock) => setSellStock(stock),
       }}
     >
       {children}
 
-      {buyUID && (
-        <BuyActionWindow uid={buyUID} closeBuyWindow={() => setBuyUID(null)} />
+      {buyStock && (
+        <BuyActionWindow stock={buyStock} closeBuyWindow={() => setBuyStock(null)} />
       )}
 
-      {sellUID && (
+      {sellStock && (
         <SellActionWindow
-          uid={sellUID}
-          closeSellWindow={() => setSellUID(null)}
+          stock={sellStock}
+          closeSellWindow={() => setSellStock(null)}
         />
       )}
     </GeneralContext.Provider>

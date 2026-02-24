@@ -6,8 +6,16 @@ import User from "../model/User.js";
 ============================== */
 export const protect = async (req, res, next) => {
   try {
-    // Cookie se token lena
-    const token = req.cookies.token;
+    // Token from cookies OR Authorization header
+    let token = req.cookies.token;
+
+    if (!token) {
+      // Check Authorization header
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.slice(7); // Remove "Bearer " prefix
+      }
+    }
 
     if (!token) {
       return res.status(401).json({
