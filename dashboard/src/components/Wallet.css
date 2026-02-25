@@ -14,11 +14,21 @@
 .action-btn:hover { transform: translateY(-3px) scale(1.01); box-shadow:0 14px 30px rgba(3,102,214,0.16); }
 .transactions { margin-top:20px; }
 
+/* make the Transactions heading and table text clearly visible on dashboard */
+.transactions h4 {
+	margin-bottom: 12px;
+	color: rgb(31, 41, 55); /* dark slate for clear contrast */
+	font-size: 1.05rem;
+	font-weight: 600;
+}
+.tx-table th { color: rgb(71,71,71); }
+.tx-table td { color: rgb(31,41,55); }
+
 /* ensure actions (withdraw/add) stacks on small screens */
-.actions { display:flex; gap:16px; flex:0 1 360px; }
+.inner-actions { display:flex; gap:16px; margin-top:14px; }
 @media (max-width: 880px) {
 	.wallet-top { flex-direction:column; }
-	.actions { width:100%; }
+	.inner-actions { flex-direction:column; }
 }
 .tx-table { width:100%; border-collapse:collapse; background:transparent; }
 .tx-table th { text-align:left; padding:12px 10px; color:#9fb1cc; font-size:13px; }

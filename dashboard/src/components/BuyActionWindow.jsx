@@ -28,10 +28,23 @@ const BuyActionWindow = ({ stock, closeBuyWindow }) => {
         if (res.data?.success) {
           // notify other parts of app to refresh wallet/holdings
           window.dispatchEvent(new Event("walletUpdated"));
+          // close only on success
+          closeBuyWindow();
         }
       } catch (err) {
         console.error(err);
-      } finally {
+        const status = err.response?.status;
+        const serverMsg = err.response?.data?.message || "";
+
+        // Handle insufficient wallet balance specifically
+        if (status === 400 && serverMsg.toLowerCase().includes("insufficient wallet")) {
+          window.dispatchEvent(new CustomEvent("appToast", { detail: { message: "Insufficient funds. Please add money to your wallet.", type: "error" } }));
+          // do not close the buy window so user can adjust or add funds
+          return;
+        }
+
+        // Generic error — show toast and close
+        window.dispatchEvent(new CustomEvent("appToast", { detail: { message: err.response?.data?.message || "Buy failed", type: "error" } }));
         closeBuyWindow();
       }
     })();

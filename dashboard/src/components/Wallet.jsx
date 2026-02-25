@@ -70,7 +70,13 @@ const Wallet = () => {
       fetchTransactions();
     };
 
+    const onAppToast = (e) => {
+      const detail = e.detail || {};
+      if (detail.message) showToast(detail.message, detail.type || "error");
+    };
+
     window.addEventListener("walletUpdated", onWalletUpdate);
+    window.addEventListener("appToast", onAppToast);
     return () => window.removeEventListener("walletUpdated", onWalletUpdate);
   }, []);
 
@@ -120,30 +126,30 @@ const Wallet = () => {
             <h4>Available Funds</h4>
             {loading ? <Spinner /> : <p className="balance-amount">{formatCurrency(balance)}</p>}
             <p className="balance-sub">Use these funds to buy stocks</p>
-          </div>
-        </div>
 
-        <div className="actions">
-          <div className="action-card add">
-            <label>Add Money</label>
-            <input
-              type="number"
-              value={addAmount}
-              onChange={(e) => setAddAmount(e.target.value)}
-              placeholder="Amount"
-            />
-            <button className="action-btn" onClick={handleAdd} disabled={loading}>Add</button>
-          </div>
+            <div className="inner-actions">
+              <div className="action-card add">
+                <label>Add Money</label>
+                <input
+                  type="number"
+                  value={addAmount}
+                  onChange={(e) => setAddAmount(e.target.value)}
+                  placeholder="Amount"
+                />
+                <button className="action-btn" onClick={handleAdd} disabled={loading}>Add</button>
+              </div>
 
-          <div className="action-card withdraw">
-            <label>Withdraw</label>
-            <input
-              type="number"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              placeholder="Amount"
-            />
-            <button className="action-btn" onClick={handleWithdraw} disabled={loading}>Withdraw</button>
+              <div className="action-card withdraw">
+                <label>Withdraw</label>
+                <input
+                  type="number"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  placeholder="Amount"
+                />
+                <button className="action-btn" onClick={handleWithdraw} disabled={loading}>Withdraw</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

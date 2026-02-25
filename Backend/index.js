@@ -1055,7 +1055,7 @@ app.post("/newOrder", protect, async (req, res) => {
         ).select("walletBalance");
 
         if (!updatedUser) {
-          throw { status: 400, message: "Insufficient balance" };
+          throw { status: 400, message: "Insufficient wallet balance" };
         }
 
         // Update or create holding for user
