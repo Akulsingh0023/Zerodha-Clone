@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import BASE_URL from "../config";
 import "./BuyActionWindow.css";
+import { showGlobalToast } from "../utils/toast";
 
 const BuyActionWindow = ({ stock, closeBuyWindow }) => {
   const [stockQuantity, setStockQuantity] = useState(1);
@@ -18,6 +19,17 @@ const BuyActionWindow = ({ stock, closeBuyWindow }) => {
   const handleBuyClick = () => {
     (async () => {
       try {
+        // check wallet balance first
+        const qtyNum = Number(stockQuantity) || 0;
+        const totalCost = qtyNum * Number(stockPrice || 0);
+        const balRes = await axios.get(`${BASE_URL}/wallet/balance`);
+        const balance = balRes.data?.balance ?? balRes.data?.walletBalance ?? 0;
+
+        if (balance < totalCost) {
+          showGlobalToast("Insufficient balance in wallet");
+          return; // prevent buy
+        }
+
         const res = await axios.post(`${BASE_URL}/newOrder`, {
           name: stock.name,
           qty: Number(stockQuantity),
@@ -33,18 +45,7 @@ const BuyActionWindow = ({ stock, closeBuyWindow }) => {
         }
       } catch (err) {
         console.error(err);
-        const status = err.response?.status;
-        const serverMsg = err.response?.data?.message || "";
-
-        // Handle insufficient wallet balance specifically
-        if (status === 400 && serverMsg.toLowerCase().includes("insufficient wallet")) {
-          window.dispatchEvent(new CustomEvent("appToast", { detail: { message: "Insufficient funds. Please add money to your wallet.", type: "error" } }));
-          // do not close the buy window so user can adjust or add funds
-          return;
-        }
-
-        // Generic error — show toast and close
-        window.dispatchEvent(new CustomEvent("appToast", { detail: { message: err.response?.data?.message || "Buy failed", type: "error" } }));
+        showGlobalToast(err.response?.data?.message || "Buy failed");
         closeBuyWindow();
       }
     })();

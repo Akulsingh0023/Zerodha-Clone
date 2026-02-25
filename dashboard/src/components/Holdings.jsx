@@ -87,7 +87,7 @@ const updateWithLivePrice = async (holdings) => {
 
   return (
     <>
-      <h3 className="title">Holdings ({allHoldings.length})</h3>
+     <h3 className="title">Holdings ({allHoldings.length})</h3>
 
       <div className="order-table">
         <table>
@@ -99,7 +99,6 @@ const updateWithLivePrice = async (holdings) => {
               <th>LTP</th>
               <th>Cur. val</th>
               <th>P&L</th>
-              <th>Net chg.</th>
               <th>Day chg.</th>
             </tr>
           </thead>
@@ -122,7 +121,6 @@ const updateWithLivePrice = async (holdings) => {
                     {pnl >= 0 ? "+" : ""}
                     {pnl.toFixed(2)}
                   </td>
-                  <td className={profClass}>{stock.net}</td>
                   <td className={dayClass}>{stock.day}</td>
                 </tr>
               );

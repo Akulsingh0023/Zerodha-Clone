@@ -86,6 +86,7 @@ import Wallet from "./Wallet";
 import { GeneralContextProvider } from "./GeneralContext";
 import AdminDashboard from "./AdminDashboard";
 import Profile from "./Profile";
+import GlobalToast from "./GlobalToast";
 
 const Dashboard = () => {
   const location = useLocation();
@@ -94,6 +95,7 @@ const Dashboard = () => {
   return (
     <ProtectedRoute>
       <div className="dashboard-container">
+        <GlobalToast />
         {!isAdminRoute && (
           <GeneralContextProvider>
             <WatchList />
