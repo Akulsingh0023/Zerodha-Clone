@@ -7,6 +7,11 @@ const HoldingsSchema = new mongoose.Schema({
   price: Number,
   net: String,
   day: String,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 const HoldingsModel = mongoose.model("Holding", HoldingsSchema);

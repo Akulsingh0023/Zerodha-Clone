@@ -823,6 +823,7 @@ import cookieParser from "cookie-parser";
 import  HoldingsModel  from "./model/HoldingsModel.js";
 import  PositionsModel  from "./model/PositionsModel.js";
 import  OrdersModel  from "./model/OrdersModel.js";
+import WalletTransaction from "./model/WalletTransaction.js";
 import User from "./model/User.js";
 import { protect } from "./middleware/authMiddleware.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -863,9 +864,10 @@ mongoose
 /* ================= ROUTES ================= */
 
 /* 🔹 GET HOLDINGS */
-app.get("/allHoldings", async (req, res) => {
+app.get("/allHoldings", protect, async (req, res) => {
   try {
-    const holdings = await HoldingsModel.find({});
+    // Return holdings only for the authenticated user
+    const holdings = await HoldingsModel.find({ user: req.user._id });
     res.json(holdings);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch holdings" });
@@ -941,201 +943,186 @@ app.get("/newOrder", async (req, res) => {
 ===================================================== */
 app.get("/wallet", protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("wallet");
+    const user = await User.findById(req.user._id).select("walletBalance");
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    res.json({
-      success: true,
-      wallet: user.wallet || 100000,
-    });
+    res.json({ success: true, walletBalance: user.walletBalance || 0 });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch wallet",
-    });
+    res.status(500).json({ success: false, message: "Failed to fetch wallet" });
   }
 });
 
 /* =====================================================
-   �🔹 BUY + SELL ORDER
+   🔹 WALLET ROUTES + BUY/SELL (atomic with sessions)
 ===================================================== */
+
+// GET current balance
+app.get("/wallet/balance", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("walletBalance");
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    return res.json({ success: true, balance: user.walletBalance || 0 });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Failed to fetch balance" });
+  }
+});
+
+// GET transaction history
+app.get("/wallet/transactions", protect, async (req, res) => {
+  try {
+    const txns = await WalletTransaction.find({ userId: req.user._id }).sort({ createdAt: -1 });
+    return res.json(txns);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Failed to fetch transactions" });
+  }
+});
+
+// POST add money (manual)
+app.post("/wallet/add", protect, async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const num = Number(amount);
+    if (!num || num <= 0) return res.status(400).json({ success: false, message: "Invalid amount" });
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { $inc: { walletBalance: num } },
+      { new: true }
+    ).select("walletBalance");
+
+    await WalletTransaction.create({ userId: req.user._id, type: "credit", amount: num, reason: "manual_add" });
+
+    return res.json({ success: true, balance: updatedUser.walletBalance });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Failed to add money" });
+  }
+});
+
+// POST withdraw money (manual)
+app.post("/wallet/withdraw", protect, async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const num = Number(amount);
+    if (!num || num <= 0) return res.status(400).json({ success: false, message: "Invalid amount" });
+
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: req.user._id, walletBalance: { $gte: num } },
+      { $inc: { walletBalance: -num } },
+      { new: true }
+    ).select("walletBalance");
+
+    if (!updatedUser) return res.status(400).json({ success: false, message: "Insufficient balance" });
+
+    await WalletTransaction.create({ userId: req.user._id, type: "debit", amount: num, reason: "withdraw" });
+
+    return res.json({ success: true, balance: updatedUser.walletBalance });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Failed to withdraw" });
+  }
+});
+
+// BUY / SELL with mongoose session for atomicity
 app.post("/newOrder", protect, async (req, res) => {
+  const session = await mongoose.startSession();
   try {
     const { name, qty, price, mode } = req.body;
     const userId = req.user._id;
 
-    // 🔧 Validation
     if (!name || !qty || !price || !mode) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields",
-      });
+      return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
     const quantityNum = Number(qty);
     const priceNum = Number(price);
-    const BROKERAGE_PERCENTAGE = 0.05; // 0.05% brokerage
 
-    // 🔥 BUY Logic
-    if (mode === "BUY") {
-      // Step 1: Calculate total amount with charges
-      const totalValue = quantityNum * priceNum;
-      const charges = totalValue * (BROKERAGE_PERCENTAGE / 100);
-      const finalAmount = totalValue + charges;
+    await session.withTransaction(async () => {
+      if (mode === "BUY") {
+        const totalCost = quantityNum * priceNum;
 
-      // Step 2: Get user and check wallet
-      const user = await User.findById(userId);
+        // Atomically decrement wallet if sufficient
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: userId, walletBalance: { $gte: totalCost } },
+          { $inc: { walletBalance: -totalCost } },
+          { new: true, session }
+        ).select("walletBalance");
 
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: "User not found",
-        });
-      }
+        if (!updatedUser) {
+          throw { status: 400, message: "Insufficient balance" };
+        }
 
-      if (user.wallet < finalAmount) {
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient balance. Required: ₹${finalAmount.toFixed(2)}, Available: ₹${user.wallet.toFixed(2)}`,
-        });
-      }
+        // Update or create holding for user
+        const existingHolding = await HoldingsModel.findOne({ name, user: userId }).session(session);
 
-      // Step 3: Deduct from wallet
-      user.wallet -= finalAmount;
-      await user.save();
+        if (existingHolding) {
+          const totalQty = existingHolding.qty + quantityNum;
+          const totalCostExisting = existingHolding.qty * existingHolding.avg + totalCost;
+          existingHolding.qty = totalQty;
+          existingHolding.avg = totalCostExisting / totalQty;
+          existingHolding.price = priceNum;
+          await existingHolding.save({ session });
+        } else {
+          await HoldingsModel.create(
+            [
+              { name, qty: quantityNum, avg: priceNum, price: priceNum, net: "+0.00%", day: "+0.00%", user: userId },
+            ],
+            { session }
+          );
+        }
 
-      // Step 4: Update Holdings
-      const existingHolding = await HoldingsModel.findOne({ name });
+        // Save order
+        await OrdersModel.create([{ name, qty: quantityNum, price: priceNum, mode: "BUY" }], { session });
 
-      if (existingHolding) {
-        const totalQty = existingHolding.qty + quantityNum;
-        const totalCost =
-          existingHolding.qty * existingHolding.avg + totalValue;
+        // Wallet transaction
+        await WalletTransaction.create(
+          [ { userId: userId, type: "debit", amount: totalCost, reason: "stock_buy" } ],
+          { session }
+        );
+      } else if (mode === "SELL") {
+        const totalSellAmount = quantityNum * priceNum;
 
-        existingHolding.qty = totalQty;
-        existingHolding.avg = totalCost / totalQty;
-        existingHolding.price = priceNum;
+        const existingHolding = await HoldingsModel.findOne({ name, user: userId }).session(session);
+        if (!existingHolding || existingHolding.qty < quantityNum) {
+          throw { status: 400, message: "Not enough shares to sell" };
+        }
 
-        await existingHolding.save();
+        // Credit wallet
+        const updatedUser = await User.findByIdAndUpdate(userId, { $inc: { walletBalance: totalSellAmount } }, { new: true, session }).select("walletBalance");
+
+        // Reduce or delete holding
+        existingHolding.qty -= quantityNum;
+        if (existingHolding.qty <= 0) {
+          await HoldingsModel.deleteOne({ _id: existingHolding._id }, { session });
+        } else {
+          await existingHolding.save({ session });
+        }
+
+        // Save order and txn
+        await OrdersModel.create([{ name, qty: quantityNum, price: priceNum, mode: "SELL" }], { session });
+        await WalletTransaction.create(
+          [ { userId: userId, type: "credit", amount: totalSellAmount, reason: "stock_sell" } ],
+          { session }
+        );
       } else {
-        await HoldingsModel.create({
-          name,
-          qty: quantityNum,
-          avg: priceNum,
-          price: priceNum,
-          net: "+0.00%",
-          day: "+0.00%",
-        });
+        throw { status: 400, message: "Invalid mode. Use BUY or SELL" };
       }
-
-      // Step 5: Save Order
-      const newOrder = new OrdersModel({
-        name,
-        qty: quantityNum,
-        price: priceNum,
-        mode: "BUY",
-      });
-
-      await newOrder.save();
-
-      return res.json({
-        success: true,
-        message: "BUY order placed successfully",
-        details: {
-          totalValue: totalValue.toFixed(2),
-          charges: charges.toFixed(2),
-          finalAmount: finalAmount.toFixed(2),
-          remainingWallet: user.wallet.toFixed(2),
-        },
-      });
-    }
-
-    // 🔴 SELL Logic
-    if (mode === "SELL") {
-      // Step 1: Check holdings
-      const existingHolding = await HoldingsModel.findOne({ name });
-
-      if (!existingHolding) {
-        return res.status(400).json({
-          success: false,
-          message: "No holdings found to sell",
-        });
-      }
-
-      if (existingHolding.qty < quantityNum) {
-        return res.status(400).json({
-          success: false,
-          message: `Not enough shares to sell. Available: ${existingHolding.qty}, Requested: ${quantityNum}`,
-        });
-      }
-
-      // Step 2: Calculate net amount (after charges)
-      const totalValue = quantityNum * priceNum;
-      const charges = totalValue * (BROKERAGE_PERCENTAGE / 100);
-      const netAmount = totalValue - charges;
-
-      // Step 3: Add money to wallet
-      const user = await User.findById(userId);
-
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: "User not found",
-        });
-      }
-
-      user.wallet += netAmount;
-      await user.save();
-
-      // Step 4: Reduce holding quantity
-      existingHolding.qty -= quantityNum;
-
-      if (existingHolding.qty === 0) {
-        await HoldingsModel.deleteOne({ name });
-      } else {
-        await existingHolding.save();
-      }
-
-      // Step 5: Save Order
-      const newOrder = new OrdersModel({
-        name,
-        qty: quantityNum,
-        price: priceNum,
-        mode: "SELL",
-      });
-
-      await newOrder.save();
-
-      return res.json({
-        success: true,
-        message: "SELL order placed successfully",
-        details: {
-          totalValue: totalValue.toFixed(2),
-          charges: charges.toFixed(2),
-          netAmount: netAmount.toFixed(2),
-          receivedWallet: user.wallet.toFixed(2),
-        },
-      });
-    }
-
-    res.status(400).json({
-      success: false,
-      message: "Invalid mode. Use BUY or SELL",
     });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: error.message,
-    });
+
+    session.endSession();
+    return res.json({ success: true, message: `${req.body.mode} order executed` });
+  } catch (err) {
+    await session.abortTransaction().catch(() => {});
+    session.endSession();
+    if (err && err.status) return res.status(err.status).json({ success: false, message: err.message });
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Order failed", error: err.message || err });
   }
 });
 

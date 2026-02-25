@@ -16,14 +16,25 @@ const BuyActionWindow = ({ stock, closeBuyWindow }) => {
   const marginRequired = totalAmount; // For delivery, margin = total amount
 
   const handleBuyClick = () => {
-    axios.post(`${BASE_URL}/newOrder`, {
-      name: stock.name,
-      qty: Number(stockQuantity),
-      price: Number(stockPrice),
-      mode: "BUY",
-    });
+    (async () => {
+      try {
+        const res = await axios.post(`${BASE_URL}/newOrder`, {
+          name: stock.name,
+          qty: Number(stockQuantity),
+          price: Number(stockPrice),
+          mode: "BUY",
+        });
 
-    closeBuyWindow();
+        if (res.data?.success) {
+          // notify other parts of app to refresh wallet/holdings
+          window.dispatchEvent(new Event("walletUpdated"));
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        closeBuyWindow();
+      }
+    })();
   };
 
   const handleCancelClick = () => {

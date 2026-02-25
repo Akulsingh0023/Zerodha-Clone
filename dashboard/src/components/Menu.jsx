@@ -327,6 +327,14 @@ const Menu = () => {
                 My Profile
               </Link>
 
+              <Link
+                to="/wallet"
+                className="dropdown-item"
+                onClick={() => setIsProfileDropdownOpen(false)}
+              >
+                Wallet
+              </Link>
+
               <div
                 className="dropdown-item"
                 onClick={handleLogout}

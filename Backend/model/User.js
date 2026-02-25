@@ -51,9 +51,9 @@ const userSchema = new mongoose.Schema(
     },
 
     // � Trading Wallet
-    wallet: {
+    walletBalance: {
       type: Number,
-      default: 100000, // Start with ₹1,00,000
+      default: 0,
     },
 
     // �🔐 Forgot Password

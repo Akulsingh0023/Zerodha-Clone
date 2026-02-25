@@ -56,14 +56,24 @@ const SellActionWindow = ({ stock, closeSellWindow }) => {
     }
 
     // Place order
-    axios.post(`${BASE_URL}/newOrder`, {
-      name: stock.name,
-      qty: qty,
-      price: Number(stockPrice),
-      mode: "SELL",
-    });
+    (async () => {
+      try {
+        const res = await axios.post(`${BASE_URL}/newOrder`, {
+          name: stock.name,
+          qty: qty,
+          price: Number(stockPrice),
+          mode: "SELL",
+        });
 
-    closeSellWindow();
+        if (res.data?.success) {
+          window.dispatchEvent(new Event("walletUpdated"));
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        closeSellWindow();
+      }
+    })();
   };
 
   const handleCancelClick = () => {

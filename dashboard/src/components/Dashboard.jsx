@@ -82,6 +82,7 @@ import Orders from "./Orders";
 import Positions from "./Positions";
 import Summary from "./Summary";
 import WatchList from "./WatchList";
+import Wallet from "./Wallet";
 import { GeneralContextProvider } from "./GeneralContext";
 import AdminDashboard from "./AdminDashboard";
 import Profile from "./Profile";
@@ -107,6 +108,7 @@ const Dashboard = () => {
             <Route path="/positions" element={<Positions />} />
             <Route path="/funds" element={<Funds />} />
             <Route path="/apps" element={<Apps />} />
+            <Route path="/wallet" element={<Wallet />} />
             <Route path="/profile" element={<Profile />} />
             <Route
               path="/admin/*"
