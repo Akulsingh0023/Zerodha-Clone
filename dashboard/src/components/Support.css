@@ -1,0 +1,118 @@
+/* Support page (matches existing dashboard dark-card style) */
+.support-page {
+  max-width: 820px;
+}
+
+.support-header {
+  margin-bottom: 14px;
+}
+
+.support-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+  color: rgb(31, 41, 55);
+}
+
+.support-header p {
+  margin: 8px 0 0;
+  color: rgb(71, 71, 71);
+  font-size: 13px;
+}
+
+.support-card {
+  background: #0f172a;
+  color: #f1f5f9;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 18px 45px rgba(2, 6, 23, 0.45);
+}
+
+.support-form {
+  width: 100%;
+}
+
+.support-row {
+  display: flex;
+  gap: 14px;
+}
+
+.support-field {
+  flex: 1;
+  margin-bottom: 14px;
+}
+
+.support-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.support-input,
+.support-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 12px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  outline: none;
+  font-size: 14px;
+  border-radius: 12px;
+  color: #fff;
+  transition: 0.2s ease;
+}
+
+.support-input:focus,
+.support-textarea:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.28);
+}
+
+.support-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.support-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #fca5a5;
+}
+
+.support-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.support-submit {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  color: white;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  box-shadow: 0 10px 26px rgba(99, 102, 241, 0.35);
+  transition: 0.2s ease;
+}
+
+.support-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.45);
+}
+
+.support-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 720px) {
+  .support-row {
+    flex-direction: column;
+  }
+}

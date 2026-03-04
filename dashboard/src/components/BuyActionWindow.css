@@ -79,6 +79,53 @@
   margin-bottom: 0;
 }
 
+.product-select {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.product-label {
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.product-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.product-option:last-child {
+  margin-bottom: 0;
+}
+
+.product-option input {
+  margin-top: 3px;
+}
+
+.product-option span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.product-option small {
+  color: #666;
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
 .inputs fieldset {
   flex: 1;
   box-sizing: border-box;

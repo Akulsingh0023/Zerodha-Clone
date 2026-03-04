@@ -232,7 +232,6 @@ code {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #ef4444;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -240,6 +239,14 @@ code {
   z-index: 9999;
   font-weight: 500;
   animation: toastFadeIn 220ms ease-out;
+}
+
+.global-toast.error {
+  background-color: #ef4444;
+}
+
+.global-toast.success {
+  background-color: #10b981;
 }
 
 @keyframes toastFadeIn {
@@ -346,6 +353,40 @@ code {
 
 .align-left {
   text-align: left;
+}
+
+/* Holdings: keep original order-table look, fix alignment */
+.order-table table.holdings-table th,
+.order-table table.holdings-table td {
+  text-align: center;
+}
+
+.order-table table.holdings-table th.align-left,
+.order-table table.holdings-table td.align-left {
+  text-align: left;
+}
+
+.order-table table.holdings-table td.stock-name {
+  font-weight: 700;
+}
+
+.order-table table.holdings-table td.quantity {
+  font-weight: 400;
+}
+
+/* Positions: keep Qty/values perfectly under headers */
+.order-table table.positions-table th,
+.order-table table.positions-table td {
+  text-align: center;
+}
+
+.order-table table.positions-table th.align-left,
+.order-table table.positions-table td.align-left {
+  text-align: left;
+}
+
+.order-table table.positions-table td.quantity {
+  font-weight: 400;
 }
 
 .order-table td.profit {

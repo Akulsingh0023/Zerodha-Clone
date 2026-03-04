@@ -7,6 +7,7 @@ import { showGlobalToast } from "../utils/toast";
 
 const BuyActionWindow = ({ stock, closeBuyWindow }) => {
   const [stockQuantity, setStockQuantity] = useState(1);
+  const [product, setProduct] = useState("CNC");
   const stockPrice = stock.price; // Auto-filled from selected stock
 
   // Convert quantity to number for calculation
@@ -35,6 +36,7 @@ const BuyActionWindow = ({ stock, closeBuyWindow }) => {
           qty: Number(stockQuantity),
           price: Number(stockPrice),
           mode: "BUY",
+          product,
         });
 
         if (res.data?.success) {
@@ -86,6 +88,40 @@ const BuyActionWindow = ({ stock, closeBuyWindow }) => {
               value={totalAmount}
             />
           </fieldset>
+        </div>
+
+        <div className="product-select">
+          <div className="product-label">Product</div>
+
+          <label className="product-option">
+            <input
+              type="radio"
+              name="product"
+              value="CNC"
+              checked={product === "CNC"}
+              onChange={() => setProduct("CNC")}
+            />
+            <span>
+              <strong>CNC</strong> (Delivery)
+              <small>CNC → Delivery trade. Stock will be added to Holdings.</small>
+            </span>
+          </label>
+
+          <label className="product-option">
+            <input
+              type="radio"
+              name="product"
+              value="MIS"
+              checked={product === "MIS"}
+              onChange={() => setProduct("MIS")}
+            />
+            <span>
+              <strong>MIS</strong> (Intraday)
+              <small>
+                MIS → Intraday trade. Position will be added to Positions and must be squared off.
+              </small>
+            </span>
+          </label>
         </div>
       </div>
 

@@ -6,10 +6,18 @@ import "./SellActionWindow.css";
 
 const SellActionWindow = ({ stock, closeSellWindow }) => {
   const [stockQuantity, setStockQuantity] = useState(1);
-  const [holdingQuantity, setHoldingQuantity] = useState(0);
+  const [holdingQuantity, setHoldingQuantity] = useState(() => Number(stock?.qty) || 0);
   const [error, setError] = useState("");
 
   const stockPrice = stock.price; // Auto-filled from selected stock
+  const product = stock?.product || "CNC";
+
+  // For MIS positions, default to closing the full position.
+  useEffect(() => {
+    if (product === "MIS" && typeof stock?.qty === "number" && stock.qty > 0) {
+      setStockQuantity(stock.qty);
+    }
+  }, [product, stock?.qty]);
 
   // Fetch holding quantity
   useEffect(() => {
@@ -25,8 +33,14 @@ const SellActionWindow = ({ stock, closeSellWindow }) => {
       }
     };
 
+    // If caller already passed holding qty (e.g. Holdings page), use it.
+    if (typeof stock?.qty === "number" && stock.qty >= 0) {
+      setHoldingQuantity(stock.qty);
+      return;
+    }
+
     fetchHoldingQuantity();
-  }, [stock.name]);
+  }, [stock.name, stock?.qty]);
 
   // Convert quantity to number for calculation
   const qty = Number(stockQuantity) || 0;
@@ -63,6 +77,7 @@ const SellActionWindow = ({ stock, closeSellWindow }) => {
           qty: qty,
           price: Number(stockPrice),
           mode: "SELL",
+          product,
         });
 
         if (res.data?.success) {

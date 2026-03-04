@@ -87,6 +87,8 @@ import { GeneralContextProvider } from "./GeneralContext";
 import AdminDashboard from "./AdminDashboard";
 import Profile from "./Profile";
 import GlobalToast from "./GlobalToast";
+import Support from "./Support";
+import UserRoute from "./UserRoute";
 
 const Dashboard = () => {
   const location = useLocation();
@@ -112,6 +114,14 @@ const Dashboard = () => {
             <Route path="/apps" element={<Apps />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/profile" element={<Profile />} />
+            <Route
+              path="/support"
+              element={
+                <UserRoute>
+                  <Support />
+                </UserRoute>
+              }
+            />
             <Route
               path="/admin/*"
               element={

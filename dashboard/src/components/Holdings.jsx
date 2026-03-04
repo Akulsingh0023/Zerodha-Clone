@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import BASE_URL from "../config";
 import { VerticalGraph } from "./VerticalGraph";
+import SellActionWindow from "./SellActionWindow";
 
 const Holdings = () => {
   const [allHoldings, setAllHoldings] = useState([]);
+  const [sellStock, setSellStock] = useState(null);
 
 useEffect(() => {
   const fetchHoldings = async () => {
-    const res = await axios.get(`${BASE_URL}/allHoldings`);
+    const res = await axios.get(`${BASE_URL}/holdings`);
     setAllHoldings(res.data);
 
     // 🔥 live price attach
@@ -85,43 +87,67 @@ const updateWithLivePrice = async (holdings) => {
   const totalPL = currentValue - totalInvestment;
   const isProfit = totalPL >= 0;
 
+  const openSellWindow = (stock) => {
+    if (!stock) return;
+    setSellStock({
+      name: stock.name,
+      qty: stock.qty,
+      price: stock.price,
+      product: "CNC",
+    });
+  };
+
   return (
     <>
      <h3 className="title">Holdings ({allHoldings.length})</h3>
 
       <div className="order-table">
-        <table>
+        <table className="holdings-table">
           <thead>
             <tr>
-              <th>Instrument</th>
+              <th className="align-left">Instrument</th>
               <th>Qty.</th>
               <th>Avg. cost</th>
               <th>LTP</th>
               <th>Cur. val</th>
-              <th>P&L</th>
+              <th>P&amp;L</th>
               <th>Day chg.</th>
+              <th>Action</th>
             </tr>
           </thead>
 
           <tbody>
             {allHoldings.map((stock, index) => {
-              const curValue = stock.price * stock.qty;
-              const pnl = curValue - stock.avg * stock.qty;
+              const ltp = Number(stock.price) || 0;
+              const qty = Number(stock.qty) || 0;
+              const avg = Number(stock.avg) || 0;
+
+              const curValue = ltp * qty;
+              const pnl = curValue - avg * qty;
               const profClass = pnl >= 0 ? "profit" : "loss";
               const dayClass = stock.isLoss ? "loss" : "profit";
 
               return (
                 <tr key={index}>
-                  <td>{stock.name}</td>
-                  <td>{stock.qty}</td>
-                  <td>{stock.avg.toFixed(2)}</td>
-                  <td>{stock.price.toFixed(2)}</td>
+                  <td className="stock-name align-left">{stock.name}</td>
+                  <td className="quantity">{qty}</td>
+                  <td>{avg.toFixed(2)}</td>
+                  <td>{ltp.toFixed(2)}</td>
                   <td>{curValue.toFixed(2)}</td>
                   <td className={profClass}>
                     {pnl >= 0 ? "+" : ""}
                     {pnl.toFixed(2)}
                   </td>
                   <td className={dayClass}>{stock.day}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className="sell"
+                      onClick={() => openSellWindow(stock)}
+                    >
+                      Sell
+                    </button>
+                  </td>
                 </tr>
               );
             })}
@@ -150,6 +176,13 @@ const updateWithLivePrice = async (holdings) => {
       </div>
 
       <VerticalGraph data={data} />
+
+      {sellStock && (
+        <SellActionWindow
+          stock={sellStock}
+          closeSellWindow={() => setSellStock(null)}
+        />
+      )}
     </>
   );
 };

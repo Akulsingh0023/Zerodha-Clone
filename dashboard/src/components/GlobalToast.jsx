@@ -4,11 +4,14 @@ import "../index.css";
 const GlobalToast = () => {
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState("");
+  const [type, setType] = useState("error");
 
   useEffect(() => {
     const handler = (e) => {
       const msg = e?.detail?.message || "";
+      const toastType = e?.detail?.type || "error";
       setMessage(msg);
+      setType(toastType);
       // show
       setVisible(true);
       // auto hide after 2s
@@ -21,7 +24,7 @@ const GlobalToast = () => {
 
   return (
     visible && (
-      <div className="global-toast" role="status" aria-live="polite">
+      <div className={`global-toast ${type}`} role="status" aria-live="polite">
         {message}
       </div>
     )

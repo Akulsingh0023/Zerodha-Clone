@@ -7,6 +7,16 @@ const PositionsSchema = new mongoose.Schema({
   price: Number,
   net: String,
   day: String,
+  product: {
+    type: String,
+    enum: ["MIS"],
+    default: "MIS",
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 const PositionsModel = mongoose.model("Position", PositionsSchema);

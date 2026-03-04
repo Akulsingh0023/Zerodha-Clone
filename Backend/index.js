@@ -829,6 +829,7 @@ import { protect } from "./middleware/authMiddleware.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
+import supportRoutes from "./routes/supportRoutes.js";
 
 dotenv.config();
 
@@ -855,6 +856,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", profileRoutes);
+app.use("/api/support", supportRoutes);
 /* ================= DB CONNECT ================= */
 mongoose
   .connect(process.env.MONGO_URL)
@@ -874,10 +876,30 @@ app.get("/allHoldings", protect, async (req, res) => {
   }
 });
 
-/* 🔹 GET POSITIONS */
-app.get("/allPositions", async (req, res) => {
+// CNC holdings (alias)
+app.get("/holdings", protect, async (req, res) => {
   try {
-    const positions = await PositionsModel.find({});
+    const holdings = await HoldingsModel.find({ user: req.user._id });
+    res.json(holdings);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch holdings" });
+  }
+});
+
+/* 🔹 GET POSITIONS */
+app.get("/allPositions", protect, async (req, res) => {
+  try {
+    const positions = await PositionsModel.find({ user: req.user._id });
+    res.json(positions);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch positions" });
+  }
+});
+
+// MIS positions (preferred)
+app.get("/positions", protect, async (req, res) => {
+  try {
+    const positions = await PositionsModel.find({ user: req.user._id });
     res.json(positions);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch positions" });
@@ -1033,11 +1055,15 @@ app.post("/wallet/withdraw", protect, async (req, res) => {
 app.post("/newOrder", protect, async (req, res) => {
   const session = await mongoose.startSession();
   try {
-    const { name, qty, price, mode } = req.body;
+    const { name, qty, price, mode, product = "CNC" } = req.body;
     const userId = req.user._id;
 
     if (!name || !qty || !price || !mode) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    if (!["CNC", "MIS"].includes(product)) {
+      return res.status(400).json({ success: false, message: "Invalid product. Use CNC or MIS" });
     }
 
     const quantityNum = Number(qty);
@@ -1058,23 +1084,44 @@ app.post("/newOrder", protect, async (req, res) => {
           throw { status: 400, message: "Insufficient wallet balance" };
         }
 
-        // Update or create holding for user
-        const existingHolding = await HoldingsModel.findOne({ name, user: userId }).session(session);
+        if (product === "CNC") {
+          // Update or create holding for user
+          const existingHolding = await HoldingsModel.findOne({ name, user: userId }).session(session);
 
-        if (existingHolding) {
-          const totalQty = existingHolding.qty + quantityNum;
-          const totalCostExisting = existingHolding.qty * existingHolding.avg + totalCost;
-          existingHolding.qty = totalQty;
-          existingHolding.avg = totalCostExisting / totalQty;
-          existingHolding.price = priceNum;
-          await existingHolding.save({ session });
+          if (existingHolding) {
+            const totalQty = existingHolding.qty + quantityNum;
+            const totalCostExisting = existingHolding.qty * existingHolding.avg + totalCost;
+            existingHolding.qty = totalQty;
+            existingHolding.avg = totalCostExisting / totalQty;
+            existingHolding.price = priceNum;
+            await existingHolding.save({ session });
+          } else {
+            await HoldingsModel.create(
+              [
+                { name, qty: quantityNum, avg: priceNum, price: priceNum, net: "+0.00%", day: "+0.00%", user: userId },
+              ],
+              { session }
+            );
+          }
         } else {
-          await HoldingsModel.create(
-            [
-              { name, qty: quantityNum, avg: priceNum, price: priceNum, net: "+0.00%", day: "+0.00%", user: userId },
-            ],
-            { session }
-          );
+          // MIS: Update or create position for user
+          const existingPosition = await PositionsModel.findOne({ name, user: userId }).session(session);
+
+          if (existingPosition) {
+            const totalQty = existingPosition.qty + quantityNum;
+            const totalCostExisting = existingPosition.qty * existingPosition.avg + totalCost;
+            existingPosition.qty = totalQty;
+            existingPosition.avg = totalCostExisting / totalQty;
+            existingPosition.price = priceNum;
+            await existingPosition.save({ session });
+          } else {
+            await PositionsModel.create(
+              [
+                { name, qty: quantityNum, avg: priceNum, price: priceNum, net: "+0.00%", day: "+0.00%", product: "MIS", user: userId },
+              ],
+              { session }
+            );
+          }
         }
 
         // Save order
@@ -1088,20 +1135,38 @@ app.post("/newOrder", protect, async (req, res) => {
       } else if (mode === "SELL") {
         const totalSellAmount = quantityNum * priceNum;
 
-        const existingHolding = await HoldingsModel.findOne({ name, user: userId }).session(session);
-        if (!existingHolding || existingHolding.qty < quantityNum) {
-          throw { status: 400, message: "Not enough shares to sell" };
-        }
+        if (product === "CNC") {
+          const existingHolding = await HoldingsModel.findOne({ name, user: userId }).session(session);
+          if (!existingHolding || existingHolding.qty < quantityNum) {
+            throw { status: 400, message: "Not enough shares to sell" };
+          }
 
-        // Credit wallet
-        const updatedUser = await User.findByIdAndUpdate(userId, { $inc: { walletBalance: totalSellAmount } }, { new: true, session }).select("walletBalance");
+          // Credit wallet
+          await User.findByIdAndUpdate(userId, { $inc: { walletBalance: totalSellAmount } }, { new: true, session }).select("walletBalance");
 
-        // Reduce or delete holding
-        existingHolding.qty -= quantityNum;
-        if (existingHolding.qty <= 0) {
-          await HoldingsModel.deleteOne({ _id: existingHolding._id }, { session });
+          // Reduce or delete holding
+          existingHolding.qty -= quantityNum;
+          if (existingHolding.qty <= 0) {
+            await HoldingsModel.deleteOne({ _id: existingHolding._id }, { session });
+          } else {
+            await existingHolding.save({ session });
+          }
         } else {
-          await existingHolding.save({ session });
+          const existingPosition = await PositionsModel.findOne({ name, user: userId }).session(session);
+          if (!existingPosition || existingPosition.qty < quantityNum) {
+            throw { status: 400, message: "Not enough quantity to close position" };
+          }
+
+          // Credit wallet
+          await User.findByIdAndUpdate(userId, { $inc: { walletBalance: totalSellAmount } }, { new: true, session }).select("walletBalance");
+
+          // Reduce or delete position
+          existingPosition.qty -= quantityNum;
+          if (existingPosition.qty <= 0) {
+            await PositionsModel.deleteOne({ _id: existingPosition._id }, { session });
+          } else {
+            await existingPosition.save({ session });
+          }
         }
 
         // Save order and txn

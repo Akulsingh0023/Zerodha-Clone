@@ -190,7 +190,7 @@
 // export default Menu;
 
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const BASE_URL = "http://localhost:4000";
@@ -200,7 +200,6 @@ const Menu = () => {
   const [user, setUser] = useState(null);
 
   const dropdownRef = useRef();
-  const navigate = useNavigate();
   const location = useLocation();
 
   const menuClass = "menu";
@@ -334,6 +333,16 @@ const Menu = () => {
               >
                 Wallet
               </Link>
+
+              {user && user.role === "user" && (
+                <Link
+                  to="/support"
+                  className="dropdown-item"
+                  onClick={() => setIsProfileDropdownOpen(false)}
+                >
+                  Customer Support
+                </Link>
+              )}
 
               <div
                 className="dropdown-item"
