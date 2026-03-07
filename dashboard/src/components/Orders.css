@@ -1,0 +1,80 @@
+/* ═══════════════════════════════════
+   Orders Page — Clean Styles
+   ═══════════════════════════════════ */
+
+.ord-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #888;
+  font-size: 14px;
+}
+
+/* ── Table ── */
+.ord-table th {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #888;
+  text-transform: uppercase;
+}
+.ord-table td {
+  text-align: center;
+  font-size: 13px;
+}
+.ord-symbol {
+  font-weight: 600;
+  color: #333;
+}
+
+/* ── Badges ── */
+.ord-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.ord-badge.buy {
+  background: rgba(37, 166, 154, 0.12);
+  color: #26a69a;
+}
+.ord-badge.sell {
+  background: rgba(239, 83, 80, 0.12);
+  color: #ef5350;
+}
+.ord-badge.cnc {
+  background: rgba(33, 150, 243, 0.1);
+  color: #1e88e5;
+}
+.ord-badge.mis {
+  background: rgba(108, 92, 231, 0.1);
+  color: #6c5ce7;
+}
+
+/* ── Empty ── */
+.no-orders {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 220px;
+  justify-content: center;
+  color: #999;
+}
+.no-orders p {
+  font-size: 15px;
+  font-weight: 600;
+  color: #666;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .ord-table th:nth-child(7),
+  .ord-table td:nth-child(7) {
+    display: none;
+  }
+}

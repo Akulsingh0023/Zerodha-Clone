@@ -1,89 +1,94 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import BASE_URL from "../config";
+import "./Orders.css";
+
+const formatDate = (d) =>
+  new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
+const formatTime = (d) =>
+  new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
 
 const Orders = () => {
   const [allOrders, setAllOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = () => {
+  const fetchOrders = useCallback(() => {
     axios
       .get(`${BASE_URL}/newOrder`)
       .then((res) => {
-        console.log("Orders fetched:", res.data);
-        setAllOrders(res.data);
-        setLoading(false);
+        setAllOrders(Array.isArray(res.data) ? res.data : []);
       })
-      .catch((err) => {
-        console.error("Error fetching orders:", err);
-        setLoading(false);
-      });
-  };
+      .catch((err) => console.error("Error fetching orders:", err))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const formatTime = (date) => {
-    return new Date(date).toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
+  useEffect(() => {
+    fetchOrders();
+    const onTrade = () => fetchOrders();
+    window.addEventListener("walletUpdated", onTrade);
+    return () => window.removeEventListener("walletUpdated", onTrade);
+  }, [fetchOrders]);
 
   if (loading) {
     return (
       <div className="orders">
-        <p>Loading orders...</p>
+        <div className="ord-loading">Loading orders...</div>
       </div>
     );
   }
 
   return (
     <div className="orders">
-      {allOrders && allOrders.length > 0 ? (
+      <h3 className="title">Orders ({allOrders.length})</h3>
+
+      {allOrders.length > 0 ? (
         <div className="order-table">
-          <table>
+          <table className="ord-table">
             <thead>
               <tr>
-                <th>Stock</th>
-                <th>Type</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Date</th>
-                <th>Time</th>
+                <th className="align-left">SYMBOL</th>
+                <th>ACTION</th>
+                <th>ORDER TYPE</th>
+                <th>QTY</th>
+                <th>PRICE</th>
+                <th>DATE</th>
+                <th>TIME</th>
               </tr>
             </thead>
             <tbody>
-              {allOrders.map((order, index) => (
-                <tr key={index} className={order.mode === "BUY" ? "buy-order" : "sell-order"}>
-                  <td className="stock-name">{order.name}</td>
-                  <td className={`order-type ${order.mode.toLowerCase()}`}>
-                    {order.mode}
-                  </td>
-                  <td className="quantity">{order.qty}</td>
-                  <td className="price">₹{order.price.toFixed(2)}</td>
-                  <td className="date">{formatDate(order.createdAt)}</td>
-                  <td className="time">{formatTime(order.createdAt)}</td>
-                </tr>
-              ))}
+              {allOrders.map((order, i) => {
+                const isBuy = order.mode === "BUY";
+                const orderType = order.product || "CNC";
+
+                return (
+                  <tr key={order._id || i}>
+                    <td className="align-left ord-symbol">{order.name}</td>
+                    <td>
+                      <span className={`ord-badge ${isBuy ? "buy" : "sell"}`}>
+                        {order.mode}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`ord-badge ${orderType === "MIS" ? "mis" : "cnc"}`}>
+                        {orderType}
+                      </span>
+                    </td>
+                    <td>{order.qty}</td>
+                    <td>₹{Number(order.price).toFixed(2)}</td>
+                    <td>{formatDate(order.createdAt)}</td>
+                    <td>{formatTime(order.createdAt)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       ) : (
         <div className="no-orders">
           <p>You haven't placed any orders yet</p>
-          <Link to={"/"} className="btn">
+          <Link to="/" className="btn">
             Get started
           </Link>
         </div>

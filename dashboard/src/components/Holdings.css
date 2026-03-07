@@ -1,0 +1,88 @@
+/* ═══════════════════════════════════
+   Holdings Page — Professional Styles
+   ═══════════════════════════════════ */
+
+/* ── Loading / Empty ── */
+.hld-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #888;
+  font-size: 14px;
+}
+
+.hld-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 260px;
+  color: #999;
+}
+.hld-empty p {
+  font-size: 16px;
+  font-weight: 600;
+  color: #666;
+  margin: 4px 0 0;
+}
+.hld-empty span {
+  font-size: 13px;
+  color: #aaa;
+}
+
+/* ── Table overrides ── */
+.holdings-table th,
+.holdings-table td {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.holdings-table .stock-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.holdings-table .quantity {
+  font-weight: 500;
+}
+
+/* P&L percentage inline */
+.hld-pnl-pct {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+/* ── Sell button ── */
+.hld-sell-btn {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 5px 16px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.hld-sell-btn:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
+}
+.hld-sell-btn:active {
+  transform: translateY(0);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .holdings-table th:nth-child(5),
+  .holdings-table td:nth-child(5),
+  .holdings-table th:nth-child(7),
+  .holdings-table td:nth-child(7) {
+    display: none;
+  }
+}

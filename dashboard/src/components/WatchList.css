@@ -1,0 +1,400 @@
+/* ============================================================
+   WatchList.css – Professional trading-platform watchlist styles
+   ============================================================ */
+
+/* ── Search bar ── */
+.wl-search-wrapper {
+  position: relative;
+  z-index: 100;
+}
+
+.wl-search-bar {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #ebebea;
+  background: #fff;
+  padding: 0 14px;
+  height: 48px;
+}
+
+.wl-search-icon {
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.wl-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.85rem;
+  color: #333;
+  background: transparent;
+  padding: 0;
+  height: 100%;
+}
+
+.wl-search-input::placeholder {
+  color: #b1b1b1;
+}
+
+.wl-stock-count {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: #b1b1b1;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+/* ── Dropdown ── */
+.wl-search-dropdown {
+  position: absolute;
+  top: 48px;
+  left: 0;
+  right: 0;
+  max-height: 340px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 200;
+}
+
+.wl-search-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.12s;
+  gap: 12px;
+}
+
+.wl-search-item:hover,
+.wl-search-item-active {
+  background: #f5f8ff;
+}
+
+.wl-search-item-disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.wl-search-symbol {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #333;
+  min-width: 90px;
+}
+
+.wl-search-name {
+  font-size: 0.78rem;
+  color: #888;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wl-search-added {
+  font-size: 0.7rem;
+  color: #4184f3;
+  background: #eef3fd;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.wl-search-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.wl-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #4184f3;
+  border-radius: 50%;
+  animation: wl-spin 0.6s linear infinite;
+}
+
+@keyframes wl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.wl-search-empty {
+  padding: 18px 16px;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.85rem;
+}
+
+/* ── Empty state ── */
+.wl-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.wl-empty-state svg {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.wl-empty-state p {
+  color: #999;
+  font-size: 0.9rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+/* ── Table header ── */
+.wl-table-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-bottom: 1px solid #ebebea;
+  background: #fafafa;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #999;
+  letter-spacing: 0.5px;
+}
+
+.wl-th-symbol {
+  flex: 2;
+}
+
+.wl-th-change,
+.wl-th-percent {
+  flex: 1.2;
+  text-align: right;
+}
+
+.wl-th-ltp {
+  flex: 1.3;
+  text-align: right;
+  padding-right: 8px;
+}
+
+/* ── List ── */
+.wl-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.wl-drag-wrapper {
+  cursor: grab;
+}
+
+.wl-drag-wrapper:active {
+  cursor: grabbing;
+}
+
+/* ── Item row ── */
+.wl-item-row {
+  position: relative;
+  border-bottom: 1px solid #f2f2f2;
+  padding: 11px 14px;
+  transition: background 0.15s;
+  list-style: none;
+}
+
+.wl-item-row:hover {
+  background: #f8f9fb;
+}
+
+.wl-item-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wl-item-left {
+  display: flex;
+  flex-direction: column;
+  flex: 2;
+  min-width: 0;
+}
+
+.wl-item-symbol {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.wl-item-name {
+  font-size: 0.7rem;
+  color: #aaa;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wl-item-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 3;
+  justify-content: flex-end;
+}
+
+.wl-item-change {
+  font-size: 0.78rem;
+  font-weight: 500;
+  min-width: 70px;
+  text-align: right;
+}
+
+.wl-item-percent {
+  font-size: 0.75rem;
+  font-weight: 500;
+  min-width: 65px;
+  text-align: right;
+}
+
+.wl-item-ltp {
+  font-size: 0.88rem;
+  font-weight: 700;
+  min-width: 80px;
+  text-align: right;
+}
+
+.wl-item-loading {
+  font-size: 0.75rem;
+  color: #ccc;
+  animation: wl-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes wl-pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ── Colors ── */
+.wl-green {
+  color: #00c853;
+}
+
+.wl-red {
+  color: #ff5252;
+}
+
+/* ── Action buttons ── */
+.wl-item-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 12px;
+  background: linear-gradient(90deg, transparent 0%, #f8f9fb 30%);
+  padding-left: 40px;
+  animation: wl-fadeActions 0.15s ease;
+}
+
+@keyframes wl-fadeActions {
+  from {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.wl-btn-buy {
+  width: 32px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: #4184f3;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.wl-btn-buy:hover {
+  background: #2e6ed8;
+  transform: scale(1.05);
+}
+
+.wl-btn-remove {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  color: #999;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.wl-btn-remove:hover {
+  background: #ff5252;
+  color: #fff;
+  border-color: #ff5252;
+  transform: scale(1.05);
+}
+
+/* ── Responsive ── */
+@media (max-width: 992px) {
+  .wl-table-header {
+    display: none;
+  }
+
+  .wl-item-right {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .wl-item-change,
+  .wl-item-percent,
+  .wl-item-ltp {
+    min-width: auto;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .wl-search-bar {
+    height: 42px;
+    padding: 0 10px;
+  }
+
+  .wl-item-row {
+    padding: 9px 10px;
+  }
+
+  .wl-item-actions {
+    padding-left: 20px;
+  }
+}

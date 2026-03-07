@@ -155,32 +155,58 @@ const Wallet = () => {
       </div>
 
       <div className="transactions">
-        <h4>Transaction History</h4>
+        <div className="tx-header">
+          <h4>Transaction History</h4>
+          <span className="tx-count">{transactions.length} transactions</span>
+        </div>
         {txLoading ? (
-          <Spinner />
+          <div className="tx-loading"><Spinner /></div>
         ) : transactions.length === 0 ? (
-          <div className="empty">No Transactions Yet</div>
+          <div className="tx-empty">
+            <span className="tx-empty-icon">📋</span>
+            <p>No transactions yet</p>
+            <span className="tx-empty-sub">Add or withdraw funds to see your history</span>
+          </div>
         ) : (
-          <table className="tx-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Reason</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((t) => (
-                <tr key={t._id} className={t.type === "credit" ? "credit" : "debit"}>
-                  <td>{new Date(t.createdAt || t.createdAt).toLocaleString()}</td>
-                  <td>{t.type}</td>
-                  <td>{formatCurrency(t.amount)}</td>
-                  <td>{t.reason}</td>
+          <div className="tx-scroll">
+            <table className="tx-table">
+              <thead>
+                <tr>
+                  <th>DATE</th>
+                  <th>TYPE</th>
+                  <th>AMOUNT</th>
+                  <th>REASON</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {transactions.map((t) => {
+                  const d = new Date(t.createdAt);
+                  const date = d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+                  const time = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+                  const isCredit = t.type === "credit";
+                  return (
+                    <tr key={t._id} className={isCredit ? "credit" : "debit"}>
+                      <td>
+                        <span className="tx-date">{date}</span>
+                        <span className="tx-time">{time}</span>
+                      </td>
+                      <td>
+                        <span className={`tx-badge ${isCredit ? "badge-credit" : "badge-debit"}`}>
+                          {isCredit ? "↑ Credit" : "↓ Debit"}
+                        </span>
+                      </td>
+                      <td className="tx-amount">
+                        <span className={isCredit ? "amt-credit" : "amt-debit"}>
+                          {isCredit ? "+" : "-"}{formatCurrency(t.amount)}
+                        </span>
+                      </td>
+                      <td className="tx-reason">{t.reason || "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

@@ -12,30 +12,160 @@
 .action-card.add .action-btn { background: linear-gradient(90deg,#06b6d4,#06a6fa); }
 .action-card.withdraw .action-btn { background: linear-gradient(90deg,#f97316,#ff7a59); }
 .action-btn:hover { transform: translateY(-3px) scale(1.01); box-shadow:0 14px 30px rgba(3,102,214,0.16); }
-.transactions { margin-top:20px; }
-
-/* make the Transactions heading and table text clearly visible on dashboard */
-.transactions h4 {
-	margin-bottom: 12px;
-	color: rgb(31, 41, 55); /* dark slate for clear contrast */
-	font-size: 1.05rem;
-	font-weight: 600;
-}
-.tx-table th { color: rgb(71,71,71); }
-.tx-table td { color: rgb(31,41,55); }
-
-/* ensure actions (withdraw/add) stacks on small screens */
+/* ── Actions layout ── */
 .inner-actions { display:flex; gap:16px; margin-top:14px; }
 @media (max-width: 880px) {
 	.wallet-top { flex-direction:column; }
 	.inner-actions { flex-direction:column; }
 }
-.tx-table { width:100%; border-collapse:collapse; background:transparent; }
-.tx-table th { text-align:left; padding:12px 10px; color:#9fb1cc; font-size:13px; }
-.tx-table td { padding:12px 10px; border-top:1px solid rgba(255,255,255,0.03); font-size:14px; }
-.tx-table tbody tr.credit td { color:#86efac; }
-.tx-table tbody tr.debit td { color:#fca5a5; }
-.empty { padding:18px; color:#9fb1cc; background:rgba(255,255,255,0.02); border-radius:10px; }
+
+/* ── Transaction History Section ── */
+.transactions {
+  margin-top: 28px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px 24px 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border: 1px solid #e5e7eb;
+}
+
+.tx-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.tx-header h4 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.tx-count {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* Loading */
+.tx-loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+.tx-loading .wallet-spinner .dot { background: #6b7280; }
+
+/* Empty state */
+.tx-empty {
+  text-align: center;
+  padding: 40px 16px;
+}
+.tx-empty-icon { font-size: 36px; display: block; margin-bottom: 10px; }
+.tx-empty p {
+  margin: 0;
+  color: #374151;
+  font-size: 15px;
+  font-weight: 600;
+}
+.tx-empty-sub {
+  display: block;
+  margin-top: 4px;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+/* Scroll container for many rows */
+.tx-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  border-radius: 10px;
+}
+.tx-scroll::-webkit-scrollbar { width: 5px; }
+.tx-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+
+/* Table */
+.tx-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tx-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  letter-spacing: 0.5px;
+  background: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.tx-table td {
+  padding: 12px 14px;
+  font-size: 13.5px;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+.tx-table tbody tr { transition: background 0.15s ease; }
+.tx-table tbody tr:hover { background: #f9fafb; }
+.tx-table tbody tr:last-child td { border-bottom: none; }
+
+/* Date cell */
+.tx-date {
+  display: block;
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 13px;
+}
+.tx-time {
+  display: block;
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 1px;
+}
+
+/* Type badge */
+.tx-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.badge-credit {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+.badge-debit {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+/* Amount */
+.tx-amount { font-weight: 700; font-size: 13.5px; }
+.amt-credit { color: #059669; }
+.amt-debit { color: #dc2626; }
+
+/* Reason */
+.tx-reason {
+  color: #6b7280;
+  font-size: 13px;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+  .transactions { padding: 14px 12px 10px; }
+  .tx-table th, .tx-table td { padding: 10px 8px; }
+  .tx-reason { max-width: 100px; }
+}
 .wallet-toast { position:fixed; right:20px; bottom:20px; padding:12px 16px; border-radius:8px; color:white; z-index:4000; cursor:pointer; }
 .wallet-toast.success { background: #10b981; }
 .wallet-toast.error { background: #ef4444; }

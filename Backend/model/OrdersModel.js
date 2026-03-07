@@ -9,6 +9,11 @@ const OrdersSchema = new mongoose.Schema(
       type: String,
       enum: ["BUY", "SELL"],
     },
+    product: {
+      type: String,
+      enum: ["CNC", "MIS"],
+      default: "CNC",
+    },
   },
   { timestamps: true }
 );

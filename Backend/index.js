@@ -948,20 +948,7 @@ app.get("/api/live-price/:symbol", async (req, res) => {
 });
 
 /* =====================================================
-   🔹 GET ALL ORDERS
-===================================================== */
-app.get("/newOrder", async (req, res) => {
-  try {
-    const orders = await OrdersModel.find({}).sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "Failed to fetch orders" });
-  }
-});
-
-/* =====================================================
-   � GET USER WALLET
+   🔹 GET USER WALLET
 ===================================================== */
 app.get("/wallet", protect, async (req, res) => {
   try {
@@ -1125,7 +1112,7 @@ app.post("/newOrder", protect, async (req, res) => {
         }
 
         // Save order
-        await OrdersModel.create([{ name, qty: quantityNum, price: priceNum, mode: "BUY" }], { session });
+        await OrdersModel.create([{ name, qty: quantityNum, price: priceNum, mode: "BUY", product }], { session });
 
         // Wallet transaction
         await WalletTransaction.create(
@@ -1170,7 +1157,7 @@ app.post("/newOrder", protect, async (req, res) => {
         }
 
         // Save order and txn
-        await OrdersModel.create([{ name, qty: quantityNum, price: priceNum, mode: "SELL" }], { session });
+        await OrdersModel.create([{ name, qty: quantityNum, price: priceNum, mode: "SELL", product }], { session });
         await WalletTransaction.create(
           [ { userId: userId, type: "credit", amount: totalSellAmount, reason: "stock_sell" } ],
           { session }
