@@ -7,12 +7,18 @@ const OrdersSchema = new mongoose.Schema(
     price: Number,
     mode: {
       type: String,
-      enum: ["BUY", "SELL"],
+      enum: ["BUY", "SELL", "AUTO SQUARE OFF"],
     },
     product: {
       type: String,
       enum: ["CNC", "MIS"],
       default: "CNC",
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
     },
   },
   { timestamps: true }

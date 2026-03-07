@@ -11,14 +11,14 @@ const formatTime = (d) =>
   new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
 
 const Orders = () => {
-  const [allOrders, setAllOrders] = useState([]);
+  const [purchasedOrders, setPurchasedOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchOrders = useCallback(() => {
     axios
       .get(`${BASE_URL}/newOrder`)
       .then((res) => {
-        setAllOrders(Array.isArray(res.data) ? res.data : []);
+        setPurchasedOrders(Array.isArray(res.data) ? res.data : []);
       })
       .catch((err) => console.error("Error fetching orders:", err))
       .finally(() => setLoading(false));
@@ -41,9 +41,9 @@ const Orders = () => {
 
   return (
     <div className="orders">
-      <h3 className="title">Orders ({allOrders.length})</h3>
+      <h3 className="title">Orders ({purchasedOrders.length})</h3>
 
-      {allOrders.length > 0 ? (
+      {purchasedOrders.length > 0 ? (
         <div className="order-table">
           <table className="ord-table">
             <thead>
@@ -58,7 +58,7 @@ const Orders = () => {
               </tr>
             </thead>
             <tbody>
-              {allOrders.map((order, i) => {
+              {purchasedOrders.map((order, i) => {
                 const isBuy = order.mode === "BUY";
                 const orderType = order.product || "CNC";
 

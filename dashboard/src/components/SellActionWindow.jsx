@@ -45,11 +45,18 @@ const SellActionWindow = ({ stock, closeSellWindow }) => {
   // Convert quantity to number for calculation
   const qty = Number(stockQuantity) || 0;
 
-  // Calculate sell value, charges, and net amount
-  const sellValueNum = stockPrice * qty;
-  const sellValue = sellValueNum.toFixed(2);
-  const charges = (Math.max(sellValueNum * 0.001, 20)).toFixed(2);
-  const youReceive = (sellValueNum - parseFloat(charges)).toFixed(2);
+  // Calculate sell value and dynamic charges
+  const tradeValue = stockPrice * qty;
+  const sellValue = tradeValue.toFixed(2);
+
+  const brokerage = Math.min(tradeValue * 0.0003, 20);
+  const stt = tradeValue * 0.001;
+  const exchangeCharges = tradeValue * 0.0000345;
+  const gst = (brokerage + exchangeCharges) * 0.18;
+  const totalCharges = brokerage + stt + exchangeCharges + gst;
+
+  const charges = totalCharges.toFixed(2);
+  const youReceive = (tradeValue - totalCharges).toFixed(2);
 
   // Validation
   const isInvalidQuantity = qty <= 0;

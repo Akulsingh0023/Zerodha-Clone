@@ -823,6 +823,7 @@ import cookieParser from "cookie-parser";
 import  HoldingsModel  from "./model/HoldingsModel.js";
 import  PositionsModel  from "./model/PositionsModel.js";
 import  OrdersModel  from "./model/OrdersModel.js";
+import WatchlistModel from "./model/WatchlistModel.js";
 import WalletTransaction from "./model/WalletTransaction.js";
 import User from "./model/User.js";
 import { protect } from "./middleware/authMiddleware.js";
@@ -830,6 +831,8 @@ import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
+import squareOffRoutes from "./routes/squareOffRoutes.js";
+import { squareOffAllUsers } from "./controllers/squareOffController.js";
 
 dotenv.config();
 
@@ -857,6 +860,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", profileRoutes);
 app.use("/api/support", supportRoutes);
+app.use("/api/square-off", squareOffRoutes);
 /* ================= DB CONNECT ================= */
 mongoose
   .connect(process.env.MONGO_URL)
@@ -864,6 +868,63 @@ mongoose
   .catch((err) => console.log("❌ DB error:", err));
 
 /* ================= ROUTES ================= */
+
+/* =====================================================
+   ⭐ WATCHLIST (separate from Orders)
+===================================================== */
+
+// GET watchlist for current user
+app.get("/watchlist", protect, async (req, res) => {
+  try {
+    const items = await WatchlistModel.find({ user: req.user._id }).sort({ createdAt: 1 });
+    return res.json(items);
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to fetch watchlist" });
+  }
+});
+
+// POST add to watchlist
+app.post("/watchlist", protect, async (req, res) => {
+  try {
+    const { symbol, name } = req.body;
+    if (!symbol || typeof symbol !== "string") {
+      return res.status(400).json({ error: "symbol is required" });
+    }
+
+    const sym = symbol.trim().toUpperCase();
+    if (!sym) return res.status(400).json({ error: "symbol is required" });
+
+    await WatchlistModel.findOneAndUpdate(
+      { user: req.user._id, symbol: sym },
+      { $set: { name: (name || "").toString() } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    const items = await WatchlistModel.find({ user: req.user._id }).sort({ createdAt: 1 });
+    return res.json(items);
+  } catch (error) {
+    // Duplicate key (unique index) can happen in rare races
+    if (error?.code === 11000) {
+      const items = await WatchlistModel.find({ user: req.user._id }).sort({ createdAt: 1 });
+      return res.json(items);
+    }
+    return res.status(500).json({ error: "Failed to add to watchlist" });
+  }
+});
+
+// DELETE remove from watchlist
+app.delete("/watchlist/:symbol", protect, async (req, res) => {
+  try {
+    const symbol = (req.params.symbol || "").trim().toUpperCase();
+    if (!symbol) return res.status(400).json({ error: "symbol is required" });
+
+    await WatchlistModel.deleteOne({ user: req.user._id, symbol });
+    const items = await WatchlistModel.find({ user: req.user._id }).sort({ createdAt: 1 });
+    return res.json(items);
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to remove from watchlist" });
+  }
+});
 
 /* 🔹 GET HOLDINGS */
 app.get("/allHoldings", protect, async (req, res) => {
@@ -907,12 +968,23 @@ app.get("/positions", protect, async (req, res) => {
 });
 
 /* 🔹 GET ORDERS */
-app.get("/newOrder", async (req, res) => {
+// Backwards-compatible endpoint (now scoped to the authenticated user)
+app.get("/newOrder", protect, async (req, res) => {
   try {
-    const orders = await OrdersModel.find({});
-    res.json(orders);
+    const orders = await OrdersModel.find({ user: req.user._id }).sort({ createdAt: -1 });
+    return res.json(orders);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch orders" });
+    return res.status(500).json({ error: "Failed to fetch orders" });
+  }
+});
+
+// Preferred endpoint: only BUY orders (purchased orders)
+app.get("/orders", protect, async (req, res) => {
+  try {
+    const orders = await OrdersModel.find({ user: req.user._id, mode: "BUY" }).sort({ createdAt: -1 });
+    return res.json(orders);
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to fetch orders" });
   }
 });
 
@@ -1111,8 +1183,11 @@ app.post("/newOrder", protect, async (req, res) => {
           }
         }
 
-        // Save order
-        await OrdersModel.create([{ name, qty: quantityNum, price: priceNum, mode: "BUY", product }], { session });
+        // Save order (stored separately from watchlist)
+        await OrdersModel.create(
+          [{ name, qty: quantityNum, price: priceNum, mode: "BUY", product, user: userId }],
+          { session }
+        );
 
         // Wallet transaction
         await WalletTransaction.create(
@@ -1157,7 +1232,10 @@ app.post("/newOrder", protect, async (req, res) => {
         }
 
         // Save order and txn
-        await OrdersModel.create([{ name, qty: quantityNum, price: priceNum, mode: "SELL", product }], { session });
+        await OrdersModel.create(
+          [{ name, qty: quantityNum, price: priceNum, mode: "SELL", product, user: userId }],
+          { session }
+        );
         await WalletTransaction.create(
           [ { userId: userId, type: "credit", amount: totalSellAmount, reason: "stock_sell" } ],
           { session }
@@ -1177,6 +1255,29 @@ app.post("/newOrder", protect, async (req, res) => {
     return res.status(500).json({ success: false, message: "Order failed", error: err.message || err });
   }
 });
+
+/* ================= AUTO SQUARE-OFF SCHEDULER ================= */
+const SQUARE_OFF_HOUR = 15;
+const SQUARE_OFF_MINUTE = 20;
+let squareOffTriggeredToday = false;
+
+setInterval(() => {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+
+  if (h === SQUARE_OFF_HOUR && m === SQUARE_OFF_MINUTE) {
+    if (!squareOffTriggeredToday) {
+      squareOffTriggeredToday = true;
+      squareOffAllUsers().catch((err) =>
+        console.error("[Scheduler] Square-off error:", err.message)
+      );
+    }
+  } else {
+    // Reset flag so it can trigger again the next day
+    squareOffTriggeredToday = false;
+  }
+}, 30_000); // Check every 30 seconds
 
 /* ================= SERVER ================= */
 app.listen(PORT, () => {

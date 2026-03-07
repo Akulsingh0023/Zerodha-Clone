@@ -3,26 +3,12 @@ import axios from "axios";
 import SearchBar from "./SearchBar";
 import WatchlistItem from "./WatchlistItem";
 import { DoughnutChart } from "./DoughnutChart";
+import BASE_URL from "../config";
 import "./WatchList.css";
 
 const STOCK_API = "https://military-jobye-haiqstudios-14f59639.koyeb.app/stock";
-const LOCALSTORAGE_KEY = "zerodha_watchlist";
 const MAX_WATCHLIST = 50;
 const PRICE_REFRESH_MS = 7000; // 7 seconds
-
-/* ───────── helpers ───────── */
-const loadWatchlist = () => {
-  try {
-    const stored = localStorage.getItem(LOCALSTORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveWatchlist = (list) => {
-  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(list));
-};
 
 // Seed-based pseudo-random price so each symbol gets a consistent base price
 const seedPrice = (symbol) => {
@@ -45,14 +31,29 @@ const mockPrice = (symbol) => {
 
 /* ================= MAIN WATCHLIST ================= */
 const WatchList = () => {
-  const [watchlist, setWatchlist] = useState(loadWatchlist);
+  const [watchlist, setWatchlist] = useState([]);
   const [priceMap, setPriceMap] = useState({}); // { SYMBOL: { ltp, change, changePercent } }
   const intervalRef = useRef(null);
 
-  /* ── persist to localStorage whenever watchlist changes ── */
+  /* ── fetch watchlist from backend ── */
+  const fetchWatchlist = useCallback(async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/watchlist`);
+      const items = Array.isArray(res.data) ? res.data : [];
+      setWatchlist(
+        items
+          .map((it) => ({ symbol: it.symbol, name: it.name }))
+          .filter((it) => typeof it.symbol === "string" && it.symbol.trim().length > 0)
+      );
+    } catch (err) {
+      console.error("Error fetching watchlist:", err);
+      setWatchlist([]);
+    }
+  }, []);
+
   useEffect(() => {
-    saveWatchlist(watchlist);
-  }, [watchlist]);
+    fetchWatchlist();
+  }, [fetchWatchlist]);
 
   /* ── fetch live prices for all stocks ── */
   const fetchPrices = useCallback(async () => {
@@ -103,17 +104,42 @@ const WatchList = () => {
   const handleAddStock = (stock) => {
     if (watchlist.length >= MAX_WATCHLIST) return;
     if (watchlist.some((w) => w.symbol === stock.symbol)) return;
-    setWatchlist((prev) => [...prev, stock]);
+
+    (async () => {
+      try {
+        const res = await axios.post(`${BASE_URL}/watchlist`, {
+          symbol: stock.symbol,
+          name: stock.name,
+        });
+        const items = Array.isArray(res.data) ? res.data : [];
+        setWatchlist(items.map((it) => ({ symbol: it.symbol, name: it.name })));
+      } catch (err) {
+        console.error("Error adding to watchlist:", err);
+      }
+    })();
   };
 
   /* ── remove stock ── */
   const handleRemoveStock = (symbol) => {
-    setWatchlist((prev) => prev.filter((s) => s.symbol !== symbol));
-    setPriceMap((prev) => {
-      const copy = { ...prev };
-      delete copy[symbol];
-      return copy;
-    });
+    (async () => {
+      try {
+        const res = await axios.delete(
+          `${BASE_URL}/watchlist/${encodeURIComponent(symbol)}`
+        );
+        const items = Array.isArray(res.data) ? res.data : [];
+        setWatchlist(items.map((it) => ({ symbol: it.symbol, name: it.name })));
+      } catch (err) {
+        console.error("Error removing from watchlist:", err);
+        // fallback: update UI even if API fails
+        setWatchlist((prev) => prev.filter((s) => s.symbol !== symbol));
+      } finally {
+        setPriceMap((prev) => {
+          const copy = { ...prev };
+          delete copy[symbol];
+          return copy;
+        });
+      }
+    })();
   };
 
   /* ── drag & drop reorder ── */

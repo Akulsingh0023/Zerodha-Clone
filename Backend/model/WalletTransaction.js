@@ -18,7 +18,7 @@ const WalletTransactionSchema = new mongoose.Schema(
     },
     reason: {
       type: String,
-      enum: ["stock_buy", "stock_sell", "manual_add", "withdraw"],
+      enum: ["stock_buy", "stock_sell", "manual_add", "withdraw", "auto_square_off"],
       required: true,
     },
     createdAt: {
