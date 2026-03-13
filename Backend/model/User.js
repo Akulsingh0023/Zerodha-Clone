@@ -50,6 +50,12 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
 
+    // 🚫 Account Status
+    blocked: {
+      type: Boolean,
+      default: false,
+    },
+
     // � Trading Wallet
     walletBalance: {
       type: Number,

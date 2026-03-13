@@ -829,6 +829,7 @@ import User from "./model/User.js";
 import { protect } from "./middleware/authMiddleware.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import adminPanelRoutes from "./routes/adminPanelRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
 import squareOffRoutes from "./routes/squareOffRoutes.js";
@@ -858,6 +859,7 @@ app.use(cookieParser());
 /* ================= AUTH ROUTES ================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/admin-panel", adminPanelRoutes);
 app.use("/api", profileRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/square-off", squareOffRoutes);
@@ -989,7 +991,7 @@ app.get("/orders", protect, async (req, res) => {
 });
 
 /* =====================================================
-   🔥 LIVE PRICE API (NSE)
+   �🔥 LIVE PRICE API (NSE)
 ===================================================== */
 app.get("/api/live-price/:symbol", async (req, res) => {
   try {

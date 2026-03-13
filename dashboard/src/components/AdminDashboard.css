@@ -748,142 +748,45 @@
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
+  .admin-top-bar {
+    padding: 12px 16px;
+  }
+
+  .admin-top-left {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .admin-top-left h1 {
+    font-size: 16px;
+  }
+
   .admin-container {
-    padding: 20px;
-  }
-
-  .admin-header h1 {
-    font-size: 24px;
-  }
-
-  .admin-tabs {
-    gap: 8px;
-  }
-
-  .tab-btn {
-    padding: 10px 16px;
-    font-size: 12px;
+    padding: 16px;
   }
 
   .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-  }
-
-  .stat-card {
-    padding: 16px;
-    gap: 12px;
-  }
-
-  .stat-icon {
-    font-size: 36px;
-  }
-
-  .stat-value {
-    font-size: 24px;
+    grid-template-columns: 1fr;
   }
 
   .users-header {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .users-header h3 {
-    margin-bottom: 0;
-  }
-
-  .search-box-wrapper {
-    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .users-search-input {
-    width: 100%;
     min-width: unset;
-    font-size: 12px;
   }
 
   .users-table-wrapper {
     overflow-x: auto;
   }
 
-  .user-row td {
-    padding: 10px 6px;
-    font-size: 12px;
-  }
-
-  .action-edit-btn,
-  .action-delete-btn {
-    padding: 4px 8px;
-    font-size: 10px;
-    margin: 2px;
-  }
-
-  .modal {
-    padding: 24px;
-  }
-
   .settings-content {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .admin-container {
-    padding: 16px;
-  }
-
-  .admin-header h1 {
-    font-size: 20px;
-  }
-
-  .stats-grid {
     grid-template-columns: 1fr;
   }
 
   .action-buttons {
     flex-direction: column;
-  }
-
-  .action-btn {
-    width: 100%;
-  }
-
-  .users-table {
-    font-size: 12px;
-  }
-
-  .users-table th,
-  .user-row td {
-    padding: 8px;
-  }
-
-  .table-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .action-edit-btn,
-  .action-delete-btn {
-    width: 100%;
-    margin: 2px 0;
-  }
-
-  .report-options {
-    flex-direction: column;
-  }
-
-  .back-btn {
-    padding: 8px 12px;
-    font-size: 12px;
-  }
-
-  .admin-top-left h1 {
-    font-size: 18px;
-  }
-
-  .admin-top-left p {
-    display: none;
   }
 }

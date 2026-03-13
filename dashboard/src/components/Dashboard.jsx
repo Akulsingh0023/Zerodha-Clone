@@ -84,7 +84,7 @@ import Summary from "./Summary";
 import WatchList from "./WatchList";
 import Wallet from "./Wallet";
 import { GeneralContextProvider } from "./GeneralContext";
-import AdminDashboard from "./AdminDashboard";
+import AdminPanel from "./AdminPanel";
 import Profile from "./Profile";
 import GlobalToast from "./GlobalToast";
 import Support from "./Support";
@@ -126,7 +126,7 @@ const Dashboard = () => {
               path="/admin/*"
               element={
                 <AdminRoute>
-                  <AdminDashboard />
+                  <AdminPanel />
                 </AdminRoute>
               }
             />
