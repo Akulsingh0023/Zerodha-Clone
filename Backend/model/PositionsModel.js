@@ -12,6 +12,16 @@ const PositionsSchema = new mongoose.Schema({
     enum: ["MIS"],
     default: "MIS",
   },
+  productType: {
+    type: String,
+    enum: ["MIS"],
+    default: "MIS",
+  },
+  status: {
+    type: String,
+    enum: ["OPEN", "CLOSED"],
+    default: "OPEN",
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",

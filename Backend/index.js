@@ -819,6 +819,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import cron from "node-cron";
 
 import  HoldingsModel  from "./model/HoldingsModel.js";
 import  PositionsModel  from "./model/PositionsModel.js";
@@ -841,6 +842,18 @@ const app = express();
 
 /* ================= CONFIG ================= */
 const PORT = process.env.PORT || 4000;
+const IST_TIMEZONE = "Asia/Kolkata";
+const SQUARE_OFF_HOUR = 15;
+const SQUARE_OFF_MINUTE = 20;
+
+const openMisFilter = {
+  $and: [
+    { $or: [{ productType: "MIS" }, { product: "MIS" }] },
+    { $or: [{ status: "OPEN" }, { status: { $exists: false } }] },
+  ],
+};
+
+const withOpenMis = (base = {}) => ({ ...base, ...openMisFilter });
 
 /* ================= MIDDLEWARE ================= */
 
@@ -952,7 +965,7 @@ app.get("/holdings", protect, async (req, res) => {
 /* 🔹 GET POSITIONS */
 app.get("/allPositions", protect, async (req, res) => {
   try {
-    const positions = await PositionsModel.find({ user: req.user._id });
+    const positions = await PositionsModel.find(withOpenMis({ user: req.user._id }));
     res.json(positions);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch positions" });
@@ -962,7 +975,7 @@ app.get("/allPositions", protect, async (req, res) => {
 // MIS positions (preferred)
 app.get("/positions", protect, async (req, res) => {
   try {
-    const positions = await PositionsModel.find({ user: req.user._id });
+    const positions = await PositionsModel.find(withOpenMis({ user: req.user._id }));
     res.json(positions);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch positions" });
@@ -1166,7 +1179,9 @@ app.post("/newOrder", protect, async (req, res) => {
           }
         } else {
           // MIS: Update or create position for user
-          const existingPosition = await PositionsModel.findOne({ name, user: userId }).session(session);
+          const existingPosition = await PositionsModel.findOne(
+            withOpenMis({ name, user: userId })
+          ).session(session);
 
           if (existingPosition) {
             const totalQty = existingPosition.qty + quantityNum;
@@ -1174,11 +1189,25 @@ app.post("/newOrder", protect, async (req, res) => {
             existingPosition.qty = totalQty;
             existingPosition.avg = totalCostExisting / totalQty;
             existingPosition.price = priceNum;
+            existingPosition.status = "OPEN";
+            existingPosition.product = "MIS";
+            existingPosition.productType = "MIS";
             await existingPosition.save({ session });
           } else {
             await PositionsModel.create(
               [
-                { name, qty: quantityNum, avg: priceNum, price: priceNum, net: "+0.00%", day: "+0.00%", product: "MIS", user: userId },
+                {
+                  name,
+                  qty: quantityNum,
+                  avg: priceNum,
+                  price: priceNum,
+                  net: "+0.00%",
+                  day: "+0.00%",
+                  product: "MIS",
+                  productType: "MIS",
+                  status: "OPEN",
+                  user: userId,
+                },
               ],
               { session }
             );
@@ -1216,7 +1245,9 @@ app.post("/newOrder", protect, async (req, res) => {
             await existingHolding.save({ session });
           }
         } else {
-          const existingPosition = await PositionsModel.findOne({ name, user: userId }).session(session);
+          const existingPosition = await PositionsModel.findOne(
+            withOpenMis({ name, user: userId })
+          ).session(session);
           if (!existingPosition || existingPosition.qty < quantityNum) {
             throw { status: 400, message: "Not enough quantity to close position" };
           }
@@ -1227,8 +1258,17 @@ app.post("/newOrder", protect, async (req, res) => {
           // Reduce or delete position
           existingPosition.qty -= quantityNum;
           if (existingPosition.qty <= 0) {
-            await PositionsModel.deleteOne({ _id: existingPosition._id }, { session });
+            existingPosition.qty = 0;
+            existingPosition.price = priceNum;
+            existingPosition.status = "CLOSED";
+            existingPosition.product = "MIS";
+            existingPosition.productType = "MIS";
+            await existingPosition.save({ session });
           } else {
+            existingPosition.price = priceNum;
+            existingPosition.status = "OPEN";
+            existingPosition.product = "MIS";
+            existingPosition.productType = "MIS";
             await existingPosition.save({ session });
           }
         }
@@ -1259,27 +1299,44 @@ app.post("/newOrder", protect, async (req, res) => {
 });
 
 /* ================= AUTO SQUARE-OFF SCHEDULER ================= */
-const SQUARE_OFF_HOUR = 15;
-const SQUARE_OFF_MINUTE = 20;
-let squareOffTriggeredToday = false;
+let lastSquareOffDate = null;
 
-setInterval(() => {
-  const now = new Date();
-  const h = now.getHours();
-  const m = now.getMinutes();
+const getIstParts = () => {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: IST_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
 
-  if (h === SQUARE_OFF_HOUR && m === SQUARE_OFF_MINUTE) {
-    if (!squareOffTriggeredToday) {
-      squareOffTriggeredToday = true;
+  const map = {};
+  for (const part of parts) {
+    if (part.type !== "literal") map[part.type] = part.value;
+  }
+
+  return map;
+};
+
+cron.schedule(
+  "* * * * *",
+  () => {
+    const { year, month, day, hour, minute } = getIstParts();
+    const dateKey = `${year}-${month}-${day}`;
+
+    if (Number(hour) === SQUARE_OFF_HOUR && Number(minute) === SQUARE_OFF_MINUTE) {
+      if (lastSquareOffDate === dateKey) return;
+      lastSquareOffDate = dateKey;
+      console.log("Intraday auto square-off executed at 3:20 PM");
       squareOffAllUsers().catch((err) =>
         console.error("[Scheduler] Square-off error:", err.message)
       );
     }
-  } else {
-    // Reset flag so it can trigger again the next day
-    squareOffTriggeredToday = false;
-  }
-}, 30_000); // Check every 30 seconds
+  },
+  { timezone: IST_TIMEZONE }
+);
 
 /* ================= SERVER ================= */
 app.listen(PORT, () => {

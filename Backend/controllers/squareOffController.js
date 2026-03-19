@@ -1,8 +1,41 @@
 import mongoose from "mongoose";
+import axios from "axios";
 import PositionsModel from "../model/PositionsModel.js";
 import OrdersModel from "../model/OrdersModel.js";
 import WalletTransaction from "../model/WalletTransaction.js";
 import User from "../model/User.js";
+
+const openMisFilter = {
+  $and: [
+    { $or: [{ productType: "MIS" }, { product: "MIS" }] },
+    { $or: [{ status: "OPEN" }, { status: { $exists: false } }] },
+  ],
+};
+
+const fetchLivePrice = async (symbol, fallbackPrice) => {
+  try {
+    const sym = String(symbol || "").trim().toUpperCase();
+    if (!sym) return Number(fallbackPrice) || 0;
+
+    const response = await axios.get(
+      `https://www.nseindia.com/api/quote-equity?symbol=${encodeURIComponent(sym)}`,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          Accept: "application/json",
+          Referer: "https://www.nseindia.com/",
+        },
+        timeout: 8000,
+      }
+    );
+
+    const ltp = response.data?.priceInfo?.lastPrice;
+    if (ltp === undefined || ltp === null) return Number(fallbackPrice) || 0;
+    return Number(ltp);
+  } catch {
+    return Number(fallbackPrice) || 0;
+  }
+};
 
 /**
  * Square off all open MIS positions for a single user.
@@ -10,20 +43,21 @@ import User from "../model/User.js";
  * Returns { success, summary } with P&L details.
  */
 export const squareOffUserPositions = async (userId) => {
-  const positions = await PositionsModel.find({ user: userId });
-  if (positions.length === 0) return { success: true, squared: 0 };
-
   const session = await mongoose.startSession();
   const summary = [];
+  let squared = 0;
 
   try {
     await session.withTransaction(async () => {
+      const positions = await PositionsModel.find({ user: userId, ...openMisFilter }).session(session);
+      if (positions.length === 0) return;
+
       let totalPL = 0;
 
       for (const pos of positions) {
         const qty = Number(pos.qty);
         const buyPrice = Number(pos.avg);
-        const currentPrice = Number(pos.price);
+        const currentPrice = await fetchLivePrice(pos.name, pos.price);
         const pnl = (currentPrice - buyPrice) * qty;
         totalPL += pnl;
 
@@ -60,6 +94,13 @@ export const squareOffUserPositions = async (userId) => {
           );
         }
 
+        pos.status = "CLOSED";
+        pos.qty = 0;
+        pos.price = currentPrice;
+        pos.product = pos.product || "MIS";
+        pos.productType = pos.productType || "MIS";
+        await pos.save({ session });
+
         summary.push({
           name: pos.name,
           qty,
@@ -78,12 +119,11 @@ export const squareOffUserPositions = async (userId) => {
         );
       }
 
-      // Remove all positions for this user
-      await PositionsModel.deleteMany({ user: userId }, { session });
+      squared = positions.length;
     });
 
     session.endSession();
-    return { success: true, squared: positions.length, summary };
+    return { success: true, squared, summary };
   } catch (err) {
     await session.abortTransaction().catch(() => {});
     session.endSession();
@@ -97,7 +137,7 @@ export const squareOffUserPositions = async (userId) => {
  */
 export const squareOffAllUsers = async () => {
   // Find all users who have open positions
-  const userIds = await PositionsModel.distinct("user");
+  const userIds = await PositionsModel.distinct("user", openMisFilter);
   if (userIds.length === 0) {
     console.log("[Auto Square-Off] No open positions to square off.");
     return;
