@@ -19,6 +19,13 @@
 	.inner-actions { flex-direction:column; }
 }
 
+@media (max-width: 640px) {
+  .wallet-page { padding: 14px; }
+  .balance-card { padding: 18px; }
+  .actions { flex-direction: column; width: 100%; }
+  .action-card { width: 100%; }
+}
+
 /* ── Transaction History Section ── */
 .transactions {
   margin-top: 28px;

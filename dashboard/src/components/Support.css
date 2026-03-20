@@ -1,5 +1,6 @@
 /* Support page (matches existing dashboard dark-card style) */
 .support-page {
+  width: 100%;
   max-width: 820px;
 }
 
@@ -114,5 +115,19 @@
 @media (max-width: 720px) {
   .support-row {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 576px) {
+  .support-card {
+    padding: 16px;
+  }
+
+  .support-actions {
+    justify-content: stretch;
+  }
+
+  .support-submit {
+    width: 100%;
   }
 }

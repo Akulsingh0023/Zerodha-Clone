@@ -3,7 +3,7 @@ import React from "react";
 function Brokerage() {
   return (
     <div className="container">
-      <div className="row mt-5 p-5 text-center border-top">
+      <div className="row mt-5 p-5 text-center border-top landing-split brokerage-section">
         <div className="col-8 p-4">
           <a href="" style={{ textDecoration: "none" }}>
             <h3 className="fs-5 mb-4">Brokerage calulator</h3>

@@ -7,7 +7,7 @@ function Hero() {
         <h4>Support Portal</h4>
         <a href="" className="me-5">Track Tickets</a>
       </div>
-      <div className="row p-3 m-3">
+      <div className="row p-3 m-3 support-hero-row landing-split">
         <div className="col-6 p-5">
           <h1 className="fs-3 mb-4">
             Search for an answer or browse help topics to create a ticket

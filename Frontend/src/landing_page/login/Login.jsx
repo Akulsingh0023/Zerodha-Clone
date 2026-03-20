@@ -41,11 +41,11 @@ export default function Login() {
   };
 
   return (
-    <div className="container mt-5">
+    <div className="container mt-5 auth-page">
       <Toaster />
       <div className="row justify-content-center">
         <div className="col-md-6 col-lg-5">
-          <div className="card shadow-lg p-5 position-relative">
+          <div className="card shadow-lg p-5 position-relative auth-card">
 
             {/* Close button */}
             <button

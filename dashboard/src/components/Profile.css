@@ -161,3 +161,15 @@
     transform: scale(1);
   }
 }
+
+@media (max-width: 576px) {
+  .profile-card {
+    width: 92vw;
+    padding: 28px 22px;
+  }
+
+  .profile-card h2 {
+    font-size: 18px;
+    margin-bottom: 22px;
+  }
+}

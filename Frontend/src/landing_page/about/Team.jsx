@@ -7,7 +7,7 @@ function Team() {
         <h1 className="text-center">People</h1>
       </div>
       <div
-        className="row p-3  text-muted"
+        className="row p-3  text-muted landing-split team-section"
         style={{ lineHeight: "1.8", fontSize: "1.2em" }}
       >
         <div className="col-6 p-3 text-center">

@@ -72,7 +72,7 @@
 }
 
 /* ── Responsive ── */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .ord-table th:nth-child(7),
   .ord-table td:nth-child(7) {
     display: none;

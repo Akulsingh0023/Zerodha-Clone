@@ -107,7 +107,7 @@
 }
 
 /* ── Responsive ── */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .positions-table th:nth-child(6),
   .positions-table td:nth-child(6) {
     display: none;

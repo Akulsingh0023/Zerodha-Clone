@@ -3,13 +3,13 @@ import React from "react";
 function Hero() {
   return (
     <div className="container">
-      <div className="row p-5 mt-5 border-bottom text-center">
+      <div className="row p-5 mt-5 border-bottom text-center pricing-hero">
         <h1>Pricing</h1>
         <h3 className="text-muted mt-3 fs-5">
           Free equity investments and flat ₹20 traday and F&O trades
         </h3>
       </div>
-      <div className="row p-5 mt-5">
+      <div className="row p-5 mt-5 pricing-cards">
         <div className="col-4 p-4">
           <img src="media/images/pricingEquity.svg" alt="" />
           <h1 className="fs-3">Free equity delivery</h1>

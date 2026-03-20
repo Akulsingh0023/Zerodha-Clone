@@ -29,7 +29,7 @@ const mockPrice = (symbol) => {
 };
 
 /* ================= MAIN WATCHLIST ================= */
-const WatchList = () => {
+const WatchList = ({ onClose }) => {
   const [watchlist, setWatchlist] = useState([]);
   const [priceMap, setPriceMap] = useState({}); // { SYMBOL: { ltp, change, changePercent } }
   const intervalRef = useRef(null);
@@ -198,6 +198,14 @@ const WatchList = () => {
 
   return (
     <div className="watchlist-container">
+      {typeof onClose === "function" && (
+        <div className="wl-mobile-header">
+          <h4>Watchlist</h4>
+          <button type="button" className="wl-close" onClick={onClose}>
+            ×
+          </button>
+        </div>
+      )}
       {/* Search bar */}
       <SearchBar
         watchlist={watchlist}

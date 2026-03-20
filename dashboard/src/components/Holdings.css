@@ -78,7 +78,7 @@
 }
 
 /* ── Responsive ── */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .holdings-table th:nth-child(5),
   .holdings-table td:nth-child(5),
   .holdings-table th:nth-child(7),

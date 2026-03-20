@@ -317,3 +317,37 @@
 .btn-grey:active {
   transform: scale(0.98);
 }
+
+@media (max-width: 576px) {
+  .container {
+    width: 92vw;
+  }
+
+  .regular-order {
+    padding: 18px;
+  }
+
+  .inputs {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .buttons {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .buttons span {
+    text-align: center;
+  }
+
+  .buttons div {
+    width: 100%;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+}

@@ -34,6 +34,7 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   const [adminInfo, setAdminInfo] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const fetchAdmin = async () => {
@@ -54,12 +55,17 @@ const AdminPanel = () => {
 
   return (
     <div className="admin-panel">
-      <div className={`admin-sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+      <div className={`admin-sidebar ${sidebarCollapsed ? "collapsed" : ""} ${sidebarOpen ? "open" : ""}`}>
         <div className="admin-sidebar-header">
           <h2>{sidebarCollapsed ? "AP" : "Admin Panel"}</h2>
-          <button className="sidebar-toggle" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
-            {sidebarCollapsed ? "→" : "←"}
-          </button>
+          <div className="admin-sidebar-actions">
+            <button className="sidebar-toggle" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
+              {sidebarCollapsed ? "→" : "←"}
+            </button>
+            <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>
+              ×
+            </button>
+          </div>
         </div>
 
         <nav className="admin-sidebar-nav">
@@ -68,6 +74,7 @@ const AdminPanel = () => {
               key={item.path}
               to={item.path}
               className={`admin-sidebar-item ${isActive(item.path) ? "active" : ""}`}
+              onClick={() => setSidebarOpen(false)}
             >
               <span className="sidebar-icon">{item.icon}</span>
               {!sidebarCollapsed && <span className="sidebar-label">{item.label}</span>}
@@ -76,7 +83,13 @@ const AdminPanel = () => {
         </nav>
 
         <div className="admin-sidebar-footer">
-          <button className="back-to-dashboard-btn" onClick={() => navigate("/")}>
+          <button
+            className="back-to-dashboard-btn"
+            onClick={() => {
+              setSidebarOpen(false);
+              navigate("/");
+            }}
+          >
             {sidebarCollapsed ? "←" : "← Back to Dashboard"}
           </button>
           {!sidebarCollapsed && adminInfo && (
@@ -93,7 +106,23 @@ const AdminPanel = () => {
         </div>
       </div>
 
+      <div
+        className={`admin-sidebar-overlay ${sidebarOpen ? "show" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden
+      />
+
       <div className="admin-main-content">
+        <div className="admin-mobile-bar">
+          <button
+            type="button"
+            className="admin-mobile-toggle"
+            onClick={() => setSidebarOpen(true)}
+          >
+            ☰
+          </button>
+          <span>Admin Panel</span>
+        </div>
         <Routes>
           <Route index element={<AdminDashboardPage />} />
           <Route path="users" element={<AdminUsersPage />} />

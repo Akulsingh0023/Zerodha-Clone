@@ -3,7 +3,7 @@ import React from "react";
 function Education() {
   return (
     <div className="container">
-      <div className="row">
+      <div className="row landing-split education-section">
         <div className="col">
           <img
             src="media/images/education.svg"
