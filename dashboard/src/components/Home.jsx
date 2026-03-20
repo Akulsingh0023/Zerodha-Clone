@@ -2,16 +2,20 @@ import React, { useState } from "react";
 
 import Dashboard from "./Dashboard";
 import TopBar from "./TopBar";
-import MobileSidebar from "./MobileSidebar";
 
 const Home = () => {
-  const [navOpen, setNavOpen] = useState(false);
+  const [watchlistOpen, setWatchlistOpen] = useState(false);
 
   return (
     <>
-      <TopBar onToggleNav={() => setNavOpen((prev) => !prev)} />
-      <MobileSidebar open={navOpen} onClose={() => setNavOpen(false)} />
-      <Dashboard />
+      <TopBar
+        onToggleWatchlist={() => setWatchlistOpen((prev) => !prev)}
+        isWatchlistOpen={watchlistOpen}
+      />
+      <Dashboard
+        watchlistOpen={watchlistOpen}
+        onCloseWatchlist={() => setWatchlistOpen(false)}
+      />
     </>
   );
 };
