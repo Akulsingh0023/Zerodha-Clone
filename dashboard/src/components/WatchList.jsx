@@ -6,7 +6,6 @@ import { DoughnutChart } from "./DoughnutChart";
 import BASE_URL from "../config";
 import "./WatchList.css";
 
-const STOCK_API = "https://military-jobye-haiqstudios-14f59639.koyeb.app/stock";
 const MAX_WATCHLIST = 50;
 const PRICE_REFRESH_MS = 7000; // 7 seconds
 
@@ -63,7 +62,7 @@ const WatchList = () => {
       watchlist.map(async (stock) => {
         try {
           const res = await axios.get(
-            `${STOCK_API}?symbol=${encodeURIComponent(stock.symbol)}`,
+            `${BASE_URL}/api/live-price/${encodeURIComponent(stock.symbol)}`,
             { timeout: 8000 }
           );
           const d = res.data;
