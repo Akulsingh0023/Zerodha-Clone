@@ -90,7 +90,7 @@ import GlobalToast from "./GlobalToast";
 import Support from "./Support";
 import UserRoute from "./UserRoute";
 
-const Dashboard = ({ watchlistOpen, onCloseWatchlist }) => {
+const Dashboard = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname === "/admin" || location.pathname.startsWith("/admin/");
 
@@ -99,18 +99,9 @@ const Dashboard = ({ watchlistOpen, onCloseWatchlist }) => {
       <div className="dashboard-container">
         <GlobalToast />
         {!isAdminRoute && (
-          <>
-            <div className={`watchlist-shell ${watchlistOpen ? "open" : ""}`}>
-              <GeneralContextProvider>
-                <WatchList onClose={onCloseWatchlist} />
-              </GeneralContextProvider>
-            </div>
-            <div
-              className={`watchlist-overlay ${watchlistOpen ? "show" : ""}`}
-              onClick={onCloseWatchlist}
-              aria-hidden
-            />
-          </>
+          <GeneralContextProvider>
+            <WatchList />
+          </GeneralContextProvider>
         )}
 
         <div className={`content ${isAdminRoute ? "admin-full" : ""}`}>
