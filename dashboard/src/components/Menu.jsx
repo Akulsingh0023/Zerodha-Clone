@@ -248,74 +248,86 @@ const Menu = () => {
   };
 
   return (
-    <div className="menu-container">
-      <img src="logo.png" alt="logo" style={{ width: "50px" }} />
+    <div className="admin-sidebar">
+      <div className="admin-sidebar-header">
+        <h2>Dashboard</h2>
+        <div className="admin-sidebar-actions">
+          <button className="sidebar-toggle" type="button">←</button>
+          <button className="sidebar-close" type="button">×</button>
+        </div>
+      </div>
 
-      <div className="menus">
-        <ul>
-          <li>
-            <Link to="/" className="link">
-              <p className={location.pathname === "/" ? activeMenuClass : menuClass}>
-                Dashboard
-              </p>
-            </Link>
-          </li>
+      <nav className="admin-sidebar-nav">
+        <Link
+          to="/"
+          className={`admin-sidebar-item ${location.pathname === "/" ? "active" : ""}`}
+        >
+          <span className="sidebar-icon">🏠</span>
+          <span className="sidebar-label">Dashboard</span>
+        </Link>
 
-          <li>
-            <Link to="/orders" className="link">
-              <p className={location.pathname === "/orders" ? activeMenuClass : menuClass}>
-                Orders
-              </p>
-            </Link>
-          </li>
+        <Link
+          to="/"
+          className={`admin-sidebar-item ${location.pathname === "/watchlist" ? "active" : ""}`}
+        >
+          <span className="sidebar-icon">👁️</span>
+          <span className="sidebar-label">Watchlist</span>
+        </Link>
 
-          <li>
-            <Link to="/holdings" className="link">
-              <p className={location.pathname === "/holdings" ? activeMenuClass : menuClass}>
-                Holdings
-              </p>
-            </Link>
-          </li>
+        <Link
+          to="/orders"
+          className={`admin-sidebar-item ${location.pathname === "/orders" ? "active" : ""}`}
+        >
+          <span className="sidebar-icon">🧾</span>
+          <span className="sidebar-label">Orders</span>
+        </Link>
 
-          <li>
-            <Link to="/positions" className="link">
-              <p className={location.pathname === "/positions" ? activeMenuClass : menuClass}>
-                Positions
-              </p>
-            </Link>
-          </li>
+        <Link
+          to="/holdings"
+          className={`admin-sidebar-item ${location.pathname === "/holdings" ? "active" : ""}`}
+        >
+          <span className="sidebar-icon">💼</span>
+          <span className="sidebar-label">Holdings</span>
+        </Link>
 
-          {/* ================= ADMIN PANEL TAB ================= */}
-          {user?.role === "admin" && (
-            <li>
-              <Link to="/admin" className="link">
-                <p className={location.pathname === "/admin" ? activeMenuClass : menuClass}>
-                  Admin Panel
-                </p>
-              </Link>
-            </li>
-          )}
-        </ul>
+        <Link
+          to="/positions"
+          className={`admin-sidebar-item ${location.pathname === "/positions" ? "active" : ""}`}
+        >
+          <span className="sidebar-icon">📊</span>
+          <span className="sidebar-label">Positions</span>
+        </Link>
 
-        {/* ❌ <hr /> REMOVED */}
-        {/* underline yahin se aa rahi thi */}
-        
-        {/* ================= PROFILE ================= */}
+        <Link
+          to="/wallet"
+          className={`admin-sidebar-item ${location.pathname === "/wallet" ? "active" : ""}`}
+        >
+          <span className="sidebar-icon">💳</span>
+          <span className="sidebar-label">Wallet</span>
+        </Link>
+
+        <Link
+          to="/profile"
+          className={`admin-sidebar-item ${location.pathname === "/profile" ? "active" : ""}`}
+        >
+          <span className="sidebar-icon">👤</span>
+          <span className="sidebar-label">My Profile</span>
+        </Link>
+      </nav>
+
+      <div className="admin-sidebar-footer">
         <div
-          className="profile"
+          className="admin-user-info"
           onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
           ref={dropdownRef}
-          style={{ cursor: "pointer", position: "relative" }}
         >
-          <div className="avatar">
-            {user?.name
-              ? user.name.substring(0, 2).toUpperCase()
-              : "US"}
+          <div className="admin-avatar">
+            {user?.name ? user.name.substring(0, 2).toUpperCase() : "US"}
           </div>
-
-          <p className="username">
-            {user?.name || "Loading..."}
-          </p>
+          <div>
+            <p className="admin-name">{user?.name || "Loading..."}</p>
+            <p className="admin-role">Account</p>
+          </div>
 
           {isProfileDropdownOpen && (
             <div className="dropdown">
@@ -355,39 +367,6 @@ const Menu = () => {
           )}
         </div>
       </div>
-
-      {/* ================= STYLE ================= */}
-      <style>{`
-        .link {
-          text-decoration: none;
-        }
-
-        .dropdown {
-          position: absolute;
-          top: 50px;
-          right: 0;
-          width: 200px;
-          background: black;
-          border-radius: 6px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-          overflow: hidden;
-          z-index: 1000;
-        }
-
-        .dropdown-item {
-          display: block;
-          padding: 12px;
-          text-decoration: none;
-          color: white;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .dropdown-item:hover {
-          background: white;
-          color: black;
-        }
-      `}</style>
     </div>
   );
 };
