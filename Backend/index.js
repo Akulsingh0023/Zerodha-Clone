@@ -1021,51 +1021,10 @@ app.get("/orders", protect, async (req, res) => {
 /* =====================================================
    �🔥 LIVE PRICE API (NSE)
 ===================================================== */
-const LIVE_PRICE_CACHE_TTL_MS = 10_000;
-const livePriceCache = new Map();
-
-const normalizeSymbol = (symbol) =>
-  (symbol || "").toString().trim().toUpperCase();
-
-const toNumber = (value) => {
-  const cleaned = String(value ?? "").replace(/,/g, "");
-  const num = Number(cleaned);
-  return Number.isFinite(num) ? num : 0;
-};
-
-const readLivePriceCache = (symbol) => {
-  const entry = livePriceCache.get(symbol);
-  if (!entry) return null;
-  if (Date.now() - entry.timestamp > LIVE_PRICE_CACHE_TTL_MS) {
-    livePriceCache.delete(symbol);
-    return null;
-  }
-  return entry.data;
-};
-
-const writeLivePriceCache = (symbol, data) => {
-  livePriceCache.set(symbol, { timestamp: Date.now(), data });
-};
-
 app.get("/api/live-price/:symbol", async (req, res) => {
-  const symbol = normalizeSymbol(req.params.symbol);
-
-  if (!symbol) {
-    return res.status(200).json({
-      success: false,
-      symbol: "",
-      ltp: 0,
-      change: 0,
-      changePercent: 0,
-    });
-  }
-
-  const cached = readLivePriceCache(symbol);
-  if (cached) {
-    return res.status(200).json({ success: true, symbol, ...cached });
-  }
-
   try {
+    const symbol = req.params.symbol.toUpperCase();
+
     const response = await axios.get(
       `https://www.nseindia.com/api/quote-equity?symbol=${symbol}`,
       {
@@ -1074,29 +1033,19 @@ app.get("/api/live-price/:symbol", async (req, res) => {
           Accept: "application/json",
           Referer: "https://www.nseindia.com/",
         },
-        timeout: 5000,
       }
     );
 
-    const priceInfo = response?.data?.priceInfo;
-    if (!priceInfo) throw new Error("Missing priceInfo");
+    const priceInfo = response.data.priceInfo;
 
-    const data = {
-      ltp: toNumber(priceInfo.lastPrice),
-      change: toNumber(priceInfo.change),
-      changePercent: toNumber(priceInfo.pChange),
-    };
-
-    writeLivePriceCache(symbol, data);
-    return res.status(200).json({ success: true, symbol, ...data });
-  } catch (err) {
-    return res.status(200).json({
-      success: false,
+    res.json({
       symbol,
-      ltp: 0,
-      change: 0,
-      changePercent: 0,
+      ltp: priceInfo.lastPrice,
+      change: priceInfo.change,
+      changePercent: priceInfo.pChange,
     });
+  } catch (err) {
+    res.status(500).json({ error: "Price fetch failed" });
   }
 });
 
