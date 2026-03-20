@@ -1,6 +1,8 @@
 import axios from "axios";
+import API from "./config";
+import { showGlobalToast } from "./utils/toast";
 
-axios.defaults.baseURL = "http://localhost:4000";
+axios.defaults.baseURL = API;
 axios.defaults.withCredentials = true;
 
 axios.interceptors.request.use((config) => {
@@ -10,3 +12,13 @@ axios.interceptors.request.use((config) => {
   }
   return config;
 });
+
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (!error.response) {
+      showGlobalToast("Network error. Please try again.");
+    }
+    return Promise.reject(error);
+  }
+);

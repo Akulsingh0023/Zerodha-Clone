@@ -1,4 +1,6 @@
 import axios from "axios";
+import API from "../config";
+import { showGlobalToast } from "./toast";
 
 /**
  * Auto Square-Off Service
@@ -15,7 +17,7 @@ import axios from "axios";
 const SQUARE_OFF_HOUR = 15;
 const SQUARE_OFF_MINUTE = 20;
 const CHECK_INTERVAL_MS = 30_000; // 30 seconds
-const BASE_URL = "http://localhost:4000";
+const BASE_URL = API;
 
 let triggeredToday = false;
 
@@ -71,11 +73,11 @@ const runSquareOff = async () => {
     // Dispatch event so all listening components (Positions, Orders, Wallet) re-render
     window.dispatchEvent(new Event("walletUpdated"));
 
-    console.log(
-      `[Auto Square-Off] ${data.squared} position(s) squared off at 15:20.`
-    );
   } catch (err) {
-    console.error("[Auto Square-Off] Failed:", err.message);
+    showGlobalToast(
+      err.response?.data?.message ||
+        "Auto square-off failed. Please try again later."
+    );
   }
 };
 

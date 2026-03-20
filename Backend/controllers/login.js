@@ -27,6 +27,8 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 
+const isProd = process.env.NODE_ENV === "production";
+
 /* =========================
    LOGIN (JWT + COOKIE)
 ========================= */
@@ -67,8 +69,8 @@ export const login = async (req, res) => {
     // 🍪 Set Cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // true in production (HTTPS)
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -112,8 +114,8 @@ export const getProfile = async (req, res) => {
 export const logout = (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    sameSite: "lax",
-    secure: false, // agar https nahi use kar rahe
+    sameSite: isProd ? "none" : "lax",
+    secure: isProd,
     path: "/"
   });
 
@@ -153,7 +155,9 @@ export const forgotPassword = async (req, res) => {
       },
     });
 
-    const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+    const frontendUrl =
+      process.env.FRONTEND_URL || "https://zerodha-clone-gamma-rose.vercel.app";
+    const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import axios from "axios";
+import API from "../config";
 
 const UserRoute = ({ children }) => {
   const [loading, setLoading] = useState(true);
@@ -8,7 +9,7 @@ const UserRoute = ({ children }) => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:4000/api/me", {
+      .get(`${API}/api/me`, {
         withCredentials: true,
       })
       .then((res) => {

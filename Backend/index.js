@@ -839,6 +839,7 @@ import { squareOffAllUsers } from "./controllers/squareOffController.js";
 dotenv.config();
 
 const app = express();
+app.set("trust proxy", 1);
 
 /* ================= CONFIG ================= */
 const PORT = process.env.PORT || 4000;
@@ -857,10 +858,24 @@ const withOpenMis = (base = {}) => ({ ...base, ...openMisFilter });
 
 /* ================= MIDDLEWARE ================= */
 
-// CORS for multiple frontend ports
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.DASHBOARD_URL,
+  "https://zerodha-clone-gamma-rose.vercel.app",
+  "https://zerodha-clone-s4ag.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:5174",
+].filter(Boolean);
+
+// CORS for frontend + dashboard
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );

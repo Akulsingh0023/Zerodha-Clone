@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
+import { API } from "../../config";
 
 export default function Signup() {
   const [form, setForm] = useState({ fullname: "", email: "", password: "" });
@@ -14,10 +15,10 @@ export default function Signup() {
     try {
       
     const res = await axios.post(
-  "http://localhost:4000/api/auth/signup",
-  form,
-  { withCredentials: true }
-);
+      `${API}/api/auth/signup`,
+      form,
+      { withCredentials: true }
+    );
 
 
       toast.success(res.data.message);

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../../config";
 import { Line, Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -16,7 +17,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 
-const BASE_URL = "http://localhost:4000";
+const BASE_URL = API;
 
 const AdminDashboardPage = () => {
   const [stats, setStats] = useState(null);

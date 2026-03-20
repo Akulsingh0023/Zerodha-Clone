@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./AdminDashboard.css";
+import API from "../config";
 
-const BASE_URL = "http://localhost:4000";
+const BASE_URL = API;
 
 const AdminDashboard = () => {
   const navigate = useNavigate();

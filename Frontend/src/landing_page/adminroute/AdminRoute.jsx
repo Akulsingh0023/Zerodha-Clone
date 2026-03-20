@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import axios from "axios";
+import { API } from "../../config";
 
 const AdminRoute = ({ children }) => {
   const [loading, setLoading] = useState(true);
@@ -10,7 +11,7 @@ const AdminRoute = ({ children }) => {
     const checkAdmin = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:4000/api/profile",
+          `${API}/api/profile`,
           { withCredentials: true }
         );
 

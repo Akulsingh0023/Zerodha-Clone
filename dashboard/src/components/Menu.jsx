@@ -192,8 +192,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
+import API, { SITE_URL } from "../config";
 
-const BASE_URL = "http://localhost:4000";
+const BASE_URL = API;
 
 const Menu = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -216,7 +217,7 @@ const Menu = () => {
         setUser(res.data);
       } catch (error) {
         if (error.response?.status === 401) {
-          window.location.href = "http://localhost:5173/login";
+          window.location.href = `${SITE_URL}/login`;
         }
       }
     };
@@ -243,7 +244,7 @@ const Menu = () => {
   /* ================= LOGOUT ================= */
   const handleLogout = () => {
     localStorage.removeItem("token");
-    window.location.href = "http://localhost:5173";
+    window.location.href = SITE_URL;
   };
 
   return (

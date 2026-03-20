@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Profile.css";
+import API from "../config";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:4000/api/me",
+          `${API}/api/me`,
           { withCredentials: true }
         );
 
@@ -56,7 +57,7 @@ const Profile = () => {
 
     try {
       await axios.put(
-        "http://localhost:4000/api/me",
+        `${API}/api/me`,
         { name: formData.name },
         { withCredentials: true }
       );

@@ -12,8 +12,9 @@ import AdminTransactionsPage from "./admin/AdminTransactionsPage";
 import AdminReportsPage from "./admin/AdminReportsPage";
 import AdminSettingsPage from "./admin/AdminSettingsPage";
 import "./AdminPanel.css";
+import API from "../config";
 
-const BASE_URL = "http://localhost:4000";
+const BASE_URL = API;
 
 const sidebarItems = [
   { path: "/admin", label: "Dashboard", icon: "📊" },

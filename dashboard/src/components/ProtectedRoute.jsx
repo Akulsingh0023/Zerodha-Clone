@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
 import axios from "axios";
+import API, { SITE_URL } from "../config";
 
 const ProtectedRoute = ({ children }) => {
   const [loading, setLoading] = useState(true);
@@ -9,7 +9,7 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await axios.get("http://localhost:4000/api/auth/profile", {
+        await axios.get(`${API}/api/auth/profile`, {
           withCredentials: true,
         });
 
@@ -27,7 +27,7 @@ const ProtectedRoute = ({ children }) => {
   if (loading) return <div>Loading...</div>;
 
   if (!isAuthenticated) {
-    window.location.href = "http://localhost:5173";
+    window.location.href = SITE_URL;
     return null;
   }
 

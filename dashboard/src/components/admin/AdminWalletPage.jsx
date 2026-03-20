@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../../config";
 
-const BASE_URL = "http://localhost:4000";
+const BASE_URL = API;
 
 const AdminWalletPage = () => {
   const [transactions, setTransactions] = useState([]);

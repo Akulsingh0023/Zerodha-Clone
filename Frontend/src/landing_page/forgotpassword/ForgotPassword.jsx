@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
+import { API } from "../../config";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -14,9 +15,9 @@ export default function ForgotPassword() {
 
     try {
       const res = await axios.post(
-  "http://localhost:4000/api/auth/forgot-password",
-  { email }
-);
+        `${API}/api/auth/forgot-password`,
+        { email }
+      );
 
       toast.success(
         res.data.message ||

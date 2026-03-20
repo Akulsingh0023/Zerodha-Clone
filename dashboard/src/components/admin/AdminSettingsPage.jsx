@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API, { SITE_URL } from "../../config";
 
-const BASE_URL = "http://localhost:4000";
+const BASE_URL = API;
 
 const AdminSettingsPage = () => {
   const [adminInfo, setAdminInfo] = useState(null);
@@ -69,7 +70,7 @@ const AdminSettingsPage = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    window.location.href = "http://localhost:5173";
+    window.location.href = SITE_URL;
   };
 
   if (loading) return <div className="admin-page-loading">Loading settings...</div>;
