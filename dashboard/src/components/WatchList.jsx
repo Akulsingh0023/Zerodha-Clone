@@ -66,6 +66,7 @@ const WatchList = () => {
             { timeout: 8000 }
           );
           const d = res.data;
+          if (d?.success === false) throw new Error("fallback");
           const ltp = d.ltp ?? d.lastPrice ?? d.price ?? d.LTP ?? null;
           if (ltp === null) throw new Error("no ltp");
           return {

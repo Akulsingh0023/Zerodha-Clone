@@ -75,6 +75,7 @@ const Holdings = () => {
             { timeout: 6000 }
           );
           const d = res.data;
+          if (d?.success === false) throw new Error("fallback");
           const ltp = d.ltp ?? d.lastPrice ?? d.price ?? null;
           if (ltp === null) throw new Error("no ltp");
           return {
