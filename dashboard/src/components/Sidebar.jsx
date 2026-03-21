@@ -1,20 +1,17 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const Sidebar = () => {
   const location = useLocation();
   const profileRef = useRef(null);
 
-  const menuItems = useMemo(
-    () => [
-      { label: "Dashboard", to: "/" },
-      { label: "Watchlist", to: "/watchlist" },
-      { label: "Orders", to: "/orders" },
-      { label: "Holdings", to: "/holdings" },
-      { label: "Positions", to: "/positions" },
-    ],
-    []
-  );
+  const menuItems = [
+    { label: "Dashboard", to: "/" },
+    { label: "Watchlist", to: "/watchlist" },
+    { label: "Orders", to: "/orders" },
+    { label: "Holdings", to: "/holdings" },
+    { label: "Positions", to: "/positions" },
+  ];
 
   const [activePath, setActivePath] = useState(location.pathname);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -39,8 +36,8 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="sidebar">
-      <nav className="sidebar-menu" aria-label="Sidebar">
+    <aside className="sidebar" aria-label="Sidebar">
+      <div className="sidebar-menu">
         <ul className="sidebar-menu-list">
           {menuItems.map((item) => (
             <li key={item.label} className="sidebar-menu-item">
@@ -55,31 +52,46 @@ const Sidebar = () => {
             </li>
           ))}
         </ul>
-      </nav>
+      </div>
 
-      <div className="sidebar-profile" ref={profileRef}>
+      <div className="sidebar-bottom" ref={profileRef}>
         <button
           type="button"
-          className="sidebar-profile-trigger"
+          className="sidebar-profile"
           onClick={() => setIsProfileOpen((prev) => !prev)}
           aria-expanded={isProfileOpen}
         >
           <div className="sidebar-avatar" aria-hidden="true" />
-          <div className="sidebar-username">Username</div>
+          <span className="sidebar-username">Username</span>
         </button>
 
         <div
-          className={`sidebar-profile-dropdown ${isProfileOpen ? "open" : ""}`}
+          className={`sidebar-dropdown ${isProfileOpen ? "open" : ""}`}
           hidden={!isProfileOpen}
           role="menu"
         >
-          <Link className="sidebar-dropdown-item" to="/profile" role="menuitem" onClick={() => setIsProfileOpen(false)}>
+          <Link
+            className="sidebar-dropdown-item"
+            to="/profile"
+            role="menuitem"
+            onClick={() => setIsProfileOpen(false)}
+          >
             My Profile
           </Link>
-          <Link className="sidebar-dropdown-item" to="/wallet" role="menuitem" onClick={() => setIsProfileOpen(false)}>
+          <Link
+            className="sidebar-dropdown-item"
+            to="/wallet"
+            role="menuitem"
+            onClick={() => setIsProfileOpen(false)}
+          >
             Wallet
           </Link>
-          <button type="button" className="sidebar-dropdown-item" role="menuitem" onClick={() => setIsProfileOpen(false)}>
+          <button
+            type="button"
+            className="sidebar-dropdown-item"
+            role="menuitem"
+            onClick={() => setIsProfileOpen(false)}
+          >
             Logout
           </button>
         </div>
