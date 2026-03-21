@@ -96,7 +96,7 @@ const Dashboard = ({ watchlistOpen, onCloseWatchlist }) => {
 
   return (
     <ProtectedRoute>
-      <div className={`dashboard-container ${watchlistOpen ? "watchlist-open" : ""}`}>
+      <div className="dashboard-container">
         <GlobalToast />
         {!isAdminRoute && (
           <>

@@ -9,9 +9,8 @@ const Home = () => {
   return (
     <>
       <TopBar
-        onOpenWatchlist={() => setWatchlistOpen(true)}
-        onCloseWatchlist={() => setWatchlistOpen(false)}
-        watchlistOpen={watchlistOpen}
+        onToggleWatchlist={() => setWatchlistOpen((prev) => !prev)}
+        isWatchlistOpen={watchlistOpen}
       />
       <Dashboard
         watchlistOpen={watchlistOpen}
