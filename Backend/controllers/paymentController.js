@@ -28,7 +28,9 @@ export const createPaymentOrder = async (req, res) => {
     }
 
     const amountPaise = Math.round(amount * 100);
-    const receipt = `wallet_${req.user._id}_${Date.now()}`;
+    const userSuffix = String(req.user._id).slice(-8);
+    const timeSuffix = String(Date.now()).slice(-10);
+    const receipt = `w_${userSuffix}_${timeSuffix}`;
 
     const razorpay = getRazorpayClient();
     const order = await razorpay.orders.create({
