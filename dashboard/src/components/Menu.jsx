@@ -198,6 +198,7 @@ const BASE_URL = API;
 
 const Menu = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
 
   const dropdownRef = useRef();
@@ -241,20 +242,40 @@ const Menu = () => {
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+
   /* ================= LOGOUT ================= */
   const handleLogout = () => {
     localStorage.removeItem("token");
     window.location.href = SITE_URL;
   };
 
+  const handleNavClick = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
     <div className="menu-container">
       <img src="logo.png" alt="logo" style={{ width: "50px" }} />
 
-      <div className="menus">
+      <button
+        type="button"
+        className="menu-toggle"
+        aria-label="Toggle navigation"
+        aria-expanded={isMenuOpen}
+        onClick={() => setIsMenuOpen((prev) => !prev)}
+      >
+        <span className="menu-toggle-line" />
+        <span className="menu-toggle-line" />
+        <span className="menu-toggle-line" />
+      </button>
+
+      <div className={`menus ${isMenuOpen ? "open" : ""}`}>
         <ul>
           <li>
-            <Link to="/" className="link">
+            <Link to="/" className="link" onClick={handleNavClick}>
               <p className={location.pathname === "/" ? activeMenuClass : menuClass}>
                 Dashboard
               </p>
@@ -262,7 +283,7 @@ const Menu = () => {
           </li>
 
           <li>
-            <Link to="/orders" className="link">
+            <Link to="/orders" className="link" onClick={handleNavClick}>
               <p className={location.pathname === "/orders" ? activeMenuClass : menuClass}>
                 Orders
               </p>
@@ -270,7 +291,7 @@ const Menu = () => {
           </li>
 
           <li>
-            <Link to="/holdings" className="link">
+            <Link to="/holdings" className="link" onClick={handleNavClick}>
               <p className={location.pathname === "/holdings" ? activeMenuClass : menuClass}>
                 Holdings
               </p>
@@ -278,7 +299,7 @@ const Menu = () => {
           </li>
 
           <li>
-            <Link to="/positions" className="link">
+            <Link to="/positions" className="link" onClick={handleNavClick}>
               <p className={location.pathname === "/positions" ? activeMenuClass : menuClass}>
                 Positions
               </p>
@@ -288,7 +309,7 @@ const Menu = () => {
           {/* ================= ADMIN PANEL TAB ================= */}
           {user?.role === "admin" && (
             <li>
-              <Link to="/admin" className="link">
+              <Link to="/admin" className="link" onClick={handleNavClick}>
                 <p className={location.pathname === "/admin" ? activeMenuClass : menuClass}>
                   Admin Panel
                 </p>
@@ -355,6 +376,14 @@ const Menu = () => {
           )}
         </div>
       </div>
+
+      {isMenuOpen && (
+        <div
+          className="menu-overlay"
+          onClick={() => setIsMenuOpen(false)}
+          aria-hidden
+        />
+      )}
 
       {/* ================= STYLE ================= */}
       <style>{`
