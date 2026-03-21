@@ -273,16 +273,25 @@ const Menu = () => {
       </button>
 
       <div className={`menus ${isMenuOpen ? "open" : ""}`}>
-        <ul>
-          <li>
+        <ul className="menu-list">
+          <li className="menu-item">
             <Link to="/" className="link" onClick={handleNavClick}>
               <p className={location.pathname === "/" ? activeMenuClass : menuClass}>
                 Dashboard
               </p>
             </Link>
+            <ul className="submenu">
+              <li>
+                <Link to="/" className="link" onClick={handleNavClick}>
+                  <p className={location.pathname === "/" ? activeMenuClass : menuClass}>
+                    Watchlist
+                  </p>
+                </Link>
+              </li>
+            </ul>
           </li>
 
-          <li>
+          <li className="menu-item">
             <Link to="/orders" className="link" onClick={handleNavClick}>
               <p className={location.pathname === "/orders" ? activeMenuClass : menuClass}>
                 Orders
@@ -290,7 +299,7 @@ const Menu = () => {
             </Link>
           </li>
 
-          <li>
+          <li className="menu-item">
             <Link to="/holdings" className="link" onClick={handleNavClick}>
               <p className={location.pathname === "/holdings" ? activeMenuClass : menuClass}>
                 Holdings
@@ -298,7 +307,7 @@ const Menu = () => {
             </Link>
           </li>
 
-          <li>
+          <li className="menu-item">
             <Link to="/positions" className="link" onClick={handleNavClick}>
               <p className={location.pathname === "/positions" ? activeMenuClass : menuClass}>
                 Positions
@@ -308,7 +317,7 @@ const Menu = () => {
 
           {/* ================= ADMIN PANEL TAB ================= */}
           {user?.role === "admin" && (
-            <li>
+            <li className="menu-item">
               <Link to="/admin" className="link" onClick={handleNavClick}>
                 <p className={location.pathname === "/admin" ? activeMenuClass : menuClass}>
                   Admin Panel
@@ -318,12 +327,11 @@ const Menu = () => {
           )}
         </ul>
 
-        {/* ❌ <hr /> REMOVED */}
-        {/* underline yahin se aa rahi thi */}
-        
+        <div className="menu-spacer" />
+
         {/* ================= PROFILE ================= */}
         <div
-          className="profile"
+          className="profile menu-profile"
           onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
           ref={dropdownRef}
           style={{ cursor: "pointer", position: "relative" }}

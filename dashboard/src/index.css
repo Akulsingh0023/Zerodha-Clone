@@ -465,6 +465,16 @@ code {
   justify-content: space-evenly;
 }
 
+.menu-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu-item {
+  position: relative;
+}
+
 .menu-toggle {
   display: none;
   border: 1px solid rgb(224, 224, 224);
@@ -503,10 +513,23 @@ code {
   font-size: 0.8rem;
   font-weight: 400;
   color: rgb(70, 70, 70);
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
 
 .menu.selected {
   color: rgb(245, 104, 52);
+  font-weight: 600;
+}
+
+.submenu {
+  list-style-type: none;
+  margin: 6px 0 0 14px;
+  padding: 0;
+}
+
+.submenu .menu {
+  font-size: 0.75rem;
+  color: rgb(110, 110, 110);
 }
 
 hr {
@@ -547,6 +570,7 @@ hr {
 
 .menu:hover {
   color: rgb(245, 104, 52);
+  transform: translateX(1px);
 }
 
 .profile:hover {
@@ -556,6 +580,10 @@ hr {
 .profile:hover .username {
   cursor: pointer;
   color: rgb(223, 91, 43);
+}
+
+.menu-spacer {
+  display: none;
 }
 
 .orders {
@@ -1288,6 +1316,34 @@ hr {
     bottom: 0;
     background: rgba(15, 23, 42, 0.35);
     z-index: 3650;
+  }
+
+  .menu-item .menu {
+    padding: 6px 8px;
+    border-radius: 8px;
+  }
+
+  .menu-item .menu:hover {
+    background: rgba(245, 104, 52, 0.08);
+  }
+
+  .menu.selected {
+    background: rgba(245, 104, 52, 0.12);
+  }
+
+  .submenu {
+    margin-left: 18px;
+  }
+
+  .menu-spacer {
+    display: block;
+    flex: 1;
+    width: 100%;
+  }
+
+  .menu-profile {
+    border-top: 1px solid rgb(236, 235, 235);
+    padding-top: 14px;
   }
 
   .profile .username {
