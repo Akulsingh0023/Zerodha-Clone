@@ -30,7 +30,11 @@ const Wallet = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [txLoading, setTxLoading] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+  const [userId, setUserId] = useState("");
   const [toast, setToast] = useState({ message: "", type: "" });
+
+  const MAX_ADD_AMOUNT = Number(import.meta.env.VITE_WALLET_MAX_ADD_AMOUNT) || 100000;
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -65,6 +69,18 @@ const Wallet = () => {
     fetchBalance();
     fetchTransactions();
 
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/api/auth/me`);
+        if (res.data?._id) setUserId(res.data._id);
+        if (res.data?.id) setUserId(res.data.id);
+      } catch {
+        // Non-blocking: userId is optional for verification
+      }
+    };
+
+    fetchUser();
+
     const onWalletUpdate = () => {
       fetchBalance();
       fetchTransactions();
@@ -80,22 +96,80 @@ const Wallet = () => {
     return () => window.removeEventListener("walletUpdated", onWalletUpdate);
   }, []);
 
+  const loadRazorpay = () =>
+    new Promise((resolve, reject) => {
+      if (window.Razorpay) return resolve(true);
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => reject(new Error("Failed to load Razorpay"));
+      document.body.appendChild(script);
+    });
+
   const handleAdd = async () => {
-    if (!addAmount || Number(addAmount) <= 0) return showToast("Enter a valid amount", "error");
-    setLoading(true);
+    const amountNum = Number(addAmount);
+    if (!amountNum || amountNum <= 0) return showToast("Enter a valid amount", "error");
+    if (amountNum > MAX_ADD_AMOUNT) return showToast(`Max add amount is ₹${MAX_ADD_AMOUNT.toLocaleString("en-IN")}`, "error");
+    if (!import.meta.env.VITE_RAZORPAY_KEY_ID) return showToast("Razorpay key is missing", "error");
+
+    setIsPaying(true);
     try {
-      const res = await axios.post(`${BASE_URL}/wallet/add`, { amount: Number(addAmount) });
-      if (res.data?.balance !== undefined) {
-        setBalance(res.data.balance);
-        fetchTransactions();
-        showToast("Amount added successfully", "success");
-        setAddAmount("");
-        window.dispatchEvent(new Event("walletUpdated"));
-      }
+      const orderRes = await axios.post(`${BASE_URL}/api/payment/order`, { amount: amountNum });
+      const order = orderRes.data;
+
+      await loadRazorpay();
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Akul Singh",
+        description: "Add Money to Wallet",
+        order_id: order.id,
+        handler: async (response) => {
+          try {
+            const verifyRes = await axios.post(`${BASE_URL}/api/payment/verify`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              userId: userId || undefined,
+              amount: amountNum,
+            });
+
+            if (verifyRes.data?.success) {
+              window.alert("Payment Successful ✅");
+              showToast("Payment Successful ✅", "success");
+              setBalance(verifyRes.data.balance ?? balance);
+              setAddAmount("");
+              fetchTransactions();
+              window.dispatchEvent(new Event("walletUpdated"));
+            } else {
+              window.alert("Payment Failed ❌");
+              showToast("Payment Failed ❌", "error");
+            }
+          } catch (err) {
+            window.alert("Payment Failed ❌");
+            showToast(err.response?.data?.message || "Payment verification failed", "error");
+          } finally {
+            setIsPaying(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsPaying(false);
+            showToast("Payment cancelled", "error");
+          },
+        },
+        theme: { color: "#0ea5e9" },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
     } catch (err) {
-      showToast(err.response?.data?.message || "Add failed", "error");
+      showToast(err.response?.data?.message || "Payment initiation failed", "error");
+      setIsPaying(false);
     } finally {
-      setLoading(false);
+      // Keep balance loader separate from payment flow
     }
   };
 
@@ -136,7 +210,9 @@ const Wallet = () => {
                   onChange={(e) => setAddAmount(e.target.value)}
                   placeholder="Amount"
                 />
-                <button className="action-btn" onClick={handleAdd} disabled={loading}>Add</button>
+                <button className="action-btn" onClick={handleAdd} disabled={loading || isPaying}>
+                  {isPaying ? "Processing..." : "Add"}
+                </button>
               </div>
 
               <div className="action-card withdraw">
@@ -147,7 +223,7 @@ const Wallet = () => {
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                   placeholder="Amount"
                 />
-                <button className="action-btn" onClick={handleWithdraw} disabled={loading}>Withdraw</button>
+                <button className="action-btn" onClick={handleWithdraw} disabled={loading || isPaying}>Withdraw</button>
               </div>
             </div>
           </div>

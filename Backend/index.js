@@ -834,6 +834,7 @@ import adminPanelRoutes from "./routes/adminPanelRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
 import squareOffRoutes from "./routes/squareOffRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 import { squareOffAllUsers } from "./controllers/squareOffController.js";
 
 dotenv.config();
@@ -891,6 +892,7 @@ app.use("/api/admin-panel", adminPanelRoutes);
 app.use("/api", profileRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/square-off", squareOffRoutes);
+app.use("/api/payment", paymentRoutes);
 /* ================= DB CONNECT ================= */
 mongoose
   .connect(process.env.MONGO_URL)

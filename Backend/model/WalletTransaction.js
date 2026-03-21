@@ -16,9 +16,22 @@ const WalletTransactionSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    paymentId: {
+      type: String,
+      default: null,
+    },
+    orderId: {
+      type: String,
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "success", "failed"],
+      default: "success",
+    },
     reason: {
       type: String,
-      enum: ["stock_buy", "stock_sell", "manual_add", "withdraw", "auto_square_off"],
+      enum: ["stock_buy", "stock_sell", "manual_add", "withdraw", "auto_square_off", "wallet_add"],
       required: true,
     },
     createdAt: {
