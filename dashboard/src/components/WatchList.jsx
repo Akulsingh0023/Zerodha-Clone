@@ -166,19 +166,6 @@ const WatchList = ({ onClose }) => {
 
   /* ── doughnut chart data ── */
   // Use live LTP if available, otherwise show equal segments so chart is always visible
-  const chartColors = [
-    "#2563eb",
-    "#f97316",
-    "#10b981",
-    "#eab308",
-    "#8b5cf6",
-    "#06b6d4",
-    "#ef4444",
-    "#14b8a6",
-    "#f59e0b",
-    "#64748b",
-  ];
-
   const chartData = (() => {
     if (watchlist.length === 0) return null;
 
@@ -192,29 +179,22 @@ const WatchList = ({ onClose }) => {
           data: watchlist.map((s) =>
             hasLivePrices ? (priceMap[s.symbol]?.ltp || 0) : 1
           ),
-          backgroundColor: chartColors,
+          backgroundColor: [
+            "rgba(65,132,243,0.6)",
+            "rgba(255,99,132,0.6)",
+            "rgba(75,192,192,0.6)",
+            "rgba(255,206,86,0.6)",
+            "rgba(153,102,255,0.6)",
+            "rgba(255,159,64,0.6)",
+            "rgba(54,162,235,0.6)",
+            "rgba(104,211,145,0.6)",
+            "rgba(255,127,80,0.6)",
+            "rgba(186,85,211,0.6)",
+          ],
         },
       ],
     };
   })();
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: "62%",
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => {
-            const label = ctx.label || "";
-            const value = ctx.raw ?? 0;
-            return `${label}: ₹${Number(value).toLocaleString("en-IN")}`;
-          },
-        },
-      },
-    },
-  };
 
   return (
     <div className="watchlist-container">
@@ -271,33 +251,8 @@ const WatchList = ({ onClose }) => {
             ))}
           </ul>
 
-          {/* Doughnut Chart */}
-          {chartData && (
-            <div className="wl-chart-card" aria-label="Holdings distribution">
-              <div className="wl-chart-header">
-                <div>
-                  <h5>Holdings Mix</h5>
-                  <p>By symbol</p>
-                </div>
-                <span className="wl-chart-note">Live LTP</span>
-              </div>
-              <div className="wl-chart-canvas">
-                <DoughnutChart data={chartData} options={chartOptions} />
-              </div>
-              <ul className="wl-chart-legend" role="list">
-                {chartData.labels.map((label, idx) => (
-                  <li key={label} title={label}>
-                    <span
-                      className="wl-legend-dot"
-                      style={{ background: chartColors[idx % chartColors.length] }}
-                      aria-hidden
-                    />
-                    <span className="wl-legend-label">{label}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {/* Doughnut Chart — always visible below watchlist */}
+          {chartData && <DoughnutChart data={chartData} />}
         </>
       )}
     </div>

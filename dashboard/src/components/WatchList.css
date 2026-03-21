@@ -327,11 +327,11 @@
 
 /* ── Colors ── */
 .wl-green {
-  color: #0f9d58;
+  color: #00c853;
 }
 
 .wl-red {
-  color: #db4437;
+  color: #ff5252;
 }
 
 /* ── Action buttons ── */
@@ -403,72 +403,6 @@
   transform: scale(1.05);
 }
 
-/* ── Chart card ── */
-.wl-chart-card {
-  margin: 16px 14px 20px;
-  padding: 16px;
-  border-radius: 16px;
-  border: 1px solid #eef0f4;
-  background: #fff;
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
-}
-
-.wl-chart-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.wl-chart-header h5 {
-  margin: 0;
-  font-size: 0.95rem;
-  color: #111827;
-}
-
-.wl-chart-header p {
-  margin: 4px 0 0;
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.wl-chart-note {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #0f9d58;
-  background: rgba(15, 157, 88, 0.12);
-  padding: 4px 8px;
-  border-radius: 999px;
-}
-
-.wl-chart-canvas {
-  height: 180px;
-}
-
-.wl-chart-legend {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 12px;
-  padding: 12px 0 0;
-  margin: 0;
-}
-
-.wl-chart-legend li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  color: #374151;
-}
-
-.wl-legend-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  flex-shrink: 0;
-}
-
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .wl-table-header {
@@ -488,13 +422,6 @@
   }
 }
 
-@media (max-width: 768px) {
-  .wl-item-percent,
-  .wl-th-percent {
-    display: none;
-  }
-}
-
 @media (max-width: 640px) {
   .wl-mobile-header {
     display: flex;
@@ -511,13 +438,5 @@
 
   .wl-item-actions {
     padding-left: 20px;
-  }
-
-  .wl-chart-canvas {
-    height: 140px;
-  }
-
-  .wl-chart-legend {
-    grid-template-columns: 1fr;
   }
 }

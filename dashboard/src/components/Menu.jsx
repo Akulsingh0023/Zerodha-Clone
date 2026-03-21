@@ -196,9 +196,8 @@ import API, { SITE_URL } from "../config";
 
 const BASE_URL = API;
 
-const Menu = ({ showLogo = true }) => {
+const Menu = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [isNavOpen, setIsNavOpen] = useState(false);
   const [user, setUser] = useState(null);
 
   const dropdownRef = useRef();
@@ -226,10 +225,6 @@ const Menu = ({ showLogo = true }) => {
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    setIsNavOpen(false);
-  }, [location.pathname]);
-
   /* ================= CLOSE DROPDOWN ================= */
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -254,27 +249,10 @@ const Menu = ({ showLogo = true }) => {
 
   return (
     <div className="menu-container">
-      {showLogo && (
-        <div className="brand" aria-label="Brand">
-          <img src="logo.png" alt="Zerodha" className="brand-logo" />
-          <span className="brand-name">Zerodha</span>
-        </div>
-      )}
+      <img src="logo.png" alt="logo" style={{ width: "50px" }} />
 
-      <button
-        type="button"
-        className="nav-toggle"
-        aria-label="Toggle navigation"
-        aria-expanded={isNavOpen}
-        onClick={() => setIsNavOpen((prev) => !prev)}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
-
-      <div className={`menus ${isNavOpen ? "open" : ""}`}>
-        <ul aria-label="Primary">
+      <div className="menus">
+        <ul>
           <li>
             <Link to="/" className="link">
               <p className={location.pathname === "/" ? activeMenuClass : menuClass}>
@@ -378,15 +356,6 @@ const Menu = ({ showLogo = true }) => {
         </div>
       </div>
 
-      <div
-        className={`nav-overlay ${isNavOpen ? "show" : ""}`}
-        role="button"
-        aria-label="Close navigation"
-        onClick={() => setIsNavOpen(false)}
-        onKeyDown={(e) => e.key === "Escape" && setIsNavOpen(false)}
-        tabIndex={0}
-      />
-
       {/* ================= STYLE ================= */}
       <style>{`
         .link {
@@ -398,10 +367,9 @@ const Menu = ({ showLogo = true }) => {
           top: 50px;
           right: 0;
           width: 200px;
-          background: #fff;
-          border-radius: 10px;
-          border: 1px solid #e5e7eb;
-          box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+          background: black;
+          border-radius: 6px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4);
           overflow: hidden;
           z-index: 1000;
         }
@@ -410,14 +378,14 @@ const Menu = ({ showLogo = true }) => {
           display: block;
           padding: 12px;
           text-decoration: none;
-          color: #111827;
+          color: white;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .dropdown-item:hover {
-          background: #111827;
-          color: #fff;
+          background: white;
+          color: black;
         }
       `}</style>
     </div>
