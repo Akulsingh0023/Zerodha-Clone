@@ -196,7 +196,7 @@ import API, { SITE_URL } from "../config";
 
 const BASE_URL = API;
 
-const Menu = () => {
+const Menu = ({ onOpenWatchlist, onCloseWatchlist, watchlistOpen }) => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -256,6 +256,11 @@ const Menu = () => {
     setIsMenuOpen(false);
   };
 
+  const handleWatchlistClick = () => {
+    if (typeof onOpenWatchlist === "function") onOpenWatchlist();
+    setIsMenuOpen(false);
+  };
+
   return (
     <div className="menu-container">
       <img src="logo.png" alt="logo" style={{ width: "50px" }} />
@@ -282,11 +287,15 @@ const Menu = () => {
             </Link>
             <ul className="submenu">
               <li>
-                <Link to="/" className="link" onClick={handleNavClick}>
-                  <p className={location.pathname === "/" ? activeMenuClass : menuClass}>
+                <button
+                  type="button"
+                  className="submenu-button"
+                  onClick={handleWatchlistClick}
+                >
+                  <p className={watchlistOpen ? activeMenuClass : menuClass}>
                     Watchlist
                   </p>
-                </Link>
+                </button>
               </li>
             </ul>
           </li>

@@ -2,20 +2,9 @@ import React from "react";
 
 import Menu from "./Menu";
 
-const TopBar = ({ onToggleWatchlist, isWatchlistOpen }) => {
+const TopBar = ({ onOpenWatchlist, onCloseWatchlist, watchlistOpen }) => {
   return (
     <div className="topbar-container">
-      <button
-        type="button"
-        className="watchlist-toggle"
-        aria-label="Toggle watchlist"
-        aria-expanded={isWatchlistOpen}
-        onClick={onToggleWatchlist}
-      >
-        <span className="watchlist-toggle-line" />
-        <span className="watchlist-toggle-line" />
-        <span className="watchlist-toggle-line" />
-      </button>
       <div className="indices-container">
         <div className="nifty">
           <p className="index">NIFTY 50</p>
@@ -29,7 +18,11 @@ const TopBar = ({ onToggleWatchlist, isWatchlistOpen }) => {
         </div>
       </div>
 
-      <Menu />
+      <Menu
+        onOpenWatchlist={onOpenWatchlist}
+        onCloseWatchlist={onCloseWatchlist}
+        watchlistOpen={watchlistOpen}
+      />
     </div>
   );
 };

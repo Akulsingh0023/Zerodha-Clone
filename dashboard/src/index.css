@@ -102,6 +102,10 @@ code {
   min-width: 0;
 }
 
+.dashboard-container.watchlist-open .content {
+  display: none;
+}
+
 .content.admin-full {
   flex-basis: 100%;
   padding: 0;
@@ -532,6 +536,19 @@ code {
   color: rgb(110, 110, 110);
 }
 
+.submenu-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.submenu-button:focus-visible {
+  outline: 2px solid rgba(245, 104, 52, 0.45);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
 hr {
   border-left: 0.8px solid rgb(243, 242, 242);
   height: 30px;
@@ -917,6 +934,24 @@ hr {
   flex-basis: 32%;
   height: 100%;
   position: relative;
+}
+
+.watchlist-shell {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  z-index: 4000;
+  background: #fff;
+}
+
+.watchlist-shell.open {
+  transform: translateX(0);
 }
 
 .watchlist-overlay {
@@ -1359,33 +1394,7 @@ hr {
   }
 
   .watchlist-shell {
-    position: fixed;
-    top: 10vh;
-    left: 0;
-    bottom: 0;
-    width: 88vw;
-    max-width: 360px;
-    height: calc(100vh - 10vh);
-    transform: translateX(-100%);
-    transition: transform 0.25s ease;
-    z-index: 3500;
-    background: #fff;
-    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22);
-  }
-
-  .watchlist-shell.open {
-    transform: translateX(0);
-  }
-
-  .watchlist-overlay.show {
-    display: block;
-    position: fixed;
-    top: 10vh;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.45);
-    z-index: 3400;
+    box-shadow: none;
   }
 
   .content {
