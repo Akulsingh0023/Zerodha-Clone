@@ -1,4 +1,5 @@
 import React from "react";
+import DashboardWatchlist from "./DashboardWatchlist";
 
 const Summary = () => {
   return (
@@ -57,6 +58,8 @@ const Summary = () => {
         </div>
         <hr className="divider" />
       </div>
+
+      <DashboardWatchlist />
     </>
   );
 };
