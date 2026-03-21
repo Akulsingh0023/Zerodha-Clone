@@ -36,13 +36,22 @@ const WatchlistItem = ({ stock, priceData, onRemove }) => {
         <div className="wl-item-right">
           {priceLoaded ? (
             <>
-              <span className={`wl-item-change ${isUp ? "wl-green" : "wl-red"}`}>
+              <span
+                className={`wl-item-change ${isUp ? "wl-green" : "wl-red"}`}
+                title={`Change ₹${Math.abs(change).toFixed(2)}`}
+              >
                 {isUp ? "▲" : "▼"} ₹{Math.abs(change).toFixed(2)}
               </span>
-              <span className={`wl-item-percent ${isUp ? "wl-green" : "wl-red"}`}>
+              <span
+                className={`wl-item-percent ${isUp ? "wl-green" : "wl-red"}`}
+                title={`Change ${isUp ? "+" : "-"}${Math.abs(changePercent).toFixed(2)}%`}
+              >
                 ({isUp ? "+" : ""}{changePercent.toFixed(2)}%)
               </span>
-              <span className={`wl-item-ltp ${isUp ? "wl-green" : "wl-red"}`}>
+              <span
+                className={`wl-item-ltp ${isUp ? "wl-green" : "wl-red"}`}
+                title={`LTP ₹${ltp.toFixed(2)}`}
+              >
                 ₹{ltp.toFixed(2)}
               </span>
             </>

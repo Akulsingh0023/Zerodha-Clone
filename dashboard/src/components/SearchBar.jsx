@@ -89,6 +89,7 @@ const SearchBar = ({ watchlist, onAddStock, watchlistCount }) => {
           onKeyDown={handleKeyDown}
           onFocus={() => results.length > 0 && setIsOpen(true)}
           placeholder="Search eg: INFY, TCS, RELIANCE"
+          aria-label="Search stocks"
           className="wl-search-input"
           autoComplete="off"
         />
