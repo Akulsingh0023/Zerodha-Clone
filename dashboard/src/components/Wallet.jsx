@@ -66,6 +66,7 @@ const Wallet = () => {
   };
 
   useEffect(() => {
+    console.log("Razorpay key:", import.meta.env.VITE_RAZORPAY_KEY_ID);
     fetchBalance();
     fetchTransactions();
 
@@ -118,6 +119,11 @@ const Wallet = () => {
       const order = orderRes.data;
 
       await loadRazorpay();
+      if (!window.Razorpay) {
+        showToast("Razorpay SDK not loaded", "error");
+        setIsPaying(false);
+        return;
+      }
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
