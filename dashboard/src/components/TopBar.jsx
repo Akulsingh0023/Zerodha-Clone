@@ -1,21 +1,10 @@
 import React from "react";
 
 import Menu from "./Menu";
-import TopProfileMenu from "./TopProfileMenu";
 
-const TopBar = ({ onToggleWatchlist, isWatchlistOpen, onToggleSidebar }) => {
+const TopBar = ({ onToggleWatchlist, isWatchlistOpen }) => {
   return (
     <div className="topbar-container">
-      <button
-        type="button"
-        className="sidebar-toggle"
-        aria-label="Toggle sidebar"
-        onClick={onToggleSidebar}
-      >
-        <span className="sidebar-toggle-line" />
-        <span className="sidebar-toggle-line" />
-        <span className="sidebar-toggle-line" />
-      </button>
       <button
         type="button"
         className="watchlist-toggle"
@@ -41,9 +30,6 @@ const TopBar = ({ onToggleWatchlist, isWatchlistOpen, onToggleSidebar }) => {
       </div>
 
       <Menu />
-      <div className="topbar-actions">
-        <TopProfileMenu />
-      </div>
     </div>
   );
 };
