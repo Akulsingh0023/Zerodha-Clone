@@ -3,17 +3,15 @@ import { Link } from "react-router-dom";
 
 const Funds = () => {
   return (
-    <div className="container-fluid px-0">
-      <div className="funds d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2 mb-3">
-        <p className="mb-0">Instant, zero-cost fund transfers with UPI </p>
-        <div className="d-flex gap-2">
-          <Link className="btn btn-green">Add funds</Link>
-          <Link className="btn btn-blue">Withdraw</Link>
-        </div>
+    <>
+      <div className="funds">
+        <p>Instant, zero-cost fund transfers with UPI </p>
+        <Link className="btn btn-green">Add funds</Link>
+        <Link className="btn btn-blue">Withdraw</Link>
       </div>
 
-      <div className="row g-3">
-        <div className="col-12 col-lg-8">
+      <div className="row">
+        <div className="col">
           <span>
             <p>Equity</p>
           </span>
@@ -76,14 +74,14 @@ const Funds = () => {
           </div>
         </div>
 
-        <div className="col-12 col-lg-4">
+        <div className="col">
           <div className="commodity">
             <p>You don't have a commodity account</p>
             <Link className="btn btn-blue">Open Account</Link>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

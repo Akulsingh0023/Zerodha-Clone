@@ -33,19 +33,19 @@ const Orders = () => {
 
   if (loading) {
     return (
-      <div className="orders container-fluid px-0">
+      <div className="orders">
         <div className="ord-loading">Loading orders...</div>
       </div>
     );
   }
 
   return (
-    <div className="orders container-fluid px-0">
-      <h3 className="title mb-3">Orders ({purchasedOrders.length})</h3>
+    <div className="orders">
+      <h3 className="title">Orders ({purchasedOrders.length})</h3>
 
       {purchasedOrders.length > 0 ? (
-        <div className="order-table table-responsive">
-          <table className="ord-table table">
+        <div className="order-table">
+          <table className="ord-table">
             <thead>
               <tr>
                 <th className="align-left">SYMBOL</th>
@@ -86,7 +86,7 @@ const Orders = () => {
           </table>
         </div>
       ) : (
-        <div className="no-orders text-center py-4">
+        <div className="no-orders">
           <p>You haven't placed any orders yet</p>
           <Link to="/" className="btn">
             Get started

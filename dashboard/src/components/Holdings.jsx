@@ -163,8 +163,8 @@ const Holdings = () => {
 
   /* ═══════ RENDER ═══════ */
   return (
-    <div className="container-fluid px-0">
-      <h3 className="title mb-3">Holdings ({holdings.length})</h3>
+    <>
+      <h3 className="title">Holdings ({holdings.length})</h3>
 
       {loading && holdings.length === 0 ? (
         <div className="hld-loading">Loading holdings...</div>
@@ -178,8 +178,8 @@ const Holdings = () => {
         </div>
       ) : (
         <>
-          <div className="order-table table-responsive">
-            <table className="holdings-table table">
+          <div className="order-table">
+            <table className="holdings-table">
               <thead>
                 <tr>
                   <th className="align-left">Instrument</th>
@@ -245,18 +245,18 @@ const Holdings = () => {
           </div>
 
           {/* Summary row */}
-          <div className="row g-3 mt-2">
-            <div className="col-12 col-md-4">
+          <div className="row">
+            <div className="col">
               <h5>
                 ₹{totalInvestment.toFixed(2)}
               </h5>
               <p>Total investment</p>
             </div>
-            <div className="col-12 col-md-4">
+            <div className="col">
               <h5>₹{currentValue.toFixed(2)}</h5>
               <p>Current value</p>
             </div>
-            <div className="col-12 col-md-4">
+            <div className="col">
               <h5 className={isProfit ? "profit" : "loss"}>
                 {isProfit ? "+" : ""}₹{totalPL.toFixed(2)}
                 <span> ({isProfit ? "+" : ""}{totalPLPercent}%)</span>
@@ -273,7 +273,7 @@ const Holdings = () => {
       {sellStock && (
         <SellActionWindow stock={sellStock} closeSellWindow={closeSellWindow} />
       )}
-    </div>
+    </>
   );
 };
 

@@ -248,13 +248,13 @@ const Menu = () => {
   };
 
   return (
-    <div className="menu-container d-flex flex-column h-100 p-3">
-      <img src="logo.png" alt="logo" className="img-fluid" style={{ width: "50px" }} />
+    <div className="menu-container">
+      <img src="logo.png" alt="logo" style={{ width: "50px" }} />
 
-      <div className="menus d-flex flex-column flex-grow-1 mt-3">
-        <ul className="nav flex-column gap-1">
+      <div className="menus">
+        <ul>
           <li>
-            <Link to="/" className="link nav-link p-0">
+            <Link to="/" className="link">
               <p className={location.pathname === "/" ? activeMenuClass : menuClass}>
                 Dashboard
               </p>
@@ -262,7 +262,7 @@ const Menu = () => {
           </li>
 
           <li>
-            <Link to="/orders" className="link nav-link p-0">
+            <Link to="/orders" className="link">
               <p className={location.pathname === "/orders" ? activeMenuClass : menuClass}>
                 Orders
               </p>
@@ -270,7 +270,7 @@ const Menu = () => {
           </li>
 
           <li>
-            <Link to="/holdings" className="link nav-link p-0">
+            <Link to="/holdings" className="link">
               <p className={location.pathname === "/holdings" ? activeMenuClass : menuClass}>
                 Holdings
               </p>
@@ -278,7 +278,7 @@ const Menu = () => {
           </li>
 
           <li>
-            <Link to="/positions" className="link nav-link p-0">
+            <Link to="/positions" className="link">
               <p className={location.pathname === "/positions" ? activeMenuClass : menuClass}>
                 Positions
               </p>
@@ -288,7 +288,7 @@ const Menu = () => {
           {/* ================= ADMIN PANEL TAB ================= */}
           {user?.role === "admin" && (
             <li>
-              <Link to="/admin" className="link nav-link p-0">
+              <Link to="/admin" className="link">
                 <p className={location.pathname === "/admin" ? activeMenuClass : menuClass}>
                   Admin Panel
                 </p>
@@ -302,7 +302,7 @@ const Menu = () => {
         
         {/* ================= PROFILE ================= */}
         <div
-          className="profile mt-auto pt-3"
+          className="profile"
           onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
           ref={dropdownRef}
           style={{ cursor: "pointer", position: "relative" }}
