@@ -150,7 +150,6 @@ const Wallet = () => {
             });
 
             if (verifyRes.data?.success) {
-              window.alert("Payment Successful ✅");
               showToast("Payment Successful ✅", "success");
               setBalance(verifyRes.data.balance ?? balance);
               setAddAmount("");
