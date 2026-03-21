@@ -204,8 +204,8 @@ const Positions = () => {
 
   /* ═══════ RENDER ═══════ */
   return (
-    <>
-      <h3 className="title">
+    <div className="container-fluid px-0">
+      <h3 className="title mb-3">
         Positions ({positions.length})
         <span className="pos-mis-badge">MIS · Intraday</span>
       </h3>
@@ -230,8 +230,8 @@ const Positions = () => {
         </div>
       ) : (
         <>
-          <div className="order-table">
-            <table className="positions-table">
+          <div className="order-table table-responsive">
+            <table className="positions-table table">
               <thead>
                 <tr>
                   <th className="align-left">Instrument</th>
@@ -295,16 +295,16 @@ const Positions = () => {
           </div>
 
           {/* Summary row */}
-          <div className="row">
-            <div className="col">
+          <div className="row g-3 mt-2">
+            <div className="col-12 col-md-4">
               <h5>₹{totalInvested.toFixed(2)}</h5>
               <p>Total invested</p>
             </div>
-            <div className="col">
+            <div className="col-12 col-md-4">
               <h5>₹{totalCurrent.toFixed(2)}</h5>
               <p>Current value</p>
             </div>
-            <div className="col">
+            <div className="col-12 col-md-4">
               <h5 className={isProfit ? "profit" : "loss"}>
                 {isProfit ? "+" : ""}₹{totalPL.toFixed(2)}
                 <span> ({isProfit ? "+" : ""}{totalPLPercent}%)</span>
@@ -319,7 +319,7 @@ const Positions = () => {
       {sellStock && (
         <SellActionWindow stock={sellStock} closeSellWindow={closeSellWindow} />
       )}
-    </>
+    </div>
   );
 };
 

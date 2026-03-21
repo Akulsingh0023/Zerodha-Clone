@@ -205,16 +205,16 @@ const Wallet = () => {
   };
 
   return (
-    <div className="wallet-page">
-      <div className="wallet-top">
+    <div className="wallet-page container-fluid px-0">
+      <div className="wallet-top mb-3">
         <div className="balance-card">
           <div className="balance-left">
             <h4>Available Funds</h4>
             {loading ? <Spinner /> : <p className="balance-amount">{formatCurrency(balance)}</p>}
             <p className="balance-sub">Use these funds to buy stocks</p>
 
-            <div className="inner-actions">
-              <div className="action-card add">
+            <div className="inner-actions row g-3">
+              <div className="action-card add col-12 col-md-6">
                 <label>Add Money</label>
                 <input
                   type="number"
@@ -227,7 +227,7 @@ const Wallet = () => {
                 </button>
               </div>
 
-              <div className="action-card withdraw">
+              <div className="action-card withdraw col-12 col-md-6">
                 <label>Withdraw</label>
                 <input
                   type="number"
@@ -256,8 +256,8 @@ const Wallet = () => {
             <span className="tx-empty-sub">Add or withdraw funds to see your history</span>
           </div>
         ) : (
-          <div className="tx-scroll">
-            <table className="tx-table">
+          <div className="tx-scroll table-responsive">
+            <table className="tx-table table">
               <thead>
                 <tr>
                   <th>DATE</th>
