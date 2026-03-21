@@ -198,7 +198,6 @@ const BASE_URL = API;
 
 const Menu = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
 
   const dropdownRef = useRef();
@@ -242,73 +241,44 @@ const Menu = () => {
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    setIsMenuOpen(false);
-  }, [location.pathname]);
-
   /* ================= LOGOUT ================= */
   const handleLogout = () => {
     localStorage.removeItem("token");
     window.location.href = SITE_URL;
   };
 
-  const handleNavClick = () => {
-    setIsMenuOpen(false);
-  };
-
   return (
     <div className="menu-container">
       <img src="logo.png" alt="logo" style={{ width: "50px" }} />
 
-      <button
-        type="button"
-        className="menu-toggle"
-        aria-label="Toggle navigation"
-        aria-expanded={isMenuOpen}
-        onClick={() => setIsMenuOpen((prev) => !prev)}
-      >
-        <span className="menu-toggle-line" />
-        <span className="menu-toggle-line" />
-        <span className="menu-toggle-line" />
-      </button>
-
-      <div className={`menus ${isMenuOpen ? "open" : ""}`}>
-        <ul className="menu-list">
-          <li className="menu-item">
-            <Link to="/" className="link" onClick={handleNavClick}>
+      <div className="menus">
+        <ul>
+          <li>
+            <Link to="/" className="link">
               <p className={location.pathname === "/" ? activeMenuClass : menuClass}>
                 Dashboard
               </p>
             </Link>
-            <ul className="submenu">
-              <li>
-                <Link to="/" className="link" onClick={handleNavClick}>
-                  <p className={location.pathname === "/" ? activeMenuClass : menuClass}>
-                    Watchlist
-                  </p>
-                </Link>
-              </li>
-            </ul>
           </li>
 
-          <li className="menu-item">
-            <Link to="/orders" className="link" onClick={handleNavClick}>
+          <li>
+            <Link to="/orders" className="link">
               <p className={location.pathname === "/orders" ? activeMenuClass : menuClass}>
                 Orders
               </p>
             </Link>
           </li>
 
-          <li className="menu-item">
-            <Link to="/holdings" className="link" onClick={handleNavClick}>
+          <li>
+            <Link to="/holdings" className="link">
               <p className={location.pathname === "/holdings" ? activeMenuClass : menuClass}>
                 Holdings
               </p>
             </Link>
           </li>
 
-          <li className="menu-item">
-            <Link to="/positions" className="link" onClick={handleNavClick}>
+          <li>
+            <Link to="/positions" className="link">
               <p className={location.pathname === "/positions" ? activeMenuClass : menuClass}>
                 Positions
               </p>
@@ -317,8 +287,8 @@ const Menu = () => {
 
           {/* ================= ADMIN PANEL TAB ================= */}
           {user?.role === "admin" && (
-            <li className="menu-item">
-              <Link to="/admin" className="link" onClick={handleNavClick}>
+            <li>
+              <Link to="/admin" className="link">
                 <p className={location.pathname === "/admin" ? activeMenuClass : menuClass}>
                   Admin Panel
                 </p>
@@ -327,11 +297,12 @@ const Menu = () => {
           )}
         </ul>
 
-        <div className="menu-spacer" />
-
+        {/* ❌ <hr /> REMOVED */}
+        {/* underline yahin se aa rahi thi */}
+        
         {/* ================= PROFILE ================= */}
         <div
-          className="profile menu-profile"
+          className="profile"
           onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
           ref={dropdownRef}
           style={{ cursor: "pointer", position: "relative" }}
@@ -384,14 +355,6 @@ const Menu = () => {
           )}
         </div>
       </div>
-
-      {isMenuOpen && (
-        <div
-          className="menu-overlay"
-          onClick={() => setIsMenuOpen(false)}
-          aria-hidden
-        />
-      )}
 
       {/* ================= STYLE ================= */}
       <style>{`
