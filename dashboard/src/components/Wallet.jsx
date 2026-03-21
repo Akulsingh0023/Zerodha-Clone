@@ -97,13 +97,13 @@ const Wallet = () => {
     return () => window.removeEventListener("walletUpdated", onWalletUpdate);
   }, []);
 
-  const loadRazorpay = () =>
-    new Promise((resolve, reject) => {
+  const loadRazorpayScript = () =>
+    new Promise((resolve) => {
       if (window.Razorpay) return resolve(true);
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
-      script.onerror = () => reject(new Error("Failed to load Razorpay"));
+      script.onerror = () => resolve(false);
       document.body.appendChild(script);
     });
 
@@ -111,22 +111,29 @@ const Wallet = () => {
     const amountNum = Number(addAmount);
     if (!amountNum || amountNum <= 0) return showToast("Enter a valid amount", "error");
     if (amountNum > MAX_ADD_AMOUNT) return showToast(`Max add amount is ₹${MAX_ADD_AMOUNT.toLocaleString("en-IN")}`, "error");
-    if (!import.meta.env.VITE_RAZORPAY_KEY_ID) return showToast("Razorpay key is missing", "error");
+    const key = import.meta.env.VITE_RAZORPAY_KEY_ID;
+    console.log("Razorpay key:", key);
+    if (!key) {
+      console.error("Razorpay key is missing");
+      return showToast("Razorpay key is missing", "error");
+    }
 
     setIsPaying(true);
     try {
       const orderRes = await axios.post(`${BASE_URL}/api/payment/order`, { amount: amountNum });
       const order = orderRes.data;
 
-      await loadRazorpay();
-      if (!window.Razorpay) {
+      const sdkLoaded = await loadRazorpayScript();
+      console.log("Razorpay object:", window.Razorpay);
+      if (!sdkLoaded || !window.Razorpay) {
+        window.alert("Razorpay SDK failed to load");
         showToast("Razorpay SDK not loaded", "error");
         setIsPaying(false);
         return;
       }
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key,
         amount: order.amount,
         currency: order.currency,
         name: "Akul Singh",

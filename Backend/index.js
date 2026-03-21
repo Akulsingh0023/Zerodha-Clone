@@ -859,23 +859,30 @@ const withOpenMis = (base = {}) => ({ ...base, ...openMisFilter });
 
 /* ================= MIDDLEWARE ================= */
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.DASHBOARD_URL,
-  "https://zerodha-clone-gamma-rose.vercel.app",
-  "https://zerodha-clone-s4ag.vercel.app",
-  "http://localhost:5173",
-  "http://localhost:5174",
-].filter(Boolean);
+const allowedOrigins = new Set(
+  [
+    process.env.FRONTEND_URL,
+    process.env.DASHBOARD_URL,
+    "https://zerodha-clone-gamma-rose.vercel.app",
+    "https://zerodha-clone-s4ag.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:5174",
+  ].filter(Boolean)
+);
 
 // CORS for frontend + dashboard
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) return callback(null, true);
+
+      if (!allowedOrigins.has(origin)) {
+        console.warn("[CORS] Blocked origin:", origin);
+        // Allow temporarily for debugging; tighten in production if needed.
         return callback(null, true);
       }
-      return callback(new Error("Not allowed by CORS"));
+
+      return callback(null, true);
     },
     credentials: true,
   })
