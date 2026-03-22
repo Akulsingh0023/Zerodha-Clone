@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import BASE_URL from "../config";
 import SellActionWindow from "./SellActionWindow";
-import StockChart from "./StockChart";
 import "./Positions.css";
 
 const POSITIONS_LS_KEY = "zerodha_positions";
@@ -46,8 +45,6 @@ const Positions = () => {
   const [positions, setPositions] = useState(loadCached);
   const [priceMap, setPriceMap] = useState({});
   const [sellStock, setSellStock] = useState(null);
-  const [selectedPosition, setSelectedPosition] = useState(null);
-  const [activeTab, setActiveTab] = useState("open");
   const [loading, setLoading] = useState(true);
   const [squaredOff, setSquaredOff] = useState(false);
   const priceInterval = useRef(null);
@@ -205,11 +202,6 @@ const Positions = () => {
       ? ((totalPL / totalInvested) * 100).toFixed(2)
       : "0.00";
 
-  const filteredPositions = positions.filter((stock) => {
-    const qty = Number(stock.qty) || 0;
-    return activeTab === "open" ? qty !== 0 : qty === 0;
-  });
-
   /* ═══════ RENDER ═══════ */
   return (
     <>
@@ -238,22 +230,6 @@ const Positions = () => {
         </div>
       ) : (
         <>
-          <div className="pos-tabs">
-            <button
-              type="button"
-              className={activeTab === "open" ? "pos-tab active" : "pos-tab"}
-              onClick={() => setActiveTab("open")}
-            >
-              Open
-            </button>
-            <button
-              type="button"
-              className={activeTab === "closed" ? "pos-tab active" : "pos-tab"}
-              onClick={() => setActiveTab("closed")}
-            >
-              Closed
-            </button>
-          </div>
           <div className="order-table">
             <table className="positions-table">
               <thead>
@@ -268,7 +244,7 @@ const Positions = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredPositions.map((stock, index) => {
+                {positions.map((stock, index) => {
                   const qty = Number(stock.qty) || 0;
                   const avg = Number(stock.avg) || 0;
                   const priceInfo = priceMap[stock.name];
@@ -285,10 +261,7 @@ const Positions = () => {
                   const dayClass = dayChange >= 0 ? "profit" : "loss";
 
                   return (
-                    <tr
-                      key={stock.name + "-" + index}
-                      onClick={() => setSelectedPosition(stock)}
-                    >
+                    <tr key={stock.name + "-" + index}>
                       <td className="stock-name align-left">
                         {stock.name}
                         <span className="pos-product-tag">MIS</span>
@@ -339,14 +312,6 @@ const Positions = () => {
               <p>Total P&amp;L</p>
             </div>
           </div>
-
-          {selectedPosition && (
-            <StockChart
-              symbol={selectedPosition.symbol}
-              priceData={selectedPosition.priceHistory}
-              isProfit={selectedPosition.pnl > 0}
-            />
-          )}
         </>
       )}
 

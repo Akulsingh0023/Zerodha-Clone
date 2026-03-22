@@ -88,31 +88,6 @@
   transform: translateY(0);
 }
 
-/* ── Tabs ── */
-.pos-tabs {
-  display: inline-flex;
-  gap: 8px;
-  margin: 6px 0 12px;
-}
-
-.pos-tab {
-  border: 1px solid #ddd;
-  background: #fafafa;
-  color: #444;
-  padding: 6px 14px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.pos-tab.active {
-  background: #111827;
-  border-color: #111827;
-  color: #fff;
-}
-
-
 /* ── Auto square-off banner ── */
 .pos-squareoff-banner {
   background: linear-gradient(90deg, #fdcb6e, #f39c12);

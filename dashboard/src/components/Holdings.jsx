@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import BASE_URL from "../config";
+import { VerticalGraph } from "./VerticalGraph";
 import SellActionWindow from "./SellActionWindow";
-import StockChart from "./StockChart";
 import "./Holdings.css";
 
 const HOLDINGS_LS_KEY = "zerodha_holdings";
@@ -44,7 +44,6 @@ const Holdings = () => {
   const [holdings, setHoldings] = useState(loadCached);
   const [priceMap, setPriceMap] = useState({}); // { SYMBOL: { ltp, changePercent } }
   const [sellStock, setSellStock] = useState(null);
-  const [selectedStock, setSelectedStock] = useState(null);
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef(null);
 
@@ -147,6 +146,21 @@ const Holdings = () => {
   const totalPLPercent =
     totalInvestment > 0 ? ((totalPL / totalInvestment) * 100).toFixed(2) : "0.00";
 
+  /* ── chart data ── */
+  const chartData = {
+    labels: holdings.map((s) => s.name),
+    datasets: [
+      {
+        label: "Current Value",
+        data: holdings.map((s) => {
+          const ltp = priceMap[s.name]?.ltp ?? Number(s.price) ?? 0;
+          return (Number(s.qty) * ltp).toFixed(2);
+        }),
+        backgroundColor: "rgba(53, 162, 235, 0.6)",
+      },
+    ],
+  };
+
   /* ═══════ RENDER ═══════ */
   return (
     <>
@@ -197,13 +211,7 @@ const Holdings = () => {
                   const dayClass = dayChange >= 0 ? "profit" : "loss";
 
                   return (
-                    <tr
-                      key={stock.name + index}
-                      className={
-                        selectedStock?.name === stock.name ? "hld-row is-selected" : "hld-row"
-                      }
-                      onClick={() => setSelectedStock(stock)}
-                    >
+                    <tr key={stock.name + index}>
                       <td className="stock-name align-left">{stock.name}</td>
                       <td className="quantity">{qty}</td>
                       <td>₹{avg.toFixed(2)}</td>
@@ -257,27 +265,7 @@ const Holdings = () => {
             </div>
           </div>
 
-          {selectedStock && (
-            <StockChart
-              symbol={selectedStock.name}
-              avgPrice={Number(selectedStock.avg) || 0}
-              currentPrice={
-                priceMap[selectedStock.name]?.ltp ?? Number(selectedStock.price) ?? 0
-              }
-              change={
-                (() => {
-                  const ltp =
-                    priceMap[selectedStock.name]?.ltp ?? Number(selectedStock.price) ?? 0;
-                  const pct = priceMap[selectedStock.name]?.changePercent ?? 0;
-                  return +(ltp * (pct / 100)).toFixed(2);
-                })()
-              }
-              changePercent={
-                priceMap[selectedStock.name]?.changePercent ?? 0
-              }
-              priceData={selectedStock.priceHistory}
-            />
-          )}
+          {holdings.length > 0 && <VerticalGraph data={chartData} />}
         </>
       )}
 
