@@ -1287,4 +1287,43 @@ img {
   height: auto;
 }
 
+/* -------- DASHBOARD RESPONSIVE (Dashboard.jsx) -------- */
+@media (max-width: 768px) {
+  .dashboard-container {
+    overflow-x: hidden;
+  }
+
+  .content {
+    padding: clamp(12px, 2vw, 20px);
+  }
+
+  .row {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .col {
+    flex-basis: 50%;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    overflow-x: hidden;
+  }
+
+  .content {
+    padding: clamp(8px, 2vw, 20px);
+  }
+
+  .row {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .col {
+    flex-basis: 100%;
+  }
+}
+
 
