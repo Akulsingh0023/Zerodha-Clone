@@ -5,8 +5,7 @@ function StockChart({ symbol, currentPrice, avgPrice, change, changePercent }) {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
   const [activeRange, setActiveRange] = useState('1D');
-  const [priceData, setPriceData] = useState([]);
-  const [labels, setLabels] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -19,40 +18,53 @@ function StockChart({ symbol, currentPrice, avgPrice, change, changePercent }) {
 
   useEffect(() => {
     if (!symbol) return;
-    setLoading(true);
-    setError('');
-    setPriceData([]);
-    setLabels([]);
+    const fetchChart = async () => {
+      setLoading(true);
+      setError('');
+      setChartData([]);
 
-    fetch(getChartUrl(symbol))
-      .then(async (res) => {
+      try {
+        const res = await fetch(getChartUrl(symbol));
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        let data;
         try {
-          return await res.json();
+          data = await res.json();
         } catch (err) {
-          throw new Error("Invalid JSON response");
+          throw new Error('Invalid JSON response');
         }
-      })
-      .then((data) => {
-        const raw = Array.isArray(data?.formatted) ? data.formatted : [];
-        const prices = raw.map((item) => item.price).filter((v) => Number.isFinite(v));
-        const times = raw.map((item) => item.time).filter(Boolean);
-        if (!prices.length || !times.length) {
-          throw new Error("No chart data available");
+
+        if (!data?.formatted || data.formatted.length === 0) {
+          setChartData([]);
+          setLoading(false);
+          return;
         }
-        setPriceData(prices);
-        setLabels(times);
+
+        const sanitized = data.formatted
+          .filter((item) => item && item.time)
+          .map((item) => ({
+            time: item.time,
+            price: Number(item.price),
+          }))
+          .filter((item) => Number.isFinite(item.price));
+
+        setChartData(sanitized);
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Chart fetch failed:", err);
-        setError("Chart data unavailable right now");
+      } catch (err) {
+        console.error('Chart fetch failed:', err);
+        setChartData([]);
         setLoading(false);
-      });
+      }
+    };
+
+    fetchChart();
   }, [symbol, activeRange]);
 
   useEffect(() => {
-    if (!canvasRef.current || priceData.length === 0) return;
+    if (!canvasRef.current || chartData.length === 0) return;
+
+    const priceData = chartData.map((item) => item.price);
+    const labels = chartData.map((item) => item.time);
 
     const ctx = canvasRef.current.getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 220);
@@ -128,7 +140,7 @@ function StockChart({ symbol, currentPrice, avgPrice, change, changePercent }) {
     return () => {
       if (chartRef.current) chartRef.current.destroy();
     };
-  }, [priceData, labels]);
+  }, [chartData, color, isProfit]);
 
   return (
     <div style={{ 
@@ -180,13 +192,13 @@ function StockChart({ symbol, currentPrice, avgPrice, change, changePercent }) {
         }}>
           Loading chart...
         </div>
-      ) : error ? (
+      ) : chartData.length === 0 ? (
         <div style={{ 
           height: '220px', display: 'flex', 
           alignItems: 'center', justifyContent: 'center', 
           color: '#888', fontSize: '13px' 
         }}>
-          {error}
+          Chart data unavailable right now
         </div>
       ) : (
         <div style={{ position: 'relative', height: '220px', width: '100%' }}>
