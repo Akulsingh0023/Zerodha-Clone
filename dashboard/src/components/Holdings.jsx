@@ -45,6 +45,7 @@ const Holdings = () => {
   const [priceMap, setPriceMap] = useState({}); // { SYMBOL: { ltp, changePercent } }
   const [sellStock, setSellStock] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedHolding, setSelectedHolding] = useState(null);
   const intervalRef = useRef(null);
 
   /* ── fetch holdings from backend ── */
@@ -146,6 +147,21 @@ const Holdings = () => {
   const totalPLPercent =
     totalInvestment > 0 ? ((totalPL / totalInvestment) * 100).toFixed(2) : "0.00";
 
+  useEffect(() => {
+    if (holdings.length === 0) {
+      if (selectedHolding !== null) setSelectedHolding(null);
+      return;
+    }
+
+    const stillVisible = holdings.some(
+      (holding) => holding.name === selectedHolding?.name
+    );
+
+    if (!stillVisible) {
+      setSelectedHolding(holdings[0]);
+    }
+  }, [holdings, selectedHolding]);
+
   /* ── chart data ── */
   const chartData = {
     labels: holdings.map((s) => s.name),
@@ -211,7 +227,17 @@ const Holdings = () => {
                   const dayClass = dayChange >= 0 ? "profit" : "loss";
 
                   return (
-                    <tr key={stock.name + index}>
+                    <tr
+                      key={stock.name + index}
+                      onClick={() => setSelectedHolding(stock)}
+                      style={{
+                        backgroundColor:
+                          selectedHolding?.name === stock.name
+                            ? "rgba(37, 99, 235, 0.1)"
+                            : "transparent",
+                        cursor: "pointer",
+                      }}
+                    >
                       <td className="stock-name align-left">{stock.name}</td>
                       <td className="quantity">{qty}</td>
                       <td>₹{avg.toFixed(2)}</td>
