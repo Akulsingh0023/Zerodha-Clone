@@ -14,9 +14,7 @@ function StockChart({ symbol, currentPrice, avgPrice, change, changePercent }) {
 
   // IMPORTANT: Replace this URL with whatever endpoint 
   // our backend uses to get NSE chart data for a symbol
-  const getChartUrl = (sym, range) => {
-    return `/api/chart/${sym}?range=${range}`;
-  };
+  const getChartUrl = (sym) => `/api/chart/${sym}`;
 
   useEffect(() => {
     if (!symbol) return;
@@ -24,7 +22,7 @@ function StockChart({ symbol, currentPrice, avgPrice, change, changePercent }) {
     setPriceData([]);
     setLabels([]);
 
-    fetch(getChartUrl(symbol, activeRange))
+    fetch(getChartUrl(symbol))
       .then(res => res.json())
       .then(data => {
         const raw = data.formatted || [];

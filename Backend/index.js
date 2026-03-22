@@ -1418,25 +1418,13 @@ cron.schedule(
 ===================================================== */
 app.get("/api/chart/:symbol", async (req, res) => {
   const { symbol } = req.params;
-  const { range } = req.query;
-
-  const rangeMap = {
-    "1D": "symbol",
-    "1W": "week",
-    "1M": "month",
-    "1Y": "year",
-  };
-
-  const type = rangeMap[range] || "symbol";
 
   try {
-    // Step 1: Hit NSE homepage first to get cookies
     const sessionRes = await axios.get("https://www.nseindia.com", {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
       },
       timeout: 10000,
     });
@@ -1446,7 +1434,6 @@ app.get("/api/chart/:symbol", async (req, res) => {
         ?.map((c) => c.split(";")[0])
         .join("; ") || "";
 
-    // Step 2: Fetch chart data with cookies
     const chartRes = await axios.get(
       `https://www.nseindia.com/api/chart-databyindex?index=${symbol}EQN`,
       {
@@ -1454,7 +1441,6 @@ app.get("/api/chart/:symbol", async (req, res) => {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
           Accept: "application/json, text/plain, */*",
-          "Accept-Language": "en-US,en;q=0.5",
           Referer: "https://www.nseindia.com/",
           Cookie: cookies,
           "X-Requested-With": "XMLHttpRequest",
@@ -1473,14 +1459,9 @@ app.get("/api/chart/:symbol", async (req, res) => {
       price: parseFloat(parseFloat(item[1]).toFixed(2)),
     }));
 
-    return res.json({
-      symbol,
-      range,
-      grapthData: raw,
-      formatted,
-    });
+    return res.json({ symbol, formatted });
   } catch (error) {
-    console.error("NSE chart fetch error:", error.message);
+    console.error("NSE chart error:", error.message);
     return res.status(500).json({
       error: "Failed to fetch chart data",
       message: error.message,
