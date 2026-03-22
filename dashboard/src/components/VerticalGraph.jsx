@@ -20,21 +20,30 @@ ChartJS.register(
   Legend
 );
 
-export const options = {
+const baseOptions = {
   responsive: true,
   plugins: {
     legend: {
-      position: 'top',
+      position: "top",
     },
     title: {
       display: true,
-      text: 'Holdings',
+      text: "Holdings",
     },
   },
 };
 
+export function VerticalGraph({ data, title = "Holdings" }) {
+  const options = {
+    ...baseOptions,
+    plugins: {
+      ...baseOptions.plugins,
+      title: {
+        ...baseOptions.plugins.title,
+        text: title,
+      },
+    },
+  };
 
-
-export function VerticalGraph({data}) {
   return <Bar options={options} data={data} />;
 }

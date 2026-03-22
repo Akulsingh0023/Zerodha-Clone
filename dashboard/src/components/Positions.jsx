@@ -188,6 +188,21 @@ const Positions = () => {
   const closedPositions = positions.filter((p) => Number(p.qty) === 0);
   const displayedPositions = activeTab === "open" ? openPositions : closedPositions;
 
+  useEffect(() => {
+    if (displayedPositions.length === 0) {
+      if (selectedPosition !== null) setSelectedPosition(null);
+      return;
+    }
+
+    const stillVisible = displayedPositions.some(
+      (position) => position.name === selectedPosition?.name
+    );
+
+    if (!stillVisible) {
+      setSelectedPosition(displayedPositions[0]);
+    }
+  }, [activeTab, positions, displayedPositions, selectedPosition]);
+
   const totalPL = displayedPositions.reduce((sum, s) => {
     const ltp = priceMap[s.name]?.ltp ?? Number(s.price) ?? 0;
     return sum + (ltp - Number(s.avg)) * Number(s.qty);
@@ -393,7 +408,9 @@ const Positions = () => {
             </div>
           </div>
 
-          {selectedPosition && <VerticalGraph data={chartData} />}
+          {displayedPositions.length > 0 && (
+            <VerticalGraph data={chartData} title="Positions" />
+          )}
         </>
       )}
 
