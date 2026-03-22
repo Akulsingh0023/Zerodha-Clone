@@ -8,6 +8,7 @@ function StockChart({ symbol, currentPrice, avgPrice, change, changePercent }) {
   const [priceData, setPriceData] = useState([]);
   const [labels, setLabels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const isProfit = currentPrice >= avgPrice;
   const color = isProfit ? '#22c55e' : '#ef4444';
@@ -19,21 +20,33 @@ function StockChart({ symbol, currentPrice, avgPrice, change, changePercent }) {
   useEffect(() => {
     if (!symbol) return;
     setLoading(true);
+    setError('');
     setPriceData([]);
     setLabels([]);
 
     fetch(getChartUrl(symbol))
-      .then(res => res.json())
-      .then(data => {
-        const raw = data.formatted || [];
-        const prices = raw.map(item => item.price);
-        const times = raw.map(item => item.time);
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        try {
+          return await res.json();
+        } catch (err) {
+          throw new Error("Invalid JSON response");
+        }
+      })
+      .then((data) => {
+        const raw = Array.isArray(data?.formatted) ? data.formatted : [];
+        const prices = raw.map((item) => item.price).filter((v) => Number.isFinite(v));
+        const times = raw.map((item) => item.time).filter(Boolean);
+        if (!prices.length || !times.length) {
+          throw new Error("No chart data available");
+        }
         setPriceData(prices);
         setLabels(times);
         setLoading(false);
       })
-      .catch(err => {
-        console.error('Chart fetch failed:', err);
+      .catch((err) => {
+        console.error("Chart fetch failed:", err);
+        setError("Chart data unavailable right now");
         setLoading(false);
       });
   }, [symbol, activeRange]);
@@ -166,6 +179,14 @@ function StockChart({ symbol, currentPrice, avgPrice, change, changePercent }) {
           color: '#444', fontSize: '13px' 
         }}>
           Loading chart...
+        </div>
+      ) : error ? (
+        <div style={{ 
+          height: '220px', display: 'flex', 
+          alignItems: 'center', justifyContent: 'center', 
+          color: '#888', fontSize: '13px' 
+        }}>
+          {error}
         </div>
       ) : (
         <div style={{ position: 'relative', height: '220px', width: '100%' }}>
