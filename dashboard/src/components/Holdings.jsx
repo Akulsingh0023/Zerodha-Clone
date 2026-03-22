@@ -162,15 +162,13 @@ const Holdings = () => {
     }
   }, [holdings, selectedHolding]);
 
-  const chartHoldings = selectedHolding ? [selectedHolding] : holdings;
-
   /* ── chart data ── */
   const chartData = {
-    labels: chartHoldings.map((s) => s.name),
+    labels: holdings.map((s) => s.name),
     datasets: [
       {
         label: "Current Value",
-        data: chartHoldings.map((s) => {
+        data: holdings.map((s) => {
           const ltp = priceMap[s.name]?.ltp ?? Number(s.price) ?? 0;
           return (Number(s.qty) * ltp).toFixed(2);
         }),
