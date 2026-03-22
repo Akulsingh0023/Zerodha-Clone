@@ -47,6 +47,7 @@ const Positions = () => {
   const [priceMap, setPriceMap] = useState({});
   const [sellStock, setSellStock] = useState(null);
   const [selectedPosition, setSelectedPosition] = useState(null);
+  const [activeTab, setActiveTab] = useState("open");
   const [loading, setLoading] = useState(true);
   const [squaredOff, setSquaredOff] = useState(false);
   const priceInterval = useRef(null);
@@ -204,39 +205,10 @@ const Positions = () => {
       ? ((totalPL / totalInvested) * 100).toFixed(2)
       : "0.00";
 
-  const activeTab = selectedPosition?.__tab ?? "open";
   const filteredPositions = positions.filter((stock) => {
     const qty = Number(stock.qty) || 0;
     return activeTab === "open" ? qty !== 0 : qty === 0;
   });
-
-  const buildIntradayLabels = () => {
-    const labels = [];
-    const start = 9 * 60 + 15;
-    const end = 15 * 60 + 30;
-    for (let t = start; t <= end; t += 15) {
-      const hours = Math.floor(t / 60);
-      const mins = t % 60;
-      labels.push(`${hours}:${mins.toString().padStart(2, "0")}`);
-    }
-    return labels;
-  };
-
-  const buildPnlSeries = (symbol, currentPnl, count) => {
-    const base = Number.isFinite(currentPnl) ? currentPnl : 0;
-    let hash = 0;
-    const key = symbol || "";
-    for (let i = 0; i < key.length; i++) {
-      hash = key.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    return Array.from({ length: count }, (_, i) => {
-      const progress = i / Math.max(1, count - 1);
-      const drift = base * progress;
-      const wobble = ((hash + i * 131) % 100) / 100 - 0.5;
-      return +(drift + wobble * (Math.abs(base) * 0.15 + 50)).toFixed(2);
-    });
-  };
 
   /* ═══════ RENDER ═══════ */
   return (
@@ -270,24 +242,14 @@ const Positions = () => {
             <button
               type="button"
               className={activeTab === "open" ? "pos-tab active" : "pos-tab"}
-              onClick={() =>
-                setSelectedPosition((prev) => ({
-                  ...(prev?.name ? prev : {}),
-                  __tab: "open",
-                }))
-              }
+              onClick={() => setActiveTab("open")}
             >
               Open
             </button>
             <button
               type="button"
               className={activeTab === "closed" ? "pos-tab active" : "pos-tab"}
-              onClick={() =>
-                setSelectedPosition((prev) => ({
-                  ...(prev?.name ? prev : {}),
-                  __tab: "closed",
-                }))
-              }
+              onClick={() => setActiveTab("closed")}
             >
               Closed
             </button>
@@ -325,17 +287,7 @@ const Positions = () => {
                   return (
                     <tr
                       key={stock.name + "-" + index}
-                      className={
-                        selectedPosition?.name === stock.name
-                          ? "pos-row is-selected"
-                          : "pos-row"
-                      }
-                      onClick={() =>
-                        setSelectedPosition({
-                          ...stock,
-                          __tab: activeTab,
-                        })
-                      }
+                      onClick={() => setSelectedPosition(stock)}
                     >
                       <td className="stock-name align-left">
                         {stock.name}
@@ -388,49 +340,13 @@ const Positions = () => {
             </div>
           </div>
 
-          {selectedPosition?.name && (() => {
-            const qty = Number(selectedPosition.qty) || 0;
-            const isVisible =
-              (activeTab === "open" && qty !== 0) ||
-              (activeTab === "closed" && qty === 0);
-            if (!isVisible) return null;
-
-            const ltp =
-              priceMap[selectedPosition.name]?.ltp ??
-              Number(selectedPosition.price) ??
-              0;
-            const avg = Number(selectedPosition.avg) || 0;
-            const currentPnl = (ltp - avg) * qty;
-            const labels = buildIntradayLabels();
-            const series = buildPnlSeries(
-              selectedPosition.name,
-              currentPnl,
-              labels.length
-            );
-
-            return (
-              <div className="pos-chart-panel">
-                <div className="pos-chart-header">
-                  <div className="pos-chart-title">{selectedPosition.name}</div>
-                  <div
-                    className={
-                      currentPnl >= 0 ? "pos-chart-pill profit" : "pos-chart-pill loss"
-                    }
-                  >
-                    {currentPnl >= 0 ? "+" : ""}₹{currentPnl.toFixed(2)}
-                  </div>
-                </div>
-                <div className="pos-chart-canvas">
-                  <StockChart
-                    symbol={selectedPosition.name}
-                    isProfit={currentPnl >= 0}
-                    priceData={series}
-                    timeLabels={labels}
-                  />
-                </div>
-              </div>
-            );
-          })()}
+          {selectedPosition && (
+            <StockChart
+              symbol={selectedPosition.symbol}
+              priceData={selectedPosition.priceHistory}
+              isProfit={selectedPosition.pnl > 0}
+            />
+          )}
         </>
       )}
 

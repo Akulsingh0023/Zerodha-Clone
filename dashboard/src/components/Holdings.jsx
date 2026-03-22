@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import BASE_URL from "../config";
-import { VerticalGraph } from "./VerticalGraph";
 import SellActionWindow from "./SellActionWindow";
 import StockChart from "./StockChart";
 import "./Holdings.css";
@@ -148,47 +147,6 @@ const Holdings = () => {
   const totalPLPercent =
     totalInvestment > 0 ? ((totalPL / totalInvestment) * 100).toFixed(2) : "0.00";
 
-  /* ── chart data ── */
-  const chartData = {
-    labels: holdings.map((s) => s.name),
-    datasets: [
-      {
-        label: "Current Value",
-        data: holdings.map((s) => {
-          const ltp = priceMap[s.name]?.ltp ?? Number(s.price) ?? 0;
-          return (Number(s.qty) * ltp).toFixed(2);
-        }),
-        backgroundColor: "rgba(53, 162, 235, 0.6)",
-      },
-    ],
-  };
-
-  const buildRangeLabels = (range) => {
-    const ranges = {
-      "1D": { count: 24, prefix: "H" },
-      "1W": { count: 7, prefix: "D" },
-      "1M": { count: 30, prefix: "D" },
-      "1Y": { count: 12, prefix: "M" },
-    };
-    const { count, prefix } = ranges[range] || ranges["1D"];
-    return Array.from({ length: count }, (_, i) => `${prefix}${i + 1}`);
-  };
-
-  const buildSeries = (symbol, baseValue, count) => {
-    const base = baseValue || seedPrice(symbol || "");
-    let hash = 0;
-    const key = symbol || "";
-    for (let i = 0; i < key.length; i++) {
-      hash = key.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    return Array.from({ length: count }, (_, i) => {
-      const wave = Math.sin(i / 2) * (base * 0.01);
-      const wobble = ((hash + i * 97) % 100) / 100 - 0.5;
-      return +(base + wave + wobble * (base * 0.02)).toFixed(2);
-    });
-  };
-
   /* ═══════ RENDER ═══════ */
   return (
     <>
@@ -241,17 +199,7 @@ const Holdings = () => {
                   return (
                     <tr
                       key={stock.name + index}
-                      className={
-                        selectedStock?.name === stock.name
-                          ? "hld-row is-selected"
-                          : "hld-row"
-                      }
-                      onClick={() =>
-                        setSelectedStock((prev) => ({
-                          ...stock,
-                          __range: prev?.__range ?? "1D",
-                        }))
-                      }
+                      onClick={() => setSelectedStock(stock)}
                     >
                       <td className="stock-name align-left">{stock.name}</td>
                       <td className="quantity">{qty}</td>
@@ -306,52 +254,13 @@ const Holdings = () => {
             </div>
           </div>
 
-          {holdings.length > 0 && <VerticalGraph data={chartData} />}
-
-          {selectedStock?.name && (() => {
-            const range = selectedStock.__range || "1D";
-            const labels = buildRangeLabels(range);
-            const ltp =
-              priceMap[selectedStock.name]?.ltp ?? Number(selectedStock.price) ?? 0;
-            const avg = Number(selectedStock.avg) || 0;
-            const qty = Number(selectedStock.qty) || 0;
-            const pnl = (ltp - avg) * qty;
-            const series = buildSeries(selectedStock.name, ltp || avg, labels.length);
-
-            return (
-              <div className="hld-chart-panel">
-                <div className="hld-chart-header">
-                  <div className="hld-chart-title">{selectedStock.name}</div>
-                  <div className="hld-range-tabs">
-                    {"1D|1W|1M|1Y".split("|").map((r) => (
-                      <button
-                        key={r}
-                        type="button"
-                        className={
-                          r === range ? "hld-range-btn active" : "hld-range-btn"
-                        }
-                        onClick={() =>
-                          setSelectedStock((prev) =>
-                            prev ? { ...prev, __range: r } : prev
-                          )
-                        }
-                      >
-                        {r}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="hld-chart-canvas">
-                  <StockChart
-                    symbol={selectedStock.name}
-                    isProfit={pnl >= 0}
-                    priceData={series}
-                    timeLabels={labels}
-                  />
-                </div>
-              </div>
-            );
-          })()}
+          {selectedStock && (
+            <StockChart
+              symbol={selectedStock.symbol}
+              priceData={selectedStock.priceHistory}
+              isProfit={selectedStock.currentPrice > selectedStock.avgPrice}
+            />
+          )}
         </>
       )}
 
