@@ -1412,7 +1412,10 @@ cron.schedule(
   },
   { timezone: IST_TIMEZONE }
 );
-
+//wake up render
+app.get("/ping", (req, res) => {
+  res.json({ status: "ok" });
+});
 /* ================= SERVER ================= */
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
