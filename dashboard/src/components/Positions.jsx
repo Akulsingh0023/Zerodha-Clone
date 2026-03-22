@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import BASE_URL from "../config";
 import SellActionWindow from "./SellActionWindow";
+import { VerticalGraph } from "./VerticalGraph";
 import "./Positions.css";
 
 const POSITIONS_LS_KEY = "zerodha_positions";
@@ -47,6 +48,8 @@ const Positions = () => {
   const [sellStock, setSellStock] = useState(null);
   const [loading, setLoading] = useState(true);
   const [squaredOff, setSquaredOff] = useState(false);
+  const [activeTab, setActiveTab] = useState("open");
+  const [selectedPosition, setSelectedPosition] = useState(null);
   const priceInterval = useRef(null);
   const squareOffTimer = useRef(null);
 
@@ -181,17 +184,21 @@ const Positions = () => {
   };
 
   /* ── computed totals ── */
-  const totalPL = positions.reduce((sum, s) => {
+  const openPositions = positions.filter((p) => Number(p.qty) !== 0);
+  const closedPositions = positions.filter((p) => Number(p.qty) === 0);
+  const displayedPositions = activeTab === "open" ? openPositions : closedPositions;
+
+  const totalPL = displayedPositions.reduce((sum, s) => {
     const ltp = priceMap[s.name]?.ltp ?? Number(s.price) ?? 0;
     return sum + (ltp - Number(s.avg)) * Number(s.qty);
   }, 0);
 
-  const totalInvested = positions.reduce(
+  const totalInvested = displayedPositions.reduce(
     (sum, s) => sum + Number(s.avg) * Number(s.qty),
     0
   );
 
-  const totalCurrent = positions.reduce((sum, s) => {
+  const totalCurrent = displayedPositions.reduce((sum, s) => {
     const ltp = priceMap[s.name]?.ltp ?? Number(s.price) ?? 0;
     return sum + ltp * Number(s.qty);
   }, 0);
@@ -201,6 +208,21 @@ const Positions = () => {
     totalInvested > 0
       ? ((totalPL / totalInvested) * 100).toFixed(2)
       : "0.00";
+
+  /* ── chart data ── */
+  const chartData = {
+    labels: displayedPositions.map((s) => s.name),
+    datasets: [
+      {
+        label: "Current Value",
+        data: displayedPositions.map((s) => {
+          const ltp = priceMap[s.name]?.ltp ?? Number(s.price) ?? 0;
+          return (Number(s.qty) * ltp).toFixed(2);
+        }),
+        backgroundColor: "rgba(53, 162, 235, 0.6)",
+      },
+    ],
+  };
 
   /* ═══════ RENDER ═══════ */
   return (
@@ -219,7 +241,7 @@ const Positions = () => {
 
       {loading && positions.length === 0 ? (
         <div className="pos-loading">Loading positions...</div>
-      ) : positions.length === 0 ? (
+      ) : displayedPositions.length === 0 ? (
         <div className="pos-empty">
           <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5">
             <circle cx="12" cy="12" r="10" />
@@ -230,6 +252,54 @@ const Positions = () => {
         </div>
       ) : (
         <>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px",
+            }}
+          >
+            <span style={{ fontSize: "14px", color: "#888" }}>Positions — Today</span>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => {
+                  setActiveTab("open");
+                  setSelectedPosition(null);
+                }}
+                style={{
+                  padding: "6px 16px",
+                  borderRadius: "20px",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  background: activeTab === "open" ? "#2563eb" : "transparent",
+                  color: activeTab === "open" ? "#fff" : "#888",
+                  border: activeTab === "open" ? "none" : "1px solid #333",
+                  fontWeight: "500",
+                }}
+              >
+                Open ({openPositions.length})
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("closed");
+                  setSelectedPosition(null);
+                }}
+                style={{
+                  padding: "6px 16px",
+                  borderRadius: "20px",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  background: activeTab === "closed" ? "#2563eb" : "transparent",
+                  color: activeTab === "closed" ? "#fff" : "#888",
+                  border: activeTab === "closed" ? "none" : "1px solid #333",
+                  fontWeight: "500",
+                }}
+              >
+                Closed ({closedPositions.length})
+              </button>
+            </div>
+          </div>
           <div className="order-table">
             <table className="positions-table">
               <thead>
@@ -244,7 +314,7 @@ const Positions = () => {
                 </tr>
               </thead>
               <tbody>
-                {positions.map((stock, index) => {
+                {displayedPositions.map((stock, index) => {
                   const qty = Number(stock.qty) || 0;
                   const avg = Number(stock.avg) || 0;
                   const priceInfo = priceMap[stock.name];
@@ -261,7 +331,17 @@ const Positions = () => {
                   const dayClass = dayChange >= 0 ? "profit" : "loss";
 
                   return (
-                    <tr key={stock.name + "-" + index}>
+                    <tr
+                      key={stock.name + "-" + index}
+                      onClick={() => setSelectedPosition(stock)}
+                      style={{
+                        backgroundColor:
+                          selectedPosition?.name === stock.name
+                            ? "rgba(37, 99, 235, 0.1)"
+                            : "transparent",
+                        cursor: "pointer",
+                      }}
+                    >
                       <td className="stock-name align-left">
                         {stock.name}
                         <span className="pos-product-tag">MIS</span>
@@ -312,6 +392,8 @@ const Positions = () => {
               <p>Total P&amp;L</p>
             </div>
           </div>
+
+          {selectedPosition && <VerticalGraph data={chartData} />}
         </>
       )}
 
