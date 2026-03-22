@@ -257,13 +257,15 @@ const Positions = () => {
       {loading && positions.length === 0 ? (
         <div className="pos-loading">Loading positions...</div>
       ) : displayedPositions.length === 0 ? (
-        <div className="pos-empty">
-          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M8 12h8M12 8v8" />
-          </svg>
-          <p>No Open Positions</p>
-          <span>Buy stocks with MIS product type to open intraday positions.</span>
+        <div style={{ textAlign: "center", padding: "60px 0", color: "#aaa" }}>
+          <p style={{ fontSize: "16px", fontWeight: "500" }}>
+            {activeTab === "open" ? "No Open Positions" : "No Closed Positions"}
+          </p>
+          <p style={{ fontSize: "13px", color: "#666", marginTop: "8px" }}>
+            {activeTab === "open"
+              ? "Buy stocks with MIS product type to open intraday positions."
+              : "Your closed positions for today will appear here."}
+          </p>
         </div>
       ) : (
         <>
