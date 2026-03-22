@@ -27,17 +27,9 @@ function StockChart({ symbol, currentPrice, avgPrice, change, changePercent }) {
     fetch(getChartUrl(symbol, activeRange))
       .then(res => res.json())
       .then(data => {
-        // data.grapthData = [[timestamp, price], [timestamp, price], ...]
-        const raw = data.grapthData || data.graphData || data.data || [];
-        
-        const prices = raw.map(item => 
-          parseFloat(parseFloat(item[1]).toFixed(2))
-        );
-        const times = raw.map(item => {
-          const d = new Date(item[0]);
-          return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
-        });
-
+        const raw = data.formatted || [];
+        const prices = raw.map(item => item.price);
+        const times = raw.map(item => item.time);
         setPriceData(prices);
         setLabels(times);
         setLoading(false);
