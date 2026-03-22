@@ -225,12 +225,14 @@ const Positions = () => {
       : "0.00";
 
   /* ── chart data ── */
+  const chartPositions = selectedPosition ? [selectedPosition] : displayedPositions;
+
   const chartData = {
-    labels: displayedPositions.map((s) => s.name),
+    labels: chartPositions.map((s) => s.name),
     datasets: [
       {
         label: "Current Value",
-        data: displayedPositions.map((s) => {
+        data: chartPositions.map((s) => {
           const ltp = priceMap[s.name]?.ltp ?? Number(s.price) ?? 0;
           return (Number(s.qty) * ltp).toFixed(2);
         }),
