@@ -77,6 +77,15 @@
   transform: translateY(0);
 }
 
+/* ── Selected row highlight ── */
+.hld-row {
+  cursor: pointer;
+}
+
+.hld-row.is-selected {
+  background: rgba(34, 197, 94, 0.08);
+}
+
 
 /* ── Responsive ── */
 @media (max-width: 640px) {

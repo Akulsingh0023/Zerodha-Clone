@@ -199,6 +199,9 @@ const Holdings = () => {
                   return (
                     <tr
                       key={stock.name + index}
+                      className={
+                        selectedStock?.name === stock.name ? "hld-row is-selected" : "hld-row"
+                      }
                       onClick={() => setSelectedStock(stock)}
                     >
                       <td className="stock-name align-left">{stock.name}</td>
@@ -256,9 +259,23 @@ const Holdings = () => {
 
           {selectedStock && (
             <StockChart
-              symbol={selectedStock.symbol}
+              symbol={selectedStock.name}
+              avgPrice={Number(selectedStock.avg) || 0}
+              currentPrice={
+                priceMap[selectedStock.name]?.ltp ?? Number(selectedStock.price) ?? 0
+              }
+              change={
+                (() => {
+                  const ltp =
+                    priceMap[selectedStock.name]?.ltp ?? Number(selectedStock.price) ?? 0;
+                  const pct = priceMap[selectedStock.name]?.changePercent ?? 0;
+                  return +(ltp * (pct / 100)).toFixed(2);
+                })()
+              }
+              changePercent={
+                priceMap[selectedStock.name]?.changePercent ?? 0
+              }
               priceData={selectedStock.priceHistory}
-              isProfit={selectedStock.currentPrice > selectedStock.avgPrice}
             />
           )}
         </>
