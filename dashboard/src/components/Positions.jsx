@@ -241,7 +241,7 @@ const Positions = () => {
 
   /* ═══════ RENDER ═══════ */
   return (
-    <>
+    <div>
       <h3 className="title">
         Positions ({positions.length})
         <span className="pos-mis-badge">MIS · Intraday</span>
@@ -254,69 +254,59 @@ const Positions = () => {
         </div>
       )}
 
-      {loading && positions.length === 0 ? (
-        <div className="pos-loading">Loading positions...</div>
-      ) : displayedPositions.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "#aaa" }}>
-          <p style={{ fontSize: "16px", fontWeight: "500" }}>
-            {activeTab === "open" ? "No Open Positions" : "No Closed Positions"}
-          </p>
-          <p style={{ fontSize: "13px", color: "#666", marginTop: "8px" }}>
-            {activeTab === "open"
-              ? "Buy stocks with MIS product type to open intraday positions."
-              : "Your closed positions for today will appear here."}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "16px",
+        }}
+      >
+        <span>Positions — Today</span>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button
+            onClick={() => {
+              setActiveTab("open");
+              setSelectedPosition(null);
+            }}
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "16px",
+              padding: "6px 16px",
+              borderRadius: "20px",
+              fontSize: "13px",
+              cursor: "pointer",
+              background: activeTab === "open" ? "#2563eb" : "transparent",
+              color: activeTab === "open" ? "#fff" : "#888",
+              border: activeTab === "open" ? "none" : "1px solid #ccc",
+              fontWeight: "500",
             }}
           >
-            <span style={{ fontSize: "14px", color: "#888" }}>Positions — Today</span>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => {
-                  setActiveTab("open");
-                  setSelectedPosition(null);
-                }}
-                style={{
-                  padding: "6px 16px",
-                  borderRadius: "20px",
-                  fontSize: "13px",
-                  cursor: "pointer",
-                  background: activeTab === "open" ? "#2563eb" : "transparent",
-                  color: activeTab === "open" ? "#fff" : "#888",
-                  border: activeTab === "open" ? "none" : "1px solid #333",
-                  fontWeight: "500",
-                }}
-              >
-                Open ({openPositions.length})
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab("closed");
-                  setSelectedPosition(null);
-                }}
-                style={{
-                  padding: "6px 16px",
-                  borderRadius: "20px",
-                  fontSize: "13px",
-                  cursor: "pointer",
-                  background: activeTab === "closed" ? "#2563eb" : "transparent",
-                  color: activeTab === "closed" ? "#fff" : "#888",
-                  border: activeTab === "closed" ? "none" : "1px solid #333",
-                  fontWeight: "500",
-                }}
-              >
-                Closed ({closedPositions.length})
-              </button>
-            </div>
-          </div>
+            Open ({openPositions.length})
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("closed");
+              setSelectedPosition(null);
+            }}
+            style={{
+              padding: "6px 16px",
+              borderRadius: "20px",
+              fontSize: "13px",
+              cursor: "pointer",
+              background: activeTab === "closed" ? "#2563eb" : "transparent",
+              color: activeTab === "closed" ? "#fff" : "#888",
+              border: activeTab === "closed" ? "none" : "1px solid #ccc",
+              fontWeight: "500",
+            }}
+          >
+            Closed ({closedPositions.length})
+          </button>
+        </div>
+      </div>
+
+      {loading && positions.length === 0 ? (
+        <div className="pos-loading">Loading positions...</div>
+      ) : displayedPositions.length > 0 ? (
+        <>
           <div className="order-table">
             <table className="positions-table">
               <thead>
@@ -414,13 +404,24 @@ const Positions = () => {
             <VerticalGraph data={chartData} title="Positions" />
           )}
         </>
+      ) : (
+        <div style={{ textAlign: "center", padding: "60px 0" }}>
+          <p style={{ fontSize: "16px", fontWeight: "500", color: "#aaa" }}>
+            {activeTab === "open" ? "No Open Positions" : "No Closed Positions"}
+          </p>
+          <p style={{ fontSize: "13px", color: "#999", marginTop: "8px" }}>
+            {activeTab === "open"
+              ? "Buy stocks with MIS product type to open intraday positions."
+              : "Your closed positions for today will appear here."}
+          </p>
+        </div>
       )}
 
       {/* Sell / Exit modal */}
       {sellStock && (
         <SellActionWindow stock={sellStock} closeSellWindow={closeSellWindow} />
       )}
-    </>
+    </div>
   );
 };
 
