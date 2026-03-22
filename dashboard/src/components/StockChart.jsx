@@ -1,36 +1,72 @@
 import { useEffect, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 
-const marketHours = [
-  "9:15","9:30","9:45","10:00","10:15","10:30","10:45","11:00",
-  "11:15","11:30","11:45","12:00","12:15","12:30","12:45","13:00",
-  "13:15","13:30","13:45","14:00","14:15","14:30","14:45","15:00",
-  "15:15","15:30"
-];
-
-const ranges = ['1D', '1W', '1M', '1Y'];
-
-function StockChart({ symbol, avgPrice, currentPrice, change, changePercent, priceData }) {
+function StockChart({ symbol, currentPrice, avgPrice, change, changePercent }) {
   const canvasRef = useRef(null);
+  const chartRef = useRef(null);
   const [activeRange, setActiveRange] = useState('1D');
+  const [priceData, setPriceData] = useState([]);
+  const [labels, setLabels] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const isProfit = currentPrice >= avgPrice;
   const color = isProfit ? '#22c55e' : '#ef4444';
 
+  // IMPORTANT: Replace this URL with whatever endpoint 
+  // our backend uses to get NSE chart data for a symbol
+  const getChartUrl = (sym, range) => {
+    return `/api/chart/${sym}?range=${range}`;
+  };
+
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!symbol) return;
+    setLoading(true);
+    setPriceData([]);
+    setLabels([]);
+
+    fetch(getChartUrl(symbol, activeRange))
+      .then(res => res.json())
+      .then(data => {
+        // data.grapthData = [[timestamp, price], [timestamp, price], ...]
+        const raw = data.grapthData || data.graphData || data.data || [];
+        
+        const prices = raw.map(item => 
+          parseFloat(parseFloat(item[1]).toFixed(2))
+        );
+        const times = raw.map(item => {
+          const d = new Date(item[0]);
+          return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+        });
+
+        setPriceData(prices);
+        setLabels(times);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Chart fetch failed:', err);
+        setLoading(false);
+      });
+  }, [symbol, activeRange]);
+
+  useEffect(() => {
+    if (!canvasRef.current || priceData.length === 0) return;
 
     const ctx = canvasRef.current.getContext('2d');
-
     const gradient = ctx.createLinearGradient(0, 0, 0, 220);
-    gradient.addColorStop(0, isProfit ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)');
+    gradient.addColorStop(0, isProfit 
+      ? 'rgba(34,197,94,0.25)' 
+      : 'rgba(239,68,68,0.25)'
+    );
     gradient.addColorStop(1, 'rgba(0,0,0,0)');
 
-    const chart = new Chart(ctx, {
+    if (chartRef.current) chartRef.current.destroy();
+
+    chartRef.current = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: marketHours,
+        labels: labels,
         datasets: [{
-          data: priceData ? priceData.slice(0, 26) : [],
+          data: priceData,
           borderColor: color,
           borderWidth: 2,
           backgroundColor: gradient,
@@ -66,11 +102,11 @@ function StockChart({ symbol, avgPrice, currentPrice, change, changePercent, pri
         scales: {
           x: {
             grid: { display: false },
-            ticks: {
-              color: '#666',
-              font: { size: 11 },
-              maxTicksLimit: 7,
-              autoSkip: true
+            ticks: { 
+              color: '#666', 
+              font: { size: 11 }, 
+              maxTicksLimit: 7, 
+              autoSkip: true 
             }
           },
           y: {
@@ -86,30 +122,36 @@ function StockChart({ symbol, avgPrice, currentPrice, change, changePercent, pri
       }
     });
 
-    return () => chart.destroy();
-  }, [symbol, priceData, activeRange, isProfit]);
+    return () => {
+      if (chartRef.current) chartRef.current.destroy();
+    };
+  }, [priceData, labels]);
 
   return (
-    <div style={{
-      background: '#111',
-      borderRadius: '12px',
-      padding: '20px',
-      marginTop: '16px',
-      color: '#fff'
+    <div style={{ 
+      background: '#111', borderRadius: '12px', 
+      padding: '20px', marginTop: '16px', color: '#fff' 
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+      <div style={{ 
+        display: 'flex', justifyContent: 'space-between', 
+        alignItems: 'flex-start', marginBottom: '16px' 
+      }}>
         <div>
-          <p style={{ fontSize: '13px', color: '#888', margin: '0 0 4px' }}>{symbol}</p>
-          <p style={{ fontSize: '26px', fontWeight: '500', margin: '0' }}>₹{Number(currentPrice).toFixed(2)}</p>
+          <p style={{ fontSize: '13px', color: '#888', margin: '0 0 4px' }}>
+            {symbol}
+          </p>
+          <p style={{ fontSize: '26px', fontWeight: '500', margin: '0' }}>
+            ₹{Number(currentPrice).toFixed(2)}
+          </p>
           <p style={{ fontSize: '13px', color: color, margin: '4px 0 0' }}>
             {change > 0 ? '+' : ''}{change} ({changePercent}%) today
           </p>
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
-          {ranges.map(r => (
-            <button
-              key={r}
-              onClick={() => setActiveRange(r)}
+          {['1D','1W','1M','1Y'].map(r => (
+            <button 
+              key={r} 
+              onClick={() => setActiveRange(r)} 
               style={{
                 padding: '4px 10px',
                 fontSize: '12px',
@@ -126,9 +168,20 @@ function StockChart({ symbol, avgPrice, currentPrice, change, changePercent, pri
           ))}
         </div>
       </div>
-      <div style={{ position: 'relative', height: '220px', width: '100%' }}>
-        <canvas ref={canvasRef}></canvas>
-      </div>
+
+      {loading ? (
+        <div style={{ 
+          height: '220px', display: 'flex', 
+          alignItems: 'center', justifyContent: 'center', 
+          color: '#444', fontSize: '13px' 
+        }}>
+          Loading chart...
+        </div>
+      ) : (
+        <div style={{ position: 'relative', height: '220px', width: '100%' }}>
+          <canvas ref={canvasRef}></canvas>
+        </div>
+      )}
     </div>
   );
 }
