@@ -72,7 +72,49 @@ const Positions = () => {
   const fetchOrders = useCallback(async () => {
     try {
       const res = await axios.get(`${BASE_URL}/newOrder`);
-      setOrders(Array.isArray(res.data) ? res.data : []);
+      console.log("[Positions][debug] GET /newOrder raw response:", res.data);
+
+      const isTodayLocal = (dateLike) => {
+        const d = new Date(dateLike);
+        if (Number.isNaN(d.getTime())) return false;
+        const now = new Date();
+        return d.toDateString() === now.toDateString();
+      };
+
+      const list = Array.isArray(res.data) ? res.data : [];
+      const auto = list.filter((o) => {
+        const raw = o?.action ?? o?.mode ?? o?.status ?? "";
+        const norm = String(raw).trim().toUpperCase().replace(/[_-]+/g, " ");
+        return norm === "AUTO SQUARE OFF";
+      });
+
+      console.log(
+        "[Positions][debug] AUTO SQUARE OFF orders (raw):",
+        auto.map((o) => ({
+          name: o?.name ?? o?.symbol,
+          action: o?.action,
+          mode: o?.mode,
+          status: o?.status,
+          price: o?.price,
+          qty: o?.qty,
+          createdAt: o?.createdAt,
+          updatedAt: o?.updatedAt,
+        }))
+      );
+
+      // Also log how the date filter behaves for these orders
+      console.log(
+        "[Positions][debug] AUTO SQUARE OFF date checks:",
+        auto.map((o) => ({
+          name: o?.name ?? o?.symbol,
+          createdAt: o?.createdAt,
+          isToday_createdAt: isTodayLocal(o?.createdAt),
+          updatedAt: o?.updatedAt,
+          isToday_updatedAt: isTodayLocal(o?.updatedAt),
+        }))
+      );
+
+      setOrders(list);
     } catch (err) {
       console.error("Orders fetch failed:", err);
       setOrders([]);
@@ -118,6 +160,11 @@ const Positions = () => {
         };
       }
     }
+
+    console.log(
+      "[Positions][debug] autoSquareOffBySymbol computed:",
+      map
+    );
     return map;
   }, [orders, isAutoSquareOffOrder, isToday, normalizeSymbol]);
 
@@ -267,6 +314,21 @@ const Positions = () => {
   const closedPositions = [...baseClosedPositions, ...autoSquareOffClosedPositions];
   const displayedPositions =
     activeTab === "open" ? openPositions : closedPositions;
+
+  // Debug: show matching between positions and AUTO SQUARE OFF orders
+  useEffect(() => {
+    const autoSymbols = Object.keys(autoSquareOffBySymbol);
+    const posSymbols = positions.map((p) => normalizeSymbol(p?.name));
+    const matched = posSymbols.filter((s) => autoSquareOffBySymbol[s]);
+    const unmatchedAutos = autoSymbols.filter((s) => !posSymbols.includes(s));
+
+    console.log("[Positions][debug] positions list:", positions);
+    console.log("[Positions][debug] position symbols:", posSymbols);
+    console.log("[Positions][debug] AUTO SQUARE OFF symbols:", autoSymbols);
+    console.log("[Positions][debug] matched symbols:", matched);
+    console.log("[Positions][debug] auto symbols w/o position match:", unmatchedAutos);
+    console.log("[Positions][debug] final closedPositions (pre-render):", closedPositions);
+  }, [positions, autoSquareOffBySymbol, normalizeSymbol, closedPositions]);
 
   const getDisplayPrice = useCallback(
     (stock) => {
