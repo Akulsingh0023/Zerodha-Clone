@@ -70,7 +70,7 @@
 
 // export default Dashboard;
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 
 import ProtectedRoute from "./ProtectedRoute";
@@ -90,46 +90,13 @@ import GlobalToast from "./GlobalToast";
 import Support from "./Support";
 import UserRoute from "./UserRoute";
 
-const getViewportWidth = () => {
-  if (typeof window === "undefined") return 1024;
-  return window.innerWidth;
-};
-
-const useViewportWidth = () => {
-  const [width, setWidth] = useState(getViewportWidth);
-
-  useEffect(() => {
-    const onResize = () => setWidth(getViewportWidth());
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  return width;
-};
-
 const Dashboard = ({ watchlistOpen, onCloseWatchlist }) => {
-  const viewportWidth = useViewportWidth();
   const location = useLocation();
   const isAdminRoute = location.pathname === "/admin" || location.pathname.startsWith("/admin/");
-  const isMobile = viewportWidth <= 480;
-  const isTablet = viewportWidth > 480 && viewportWidth <= 768;
-
-  const containerStyle = {
-    width: "100%",
-    maxWidth: "100%",
-    overflowX: "hidden",
-  };
-
-  const contentStyle = {
-    width: "100%",
-    maxWidth: "100%",
-    overflowX: "hidden",
-    padding: isMobile ? "8px" : isTablet ? "12px" : "clamp(8px, 2vw, 24px)",
-  };
 
   return (
     <ProtectedRoute>
-      <div className="dashboard-container" style={containerStyle}>
+      <div className="dashboard-container">
         <GlobalToast />
         {!isAdminRoute && (
           <>
@@ -146,7 +113,7 @@ const Dashboard = ({ watchlistOpen, onCloseWatchlist }) => {
           </>
         )}
 
-        <div className={`content ${isAdminRoute ? "admin-full" : ""}`} style={contentStyle}>
+        <div className={`content ${isAdminRoute ? "admin-full" : ""}`}>
           <Routes>
             <Route path="/" element={<Summary />} />
             <Route path="/orders" element={<Orders />} />

@@ -481,3 +481,23 @@
     font-size: 11px;
   }
 }
+
+@media (max-width: 768px) {
+  .wl-mobile-header {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 150;
+    background: #fff;
+  }
+
+  .wl-close {
+    position: static;
+    flex-shrink: 0;
+  }
+
+  .watchlist-container canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
