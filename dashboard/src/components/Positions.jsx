@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import BASE_URL from "../config";
 import SellActionWindow from "./SellActionWindow";
@@ -44,7 +44,6 @@ const saveCache = (list) =>
    ═══════════════════════════════════════════════ */
 const Positions = () => {
   const [positions, setPositions] = useState(loadCached);
-  const [orders, setOrders] = useState([]);
   const [priceMap, setPriceMap] = useState({});
   const [sellStock, setSellStock] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -67,106 +66,6 @@ const Positions = () => {
       setLoading(false);
     }
   }, []);
-
-  /* ── fetch orders (used to derive auto square-off closed list) ── */
-  const fetchOrders = useCallback(async () => {
-    try {
-      const res = await axios.get(`${BASE_URL}/newOrder`);
-      console.log("[Positions][debug] GET /newOrder raw response:", res.data);
-
-      const isTodayLocal = (dateLike) => {
-        const d = new Date(dateLike);
-        if (Number.isNaN(d.getTime())) return false;
-        const now = new Date();
-        return d.toDateString() === now.toDateString();
-      };
-
-      const list = Array.isArray(res.data) ? res.data : [];
-      const auto = list.filter((o) => {
-        const raw = o?.action ?? o?.mode ?? o?.status ?? "";
-        const norm = String(raw).trim().toUpperCase().replace(/[_-]+/g, " ");
-        return norm === "AUTO SQUARE OFF";
-      });
-
-      console.log(
-        "[Positions][debug] AUTO SQUARE OFF orders (raw):",
-        auto.map((o) => ({
-          name: o?.name ?? o?.symbol,
-          action: o?.action,
-          mode: o?.mode,
-          status: o?.status,
-          price: o?.price,
-          qty: o?.qty,
-          createdAt: o?.createdAt,
-          updatedAt: o?.updatedAt,
-        }))
-      );
-
-      // Also log how the date filter behaves for these orders
-      console.log(
-        "[Positions][debug] AUTO SQUARE OFF date checks:",
-        auto.map((o) => ({
-          name: o?.name ?? o?.symbol,
-          createdAt: o?.createdAt,
-          isToday_createdAt: isTodayLocal(o?.createdAt),
-          updatedAt: o?.updatedAt,
-          isToday_updatedAt: isTodayLocal(o?.updatedAt),
-        }))
-      );
-
-      setOrders(list);
-    } catch (err) {
-      console.error("Orders fetch failed:", err);
-      setOrders([]);
-    }
-  }, []);
-
-  const isToday = useCallback((dateLike) => {
-    const d = new Date(dateLike);
-    if (Number.isNaN(d.getTime())) return false;
-    const now = new Date();
-    return d.toDateString() === now.toDateString();
-  }, []);
-
-  const isAutoSquareOffOrder = useCallback((order) => {
-    const raw = order?.action ?? order?.mode ?? order?.status ?? "";
-    const norm = String(raw).trim().toUpperCase().replace(/[_-]+/g, " ");
-    return norm === "AUTO SQUARE OFF";
-  }, []);
-
-  const normalizeSymbol = useCallback(
-    (value) => String(value ?? "").trim().toUpperCase(),
-    []
-  );
-
-  const autoSquareOffBySymbol = useMemo(() => {
-    // Keep latest AUTO SQUARE OFF order per symbol for today
-    const map = {};
-    for (const o of orders) {
-      if (!isAutoSquareOffOrder(o)) continue;
-      if (!isToday(o?.createdAt ?? o?.updatedAt ?? o?.date)) continue;
-
-      const symbol = normalizeSymbol(o?.name ?? o?.symbol);
-      if (!symbol) continue;
-
-      const ts = new Date(o?.createdAt ?? o?.updatedAt ?? Date.now()).getTime();
-      if (!Number.isFinite(ts)) continue;
-
-      const prev = map[symbol];
-      if (!prev || ts > prev.ts) {
-        map[symbol] = {
-          ts,
-          sellPrice: Number(o?.price) || 0,
-        };
-      }
-    }
-
-    console.log(
-      "[Positions][debug] autoSquareOffBySymbol computed:",
-      map
-    );
-    return map;
-  }, [orders, isAutoSquareOffOrder, isToday, normalizeSymbol]);
 
   /* ── fetch live prices with mock fallback ── */
   const fetchPrices = useCallback(async () => {
@@ -224,11 +123,7 @@ const Positions = () => {
       try {
         await Promise.allSettled(
           positions.map((stock) => {
-            const live = priceMap[stock.name]?.ltp;
-            const ltp =
-              live !== undefined && live !== null
-                ? Number(live) || 0
-                : Number(stock.price) || 0;
+            const ltp = priceMap[stock.name]?.ltp ?? Number(stock.price) ?? 0;
             return axios.post(`${BASE_URL}/newOrder`, {
               name: stock.name,
               qty: Number(stock.qty),
@@ -252,16 +147,10 @@ const Positions = () => {
   /* ── initial load + walletUpdated listener ── */
   useEffect(() => {
     fetchPositions();
-    fetchOrders();
     const onUpdate = () => fetchPositions();
-    const onOrdersUpdate = () => fetchOrders();
     window.addEventListener("walletUpdated", onUpdate);
-    window.addEventListener("walletUpdated", onOrdersUpdate);
-    return () => {
-      window.removeEventListener("walletUpdated", onUpdate);
-      window.removeEventListener("walletUpdated", onOrdersUpdate);
-    };
-  }, [fetchPositions, fetchOrders]);
+    return () => window.removeEventListener("walletUpdated", onUpdate);
+  }, [fetchPositions]);
 
   /* ── price refresh interval ── */
   useEffect(() => {
@@ -295,61 +184,9 @@ const Positions = () => {
   };
 
   /* ── computed totals ── */
-  const baseOpenPositions = positions.filter((p) => Number(p.qty) !== 0);
-  const baseClosedPositions = positions.filter((p) => Number(p.qty) === 0);
-
-  // If a symbol has an AUTO SQUARE OFF order today, show it under Closed.
-  const autoSquareOffClosedPositions = baseOpenPositions
-    .filter((p) => autoSquareOffBySymbol[normalizeSymbol(p.name)])
-    .map((p) => ({
-      ...p,
-      __autoSquareOff: {
-        sellPrice: autoSquareOffBySymbol[normalizeSymbol(p.name)].sellPrice,
-      },
-    }));
-
-  const openPositions = baseOpenPositions.filter(
-    (p) => !autoSquareOffBySymbol[normalizeSymbol(p.name)]
-  );
-  const closedPositions = [...baseClosedPositions, ...autoSquareOffClosedPositions];
-  const displayedPositions =
-    activeTab === "open" ? openPositions : closedPositions;
-
-  // Debug: show matching between positions and AUTO SQUARE OFF orders
-  useEffect(() => {
-    const autoSymbols = Object.keys(autoSquareOffBySymbol);
-    const posSymbols = positions.map((p) => normalizeSymbol(p?.name));
-    const matched = posSymbols.filter((s) => autoSquareOffBySymbol[s]);
-    const unmatchedAutos = autoSymbols.filter((s) => !posSymbols.includes(s));
-
-    console.log("[Positions][debug] positions list:", positions);
-    console.log("[Positions][debug] position symbols:", posSymbols);
-    console.log("[Positions][debug] AUTO SQUARE OFF symbols:", autoSymbols);
-    console.log("[Positions][debug] matched symbols:", matched);
-    console.log("[Positions][debug] auto symbols w/o position match:", unmatchedAutos);
-    console.log("[Positions][debug] final closedPositions (pre-render):", closedPositions);
-  }, [positions, autoSquareOffBySymbol, normalizeSymbol, closedPositions]);
-
-  const getDisplayPrice = useCallback(
-    (stock) => {
-      const autoSellPrice = stock?.__autoSquareOff?.sellPrice;
-      if (autoSellPrice !== undefined && autoSellPrice !== null) {
-        const n = Number(autoSellPrice);
-        return Number.isFinite(n) ? n : 0;
-      }
-
-      const symbol = stock?.name;
-      const live = priceMap[symbol]?.ltp;
-      if (live !== undefined && live !== null) {
-        const n = Number(live);
-        return Number.isFinite(n) ? n : 0;
-      }
-
-      const fallback = Number(stock?.price);
-      return Number.isFinite(fallback) ? fallback : 0;
-    },
-    [priceMap]
-  );
+  const openPositions = positions.filter((p) => Number(p.qty) !== 0);
+  const closedPositions = positions.filter((p) => Number(p.qty) === 0);
+  const displayedPositions = activeTab === "open" ? openPositions : closedPositions;
 
   useEffect(() => {
     if (displayedPositions.length === 0) {
@@ -367,7 +204,7 @@ const Positions = () => {
   }, [activeTab, positions, displayedPositions, selectedPosition]);
 
   const totalPL = displayedPositions.reduce((sum, s) => {
-    const ltp = getDisplayPrice(s);
+    const ltp = priceMap[s.name]?.ltp ?? Number(s.price) ?? 0;
     return sum + (ltp - Number(s.avg)) * Number(s.qty);
   }, 0);
 
@@ -377,7 +214,7 @@ const Positions = () => {
   );
 
   const totalCurrent = displayedPositions.reduce((sum, s) => {
-    const ltp = getDisplayPrice(s);
+    const ltp = priceMap[s.name]?.ltp ?? Number(s.price) ?? 0;
     return sum + ltp * Number(s.qty);
   }, 0);
 
@@ -394,7 +231,7 @@ const Positions = () => {
       {
         label: "Current Value",
         data: displayedPositions.map((s) => {
-          const ltp = getDisplayPrice(s);
+          const ltp = priceMap[s.name]?.ltp ?? Number(s.price) ?? 0;
           return (Number(s.qty) * ltp).toFixed(2);
         }),
         backgroundColor: "rgba(53, 162, 235, 0.6)",
@@ -488,13 +325,7 @@ const Positions = () => {
                   const qty = Number(stock.qty) || 0;
                   const avg = Number(stock.avg) || 0;
                   const priceInfo = priceMap[stock.name];
-                  const autoSellPrice = stock?.__autoSquareOff?.sellPrice;
-                  const ltp =
-                    autoSellPrice !== undefined && autoSellPrice !== null
-                      ? Number(autoSellPrice) || 0
-                      : priceInfo?.ltp !== undefined && priceInfo?.ltp !== null
-                        ? Number(priceInfo.ltp) || 0
-                        : Number(stock.price) || 0;
+                  const ltp = priceInfo?.ltp ?? Number(stock.price) ?? 0;
                   const dayChange = priceInfo?.changePercent ?? 0;
 
                   const pnl = (ltp - avg) * qty;
