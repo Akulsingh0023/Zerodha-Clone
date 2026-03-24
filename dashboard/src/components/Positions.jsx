@@ -185,7 +185,21 @@ const Positions = () => {
 
   /* ── computed totals ── */
   const openPositions = positions.filter((p) => Number(p.qty) !== 0);
-  const closedPositions = positions.filter((p) => Number(p.qty) === 0);
+  const isClosedPosition = (position) => {
+    const qty = Number(position?.qty ?? position?.remainingQty ?? 0);
+    const action = String(position?.action ?? position?.mode ?? "").toUpperCase();
+    const status = String(position?.status ?? "").toUpperCase();
+
+    if (action === "AUTO SQUARE OFF") return true;
+    if (qty === 0) return true;
+    if (status === "CLOSED") return true;
+    if (status === "COMPLETE" && Number(position?.remainingQty ?? 0) === 0) return true;
+    if (action === "SELL" && qty === 0) return true;
+
+    return false;
+  };
+
+  const closedPositions = positions.filter(isClosedPosition);
   const displayedPositions = activeTab === "open" ? openPositions : closedPositions;
 
   useEffect(() => {

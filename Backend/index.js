@@ -856,6 +856,11 @@ const openMisFilter = {
 };
 
 const withOpenMis = (base = {}) => ({ ...base, ...openMisFilter });
+const misFilter = {
+  $and: [{ $or: [{ productType: "MIS" }, { product: "MIS" }] }],
+};
+
+const withMis = (base = {}) => ({ ...base, ...misFilter });
 
 /* ================= MIDDLEWARE ================= */
 
@@ -989,7 +994,7 @@ app.get("/holdings", protect, async (req, res) => {
 /* 🔹 GET POSITIONS */
 app.get("/allPositions", protect, async (req, res) => {
   try {
-    const positions = await PositionsModel.find(withOpenMis({ user: req.user._id }));
+    const positions = await PositionsModel.find(withMis({ user: req.user._id })).sort({ _id: -1 });
     res.json(positions);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch positions" });
@@ -999,7 +1004,7 @@ app.get("/allPositions", protect, async (req, res) => {
 // MIS positions (preferred)
 app.get("/positions", protect, async (req, res) => {
   try {
-    const positions = await PositionsModel.find(withOpenMis({ user: req.user._id }));
+    const positions = await PositionsModel.find(withMis({ user: req.user._id })).sort({ _id: -1 });
     res.json(positions);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch positions" });
