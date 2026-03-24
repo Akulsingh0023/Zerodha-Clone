@@ -173,3 +173,31 @@
     margin-bottom: 22px;
   }
 }
+
+@media (max-width: 768px) {
+  .profile-card {
+    width: min(95vw, 520px);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: clamp(12px, 2vw, 24px);
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-wrapper {
+    padding: 8px;
+  }
+
+  .profile-card {
+    width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 12px;
+  }
+
+  .profile-card input,
+  .save-btn,
+  .message {
+    font-size: clamp(12px, 2vw, 16px);
+  }
+}

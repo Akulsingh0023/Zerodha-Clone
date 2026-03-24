@@ -86,3 +86,36 @@
     display: none;
   }
 }
+
+@media (max-width: 768px) {
+  .hld-loading,
+  .hld-empty {
+    min-height: 180px;
+    padding: 12px;
+  }
+
+  .holdings-table {
+    min-width: 640px;
+  }
+
+  .hld-sell-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hld-empty p {
+    font-size: 14px;
+  }
+
+  .hld-empty span,
+  .hld-pnl-pct {
+    font-size: 12px;
+  }
+
+  .hld-sell-btn {
+    padding: 4px 10px;
+    font-size: 10px;
+  }
+}

@@ -252,6 +252,69 @@
   cursor: pointer;
 }
 
+@media (max-width: 768px) {
+  .admin-page {
+    padding: clamp(12px, 2vw, 16px);
+  }
+
+  .admin-stats-grid,
+  .admin-stats-grid.small {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .admin-table-wrapper,
+  .users-table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  .admin-table,
+  .users-table {
+    min-width: 680px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-panel {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .admin-sidebar {
+    width: min(88vw, 300px);
+    min-width: min(88vw, 300px);
+    position: fixed;
+    z-index: 4001;
+  }
+
+  .admin-sidebar.collapsed {
+    width: 0;
+    min-width: 0;
+  }
+
+  .admin-mobile-bar {
+    display: flex;
+  }
+
+  .admin-page,
+  .admin-page-header,
+  .admin-page-header h1,
+  .admin-page-header p,
+  .admin-table th,
+  .admin-table td,
+  .users-table th,
+  .users-table td {
+    font-size: clamp(12px, 2vw, 16px);
+  }
+
+  .admin-stats-grid,
+  .admin-stats-grid.small {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
 /* =====================================
    ADMIN PAGE (shared by all pages)
 ===================================== */

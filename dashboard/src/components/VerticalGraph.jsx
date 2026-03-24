@@ -45,5 +45,9 @@ export function VerticalGraph({ data, title = "Holdings" }) {
     },
   };
 
-  return <Bar options={options} data={data} />;
+  return (
+    <div style={{ width: "100%", maxWidth: "100%", minHeight: "220px", overflowX: "hidden" }}>
+      <Bar options={options} data={data} />
+    </div>
+  );
 }

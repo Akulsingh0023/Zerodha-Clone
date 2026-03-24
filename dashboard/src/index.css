@@ -1287,4 +1287,151 @@ img {
   height: auto;
 }
 
+/* -------- UNIVERSAL RESPONSIVE SAFETY -------- */
+* {
+  box-sizing: border-box;
+}
+
+.dashboard-container,
+.content,
+.watchlist-container,
+.watchlist-shell,
+.topbar-container,
+.menu-container,
+.indices-container,
+.order-table,
+.admin-table-wrapper,
+.users-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.order-table,
+.admin-table-wrapper,
+.users-table-wrapper,
+.tx-scroll {
+  overflow-x: auto;
+}
+
+.order-table table,
+.admin-table,
+.users-table,
+.tx-table {
+  min-width: 640px;
+}
+
+.row {
+  flex-wrap: wrap;
+}
+
+.global-toast {
+  max-width: min(92vw, 520px);
+  font-size: clamp(12px, 2vw, 16px);
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: clamp(12px, 2vw, 16px) !important;
+  }
+
+  .topbar-container {
+    height: auto;
+    min-height: 10vh;
+  }
+
+  .indices-container {
+    overflow-x: auto;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 10px 12px;
+  }
+
+  .menu-container {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .menus {
+    min-width: max-content;
+  }
+
+  .menus ul {
+    flex-wrap: nowrap;
+  }
+
+  .watchlist-container {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .content {
+    padding: clamp(8px, 2vw, 12px) !important;
+  }
+
+  .menu-container img {
+    width: 40px !important;
+  }
+
+  .menus li .menu {
+    font-size: 0;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+  }
+
+  .menus li .menu::first-letter {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgb(70, 70, 70);
+  }
+
+  .profile .username {
+    display: none;
+  }
+
+  .watchlist-shell {
+    width: 95vw;
+    max-width: 95vw;
+  }
+
+  .watchlist-container {
+    min-width: 0;
+  }
+
+  .funds {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+    text-align: left;
+  }
+
+  .btn {
+    width: auto;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .title,
+  .col p,
+  .menu,
+  .index,
+  .index-points,
+  .percent {
+    font-size: clamp(12px, 2vw, 16px);
+  }
+}
+
 

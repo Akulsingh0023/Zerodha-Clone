@@ -7,5 +7,9 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 
 export function DoughnutChart({data}) {
-  return <Doughnut data={data} />;
+  return (
+    <div style={{ width: "100%", maxWidth: "100%", minHeight: "220px", overflowX: "hidden" }}>
+      <Doughnut data={data} />
+    </div>
+  );
 }

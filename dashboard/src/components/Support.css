@@ -131,3 +131,30 @@
     width: 100%;
   }
 }
+
+@media (max-width: 768px) {
+  .support-page {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .support-card {
+    padding: clamp(12px, 2vw, 20px);
+  }
+}
+
+@media (max-width: 480px) {
+  .support-header h2,
+  .support-header p,
+  .support-label,
+  .support-input,
+  .support-textarea,
+  .support-submit {
+    font-size: clamp(12px, 2vw, 16px);
+  }
+
+  .support-card {
+    border-radius: 12px;
+    padding: 12px;
+  }
+}
