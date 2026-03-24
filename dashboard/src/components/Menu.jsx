@@ -294,6 +294,14 @@ const Menu = () => {
             </Link>
           </li>
 
+          <li className="mobile-only-nav-item">
+            <Link to="/watchlist" className="link" onClick={closeMobileSidebar}>
+              <p className={location.pathname === "/watchlist" ? activeMenuClass : menuClass}>
+                Watchlist
+              </p>
+            </Link>
+          </li>
+
           {/* ================= ADMIN PANEL TAB ================= */}
           {user?.role === "admin" && (
             <li>
@@ -387,6 +395,10 @@ const Menu = () => {
         }
 
         @media (max-width: 768px) {
+          .mobile-only-nav-item {
+            display: list-item;
+          }
+
           .dropdown {
             right: 8px;
             top: 44px;
@@ -394,6 +406,12 @@ const Menu = () => {
             max-width: calc(100vw - 20px);
             max-height: 80vh;
             overflow-y: auto;
+          }
+        }
+
+        @media (min-width: 769px) {
+          .mobile-only-nav-item {
+            display: none;
           }
         }
 
