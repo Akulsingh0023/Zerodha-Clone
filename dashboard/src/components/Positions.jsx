@@ -44,6 +44,7 @@ const saveCache = (list) =>
    ═══════════════════════════════════════════════ */
 const Positions = () => {
   const [positions, setPositions] = useState(loadCached);
+  const [closeOrderBySymbol, setCloseOrderBySymbol] = useState({});
   const [priceMap, setPriceMap] = useState({});
   const [sellStock, setSellStock] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,11 +54,42 @@ const Positions = () => {
   const priceInterval = useRef(null);
   const squareOffTimer = useRef(null);
 
+  const buildCloseOrderMap = (orders) => {
+    const map = {};
+    const list = Array.isArray(orders) ? orders : [];
+
+    list.forEach((order) => {
+      const mode = String(order?.mode ?? "").toUpperCase();
+      if (mode !== "SELL" && mode !== "AUTO SQUARE OFF") return;
+
+      const symbol = String(order?.name ?? "").trim();
+      if (!symbol || map[symbol]) return;
+      map[symbol] = order;
+    });
+
+    return map;
+  };
+
   /* ── fetch positions from backend ── */
   const fetchPositions = useCallback(async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/positions`);
-      const data = Array.isArray(res.data) ? res.data : [];
+      const [positionsRes, ordersRes] = await Promise.allSettled([
+        axios.get(`${BASE_URL}/positions`),
+        axios.get(`${BASE_URL}/newOrder`),
+      ]);
+
+      if (positionsRes.status !== "fulfilled") {
+        throw positionsRes.reason;
+      }
+
+      const data = Array.isArray(positionsRes.value?.data)
+        ? positionsRes.value.data
+        : [];
+
+      if (ordersRes.status === "fulfilled") {
+        setCloseOrderBySymbol(buildCloseOrderMap(ordersRes.value?.data));
+      }
+
       setPositions(data);
       saveCache(data);
     } catch (err) {
@@ -199,7 +231,22 @@ const Positions = () => {
     return false;
   };
 
-  const closedPositions = positions.filter(isClosedPosition);
+  const closedPositions = positions
+    .filter(isClosedPosition)
+    .map((position) => {
+      const closeOrder = closeOrderBySymbol[position.name];
+      const closedQty = Number(closeOrder?.qty ?? position?.qty ?? 0);
+      const avg = Number(position?.avg ?? 0);
+      const sellPrice = Number(closeOrder?.price ?? position?.price ?? 0);
+      const closedPnl = (sellPrice - avg) * closedQty;
+
+      return {
+        ...position,
+        __closedQty: closedQty,
+        __sellPrice: sellPrice,
+        __closedPnl: closedPnl,
+      };
+    });
   const displayedPositions = activeTab === "open" ? openPositions : closedPositions;
 
   useEffect(() => {
@@ -328,21 +375,27 @@ const Positions = () => {
                   <th className="align-left">Instrument</th>
                   <th>Qty.</th>
                   <th>Avg.</th>
-                  <th>LTP</th>
+                  {activeTab === "open" ? <th>LTP</th> : <th>Sell Price</th>}
                   <th>P&amp;L</th>
                   <th>Day Chg.</th>
-                  <th>Action</th>
+                  {activeTab === "open" && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
                 {displayedPositions.map((stock, index) => {
-                  const qty = Number(stock.qty) || 0;
+                  const isClosedTab = activeTab === "closed";
+                  const qty = isClosedTab
+                    ? Number(stock.__closedQty ?? 0)
+                    : Number(stock.qty) || 0;
                   const avg = Number(stock.avg) || 0;
                   const priceInfo = priceMap[stock.name];
                   const ltp = priceInfo?.ltp ?? Number(stock.price) ?? 0;
+                  const sellPrice = Number(stock.__sellPrice ?? stock.price) || 0;
                   const dayChange = priceInfo?.changePercent ?? 0;
 
-                  const pnl = (ltp - avg) * qty;
+                  const pnl = isClosedTab
+                    ? Number(stock.__closedPnl ?? (sellPrice - avg) * qty)
+                    : (ltp - avg) * qty;
                   const pnlPercent =
                     avg * qty > 0
                       ? ((pnl / (avg * qty)) * 100).toFixed(2)
@@ -369,25 +422,33 @@ const Positions = () => {
                       </td>
                       <td className="quantity">{qty}</td>
                       <td>₹{avg.toFixed(2)}</td>
-                      <td className={profClass}>₹{ltp.toFixed(2)}</td>
+                      {activeTab === "open" ? (
+                        <td className={profClass}>₹{ltp.toFixed(2)}</td>
+                      ) : (
+                        <td className={profClass}>₹{sellPrice.toFixed(2)}</td>
+                      )}
                       <td className={profClass}>
                         {pnl >= 0 ? "+" : ""}₹{pnl.toFixed(2)}
-                        <span className="pos-pnl-pct">
-                          ({pnl >= 0 ? "+" : ""}{pnlPercent}%)
-                        </span>
+                        {activeTab === "open" && (
+                          <span className="pos-pnl-pct">
+                            ({pnl >= 0 ? "+" : ""}{pnlPercent}%)
+                          </span>
+                        )}
                       </td>
                       <td className={dayClass}>
                         {dayChange >= 0 ? "+" : ""}{dayChange.toFixed(2)}%
                       </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="pos-exit-btn"
-                          onClick={() => openSellWindow(stock, ltp)}
-                        >
-                          Exit
-                        </button>
-                      </td>
+                      {activeTab === "open" && (
+                        <td>
+                          <button
+                            type="button"
+                            className="pos-exit-btn"
+                            onClick={() => openSellWindow(stock, ltp)}
+                          >
+                            Exit
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -395,27 +456,31 @@ const Positions = () => {
             </table>
           </div>
 
-          {/* Summary row */}
-          <div className="row">
-            <div className="col">
-              <h5>₹{totalInvested.toFixed(2)}</h5>
-              <p>Total invested</p>
-            </div>
-            <div className="col">
-              <h5>₹{totalCurrent.toFixed(2)}</h5>
-              <p>Current value</p>
-            </div>
-            <div className="col">
-              <h5 className={isProfit ? "profit" : "loss"}>
-                {isProfit ? "+" : ""}₹{totalPL.toFixed(2)}
-                <span> ({isProfit ? "+" : ""}{totalPLPercent}%)</span>
-              </h5>
-              <p>Total P&amp;L</p>
-            </div>
-          </div>
+          {activeTab === "open" && (
+            <>
+              {/* Summary row */}
+              <div className="row">
+                <div className="col">
+                  <h5>₹{totalInvested.toFixed(2)}</h5>
+                  <p>Total invested</p>
+                </div>
+                <div className="col">
+                  <h5>₹{totalCurrent.toFixed(2)}</h5>
+                  <p>Current value</p>
+                </div>
+                <div className="col">
+                  <h5 className={isProfit ? "profit" : "loss"}>
+                    {isProfit ? "+" : ""}₹{totalPL.toFixed(2)}
+                    <span> ({isProfit ? "+" : ""}{totalPLPercent}%)</span>
+                  </h5>
+                  <p>Total P&amp;L</p>
+                </div>
+              </div>
 
-          {displayedPositions.length > 0 && (
-            <VerticalGraph data={chartData} title="Positions" />
+              {displayedPositions.length > 0 && (
+                <VerticalGraph data={chartData} title="Positions" />
+              )}
+            </>
           )}
         </>
       ) : (
