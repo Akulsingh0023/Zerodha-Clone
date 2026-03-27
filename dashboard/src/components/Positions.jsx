@@ -27,6 +27,19 @@ const mockLivePrice = (symbol) => {
   return { ltp, changePercent };
 };
 
+const formatClosedDate = (dateValue) => {
+  if (!dateValue) return "--";
+
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) return "--";
+
+  return parsed.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 /* ─── localStorage cache ─── */
 const loadCached = () => {
   try {
@@ -63,8 +76,24 @@ const Positions = () => {
       if (mode !== "SELL" && mode !== "AUTO SQUARE OFF") return;
 
       const symbol = String(order?.name ?? "").trim();
-      if (!symbol || map[symbol]) return;
-      map[symbol] = order;
+      if (!symbol) return;
+
+      const currentOrderTime = new Date(
+        order?.createdAt ?? order?.updatedAt ?? order?.date ?? 0
+      ).getTime();
+      const existingOrder = map[symbol];
+      const existingOrderTime = existingOrder
+        ? new Date(
+            existingOrder?.createdAt ??
+              existingOrder?.updatedAt ??
+              existingOrder?.date ??
+              0
+          ).getTime()
+        : -1;
+
+      if (!existingOrder || currentOrderTime >= existingOrderTime) {
+        map[symbol] = order;
+      }
     });
 
     return map;
@@ -239,12 +268,20 @@ const Positions = () => {
       const avg = Number(position?.avg ?? 0);
       const sellPrice = Number(closeOrder?.price ?? position?.price ?? 0);
       const closedPnl = (sellPrice - avg) * closedQty;
+      const closedAt =
+        closeOrder?.createdAt ??
+        closeOrder?.updatedAt ??
+        closeOrder?.date ??
+        position?.updatedAt ??
+        position?.date ??
+        null;
 
       return {
         ...position,
         __closedQty: closedQty,
         __sellPrice: sellPrice,
         __closedPnl: closedPnl,
+        __closedAt: closedAt,
       };
     });
   const displayedPositions = activeTab === "open" ? openPositions : closedPositions;
@@ -378,6 +415,7 @@ const Positions = () => {
                   {activeTab === "open" ? <th>LTP</th> : <th>Sell Price</th>}
                   <th>P&amp;L</th>
                   <th>Day Chg.</th>
+                  {activeTab === "closed" && <th>DATE</th>}
                   {activeTab === "open" && <th>Action</th>}
                 </tr>
               </thead>
@@ -391,6 +429,7 @@ const Positions = () => {
                   const priceInfo = priceMap[stock.name];
                   const ltp = priceInfo?.ltp ?? Number(stock.price) ?? 0;
                   const sellPrice = Number(stock.__sellPrice ?? stock.price) || 0;
+                  const closedDate = formatClosedDate(stock.__closedAt);
                   const dayChange = priceInfo?.changePercent ?? 0;
 
                   const pnl = isClosedTab
@@ -438,6 +477,7 @@ const Positions = () => {
                       <td className={dayClass}>
                         {dayChange >= 0 ? "+" : ""}{dayChange.toFixed(2)}%
                       </td>
+                      {activeTab === "closed" && <td>{closedDate}</td>}
                       {activeTab === "open" && (
                         <td>
                           <button
