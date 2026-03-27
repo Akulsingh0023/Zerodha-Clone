@@ -78,34 +78,3 @@
     display: none;
   }
 }
-
-@media (max-width: 768px) {
-  .ord-table {
-    min-width: 640px;
-  }
-
-  .ord-table th,
-  .ord-table td {
-    white-space: nowrap;
-  }
-
-  .no-orders {
-    min-height: 180px;
-    padding: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .ord-table th {
-    font-size: 10px;
-  }
-
-  .ord-table td {
-    font-size: 12px;
-  }
-
-  .ord-symbol,
-  .ord-badge {
-    font-size: 11px;
-  }
-}

@@ -116,37 +116,3 @@
     display: none;
   }
 }
-
-@media (max-width: 768px) {
-  .positions-table {
-    min-width: 640px;
-  }
-
-  .positions-table th,
-  .positions-table td {
-    white-space: nowrap;
-  }
-
-  .pos-loading,
-  .pos-empty {
-    min-height: 180px;
-    padding: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .pos-product-tag,
-  .pos-pnl-pct {
-    font-size: 10px;
-  }
-
-  .pos-exit-btn {
-    padding: 4px 10px;
-    font-size: 10px;
-  }
-
-  .pos-squareoff-banner {
-    font-size: 12px;
-    padding: 8px 10px;
-  }
-}

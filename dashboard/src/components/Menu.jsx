@@ -247,15 +247,6 @@ const Menu = () => {
     window.location.href = SITE_URL;
   };
 
-  const closeMobileSidebar = () => {
-    if (typeof window === "undefined") return;
-    if (window.innerWidth > 768) return;
-    const toggleBtn = document.querySelector('.watchlist-toggle[aria-expanded="true"]');
-    if (toggleBtn) {
-      toggleBtn.click();
-    }
-  };
-
   return (
     <div className="menu-container">
       <img src="logo.png" alt="logo" style={{ width: "50px" }} />
@@ -263,7 +254,7 @@ const Menu = () => {
       <div className="menus">
         <ul>
           <li>
-            <Link to="/" className="link" onClick={closeMobileSidebar}>
+            <Link to="/" className="link">
               <p className={location.pathname === "/" ? activeMenuClass : menuClass}>
                 Dashboard
               </p>
@@ -271,7 +262,7 @@ const Menu = () => {
           </li>
 
           <li>
-            <Link to="/orders" className="link" onClick={closeMobileSidebar}>
+            <Link to="/orders" className="link">
               <p className={location.pathname === "/orders" ? activeMenuClass : menuClass}>
                 Orders
               </p>
@@ -279,7 +270,7 @@ const Menu = () => {
           </li>
 
           <li>
-            <Link to="/holdings" className="link" onClick={closeMobileSidebar}>
+            <Link to="/holdings" className="link">
               <p className={location.pathname === "/holdings" ? activeMenuClass : menuClass}>
                 Holdings
               </p>
@@ -287,7 +278,7 @@ const Menu = () => {
           </li>
 
           <li>
-            <Link to="/positions" className="link" onClick={closeMobileSidebar}>
+            <Link to="/positions" className="link">
               <p className={location.pathname === "/positions" ? activeMenuClass : menuClass}>
                 Positions
               </p>
@@ -297,7 +288,7 @@ const Menu = () => {
           {/* ================= ADMIN PANEL TAB ================= */}
           {user?.role === "admin" && (
             <li>
-              <Link to="/admin" className="link" onClick={closeMobileSidebar}>
+              <Link to="/admin" className="link">
                 <p className={location.pathname === "/admin" ? activeMenuClass : menuClass}>
                   Admin Panel
                 </p>
@@ -375,26 +366,12 @@ const Menu = () => {
           position: absolute;
           top: 50px;
           right: 0;
-          width: min(260px, calc(100vw - 24px));
-          max-width: calc(100vw - 24px);
-          max-height: 80vh;
-          overflow-y: auto;
+          width: 200px;
           background: black;
           border-radius: 6px;
           box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-          overflow-x: hidden;
+          overflow: hidden;
           z-index: 1000;
-        }
-
-        @media (max-width: 768px) {
-          .dropdown {
-            right: 8px;
-            top: 44px;
-            width: min(260px, calc(100vw - 20px));
-            max-width: calc(100vw - 20px);
-            max-height: 80vh;
-            overflow-y: auto;
-          }
         }
 
         .dropdown-item {
