@@ -2,46 +2,37 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
+import { API } from "../../config";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setStatus("");
-    setError("");
 
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/auth/forgot-password`,
-        { email },
-        { timeout: 30000 }
+      const res = await axios.post(
+        `${API}/api/auth/forgot-password`,
+        { email }
       );
 
-      if (response.data.success) {
-        setStatus("success");
-        toast.success(response.data.message || "Reset link sent");
-        setEmail("");
-      }
+      toast.success(
+        res.data.message ||
+          "If this email is registered, you will receive a reset link."
+      );
+
+      setEmail("");
     } catch (err) {
-      if (err.code === "ECONNABORTED") {
-        setError("❌ Request timed out after 30 seconds. Please try again.");
-        toast.error("Request timed out after 30 seconds. Please try again.");
-      } else if (err.response?.status === 404) {
-        setError("❌ This email is not registered");
-        toast.error("This email is not registered");
-      } else {
-        setError("❌ Something went wrong. Please try again.");
-        toast.error("Something went wrong. Please try again.");
-      }
-    } finally {
-      setLoading(false);
+      toast.error(
+        err.response?.data?.message ||
+          "Something went wrong. Try again."
+      );
     }
+
+    setLoading(false);
   };
 
   return (
