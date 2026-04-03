@@ -155,7 +155,7 @@ export const forgotPassword = async (req, res) => {
 
     resend.emails
       .send({
-        from: "onboarding@resend.dev",
+        from: "Akul Singh <onboarding@resend.dev>",
         to: email,
         subject: "Password Reset Link",
         html: `<a href="${resetUrl}">Click here to reset your password</a>`,
