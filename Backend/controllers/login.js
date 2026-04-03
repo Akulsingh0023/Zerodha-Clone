@@ -127,6 +127,32 @@ export const logout = (req, res) => {
 /* =========================
    FORGOT PASSWORD
 ========================= */
+const sendResetEmail = async (email, resetToken) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    connectionTimeout: 60000,
+    greetingTimeout: 30000,
+    socketTimeout: 60000,
+  });
+
+  const frontendUrl =
+    process.env.FRONTEND_URL || "https://zerodha-clone-gamma-rose.vercel.app";
+  const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Password Reset Request",
+    html: `
+        <h3>Password Reset</h3>
+        <p>Click the link below to reset your password:</p>
+        <a href="${resetLink}">${resetLink}</a>
+        <p>This link will expire in 15 minutes.</p>
+      `,
+  });
+};
+
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -136,7 +162,7 @@ export const forgotPassword = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "Email not registered",
+        message: "Email not found",
       });
     }
 
@@ -147,41 +173,14 @@ export const forgotPassword = async (req, res) => {
 
     await user.save();
 
-    const frontendUrl =
-      process.env.FRONTEND_URL || "https://zerodha-clone-gamma-rose.vercel.app";
-    const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      pool: true,
-      maxConnections: 1,
-      rateDelta: 20000,
-      rateLimit: 5,
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: user.email,
-      subject: "Password Reset Request",
-      html: `
-        <h3>Password Reset</h3>
-        <p>Click the link below to reset your password:</p>
-        <a href="${resetLink}">${resetLink}</a>
-        <p>This link will expire in 15 minutes.</p>
-      `,
-    });
-
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Reset link sent",
     });
+
+    sendResetEmail(user.email, resetToken).catch((err) =>
+      console.log("Forgot Password Mail Error:", err.message)
+    );
   } catch (error) {
     console.log("Forgot Password Error:", error.message);
     res.status(500).json({ message: "Internal server error" });
