@@ -16,7 +16,8 @@ export default function ForgotPassword() {
     try {
       const res = await axios.post(
         `${API}/api/auth/forgot-password`,
-        { email }
+        { email },
+        { timeout: 15000 }
       );
 
       toast.success(
@@ -26,13 +27,19 @@ export default function ForgotPassword() {
 
       setEmail("");
     } catch (err) {
-      toast.error(
-        err.response?.data?.message ||
-          "Something went wrong. Try again."
-      );
-    }
+      const errorMessage =
+        err.code === "ECONNABORTED"
+          ? "Request timed out. Please try again."
+          : err.response?.data?.message ||
+            "Something went wrong. Try again.";
 
-    setLoading(false);
+      setLoading(false);
+      toast.error(
+        errorMessage
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
