@@ -159,7 +159,12 @@ export const forgotPassword = async (req, res) => {
       process.env.FRONTEND_URL || "https://zerodha-clone-gamma-rose.vercel.app";
     const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
 
-    await transporter.sendMail({
+    res.status(200).json({
+      message:
+        "If this email is registered, you will receive a reset link.",
+    });
+
+    transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: user.email,
       subject: "Password Reset Request",
@@ -169,11 +174,8 @@ export const forgotPassword = async (req, res) => {
         <a href="${resetLink}">${resetLink}</a>
         <p>This link will expire in 15 minutes.</p>
       `,
-    });
-
-    res.status(200).json({
-      message:
-        "If this email is registered, you will receive a reset link.",
+    }).catch((mailError) => {
+      console.log("Forgot Password Mail Error:", mailError.message);
     });
   } catch (error) {
     console.log("Forgot Password Error:", error.message);
