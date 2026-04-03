@@ -29,6 +29,28 @@ import jwt from "jsonwebtoken";
 
 const isProd = process.env.NODE_ENV === "production";
 
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
+transporter.verify(function (error) {
+  if (error) {
+    console.log("❌ SMTP Connection Failed:", error.message);
+    console.log("❌ Error code:", error.code);
+  } else {
+    console.log("✅ SMTP Server is ready to send emails");
+  }
+});
+
 /* =========================
    LOGIN (JWT + COOKIE)
 ========================= */
@@ -154,25 +176,25 @@ export const forgotPassword = async (req, res) => {
       message: "Reset link sent",
     });
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
     // Step 5: Send email in background after response
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-    transporter.sendMail({
+    const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Password Reset Link",
       html: `<p>Click to reset: <a href="${resetUrl}">${resetUrl}</a></p>`,
-    }).then(() => {
-      console.log("✅ Email sent to:", email);
+    };
+
+    transporter.sendMail(mailOptions)
+    .then((info) => {
+      console.log("✅ Email delivered successfully");
+      console.log("✅ Message ID:", info.messageId);
+      console.log("✅ Accepted by:", info.accepted);
+      console.log("✅ Response:", info.response);
     }).catch((err) => {
-      console.log("❌ Email failed:", err.message);
+      console.log("❌ Email sending error:", err.message);
+      console.log("❌ Error code:", err.code);
+      console.log("❌ Full error:", err);
     });
   } catch (error) {
     console.log("Route error:", error);
