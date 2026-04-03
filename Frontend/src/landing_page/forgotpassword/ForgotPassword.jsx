@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
+import { API } from "../../config";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -14,9 +15,8 @@ export default function ForgotPassword() {
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/auth/forgot-password`,
-        { email },
-        { timeout: 15000 }
+        `${API}/api/auth/forgot-password`,
+        { email }
       );
 
       toast.success(
@@ -26,19 +26,13 @@ export default function ForgotPassword() {
 
       setEmail("");
     } catch (err) {
-      const errorMessage =
-        err.code === "ECONNABORTED"
-          ? "Request timed out. Please try again."
-          : err.response?.data?.message ||
-            "Something went wrong. Try again.";
-
-      setLoading(false);
       toast.error(
-        errorMessage
+        err.response?.data?.message ||
+          "Something went wrong. Try again."
       );
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   return (
