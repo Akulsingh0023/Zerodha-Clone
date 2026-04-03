@@ -17,7 +17,7 @@ export default function ForgotPassword() {
       const res = await axios.post(
         `${API}/api/auth/forgot-password`,
         { email },
-        { timeout: 10000 }
+        { timeout: 30000 }
       );
 
       toast.success(
@@ -29,7 +29,7 @@ export default function ForgotPassword() {
     } catch (err) {
       toast.error(
         err.code === "ECONNABORTED"
-          ? "Request timed out. Please try again."
+          ? "Request timed out after 30 seconds. Please try again."
           :
         err.response?.data?.message ||
           "Something went wrong. Try again."
