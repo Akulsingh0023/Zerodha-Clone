@@ -24,8 +24,10 @@
 import User from "../model/User.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import jwt from "jsonwebtoken";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -147,29 +149,23 @@ export const forgotPassword = async (req, res) => {
 
     await user.save();
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
     const frontendUrl =
       process.env.FRONTEND_URL || "https://zerodha-clone-gamma-rose.vercel.app";
-    const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: user.email,
-      subject: "Password Reset Request",
-      html: `
-        <h3>Password Reset</h3>
-        <p>Click the link below to reset your password:</p>
-        <a href="${resetLink}">${resetLink}</a>
-        <p>This link will expire in 15 minutes.</p>
-      `,
-    });
+    resend.emails
+      .send({
+        from: "onboarding@resend.dev",
+        to: email,
+        subject: "Password Reset Link",
+        html: `<a href="${resetUrl}">Click here to reset your password</a>`,
+      })
+      .then(() => {
+        console.log("✅ Email sent to:", email);
+      })
+      .catch((err) => {
+        console.log("❌ Resend error:", err.message);
+      });
 
     res.status(200).json({
       message:
