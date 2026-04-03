@@ -20,20 +20,23 @@ export default function ForgotPassword() {
         { timeout: 30000 }
       );
 
-      toast.success(
-        res.data.message ||
-          "If this email is registered, you will receive a reset link."
-      );
+      if (res.data?.success === true) {
+        toast.success("✅ Reset link has been sent to your email");
+      } else {
+        toast.error("❌ This email is not registered");
+      }
 
       setEmail("");
     } catch (err) {
-      toast.error(
-        err.code === "ECONNABORTED"
-          ? "Request timed out after 30 seconds. Please try again."
-          :
-        err.response?.data?.message ||
-          "Something went wrong. Try again."
-      );
+      if (err.response?.data?.success === false) {
+        toast.error("❌ This email is not registered");
+      } else {
+        toast.error(
+          err.code === "ECONNABORTED"
+            ? "Request timed out after 30 seconds. Please try again."
+            : err.response?.data?.message || "Something went wrong. Try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
