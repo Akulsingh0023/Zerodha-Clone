@@ -42,6 +42,27 @@ const statusClass = (status) => {
   return "status-complete";
 };
 
+const getHoldingSymbol = (holding) =>
+  String(
+    holding?.name ||
+      holding?.symbol ||
+      holding?.tradingsymbol ||
+      holding?.stock ||
+      ""
+  )
+    .trim()
+    .toUpperCase();
+
+const parsePercent = (value) => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  const raw = String(value ?? "").replace("%", "").trim();
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
 const Summary = () => {
   const [userName, setUserName] = useState("");
   const [marginAvailable, setMarginAvailable] = useState(0);
@@ -95,7 +116,16 @@ const Summary = () => {
 
       const results = await Promise.allSettled(
         holdings.map(async (holding) => {
-          const symbol = holding?.name;
+          const symbol = getHoldingSymbol(holding);
+          if (!symbol) {
+            return {
+              symbol: "",
+              ltp: Number(holding?.price ?? 0),
+              changePercent: 0,
+              hasLiveChange: false,
+            };
+          }
+
           const res = await axios.get(`${BASE_URL}/api/live-price/${encodeURIComponent(symbol)}`, {
             timeout: 7000,
           });
@@ -112,7 +142,7 @@ const Summary = () => {
 
       const next = {};
       results.forEach((item) => {
-        if (item.status === "fulfilled") {
+        if (item.status === "fulfilled" && item.value?.symbol) {
           next[item.value.symbol] = item.value;
         }
       });
@@ -125,18 +155,30 @@ const Summary = () => {
   const holdingsWithMetrics = useMemo(
     () =>
       holdings.map((holding) => {
+        const symbol = getHoldingSymbol(holding);
         const qty = Number(holding?.qty || 0);
         const avg = Number(holding?.avg || 0);
-        const ltp = Number(liveQuotes[holding?.name]?.ltp ?? holding?.price ?? 0);
+        const ltp = Number(liveQuotes[symbol]?.ltp ?? holding?.price ?? 0);
         const investment = qty * avg;
         const currentValue = qty * ltp;
         const pnl = currentValue - investment;
-        const liveQuote = liveQuotes[holding?.name];
+        const liveQuote = liveQuotes[symbol];
         const fallbackChangePercent = avg > 0 ? ((ltp - avg) / avg) * 100 : 0;
+        const holdingDayPercent = parsePercent(holding?.day);
         const changePercent = liveQuote?.hasLiveChange
           ? Number(liveQuote?.changePercent ?? 0)
-          : fallbackChangePercent;
-        return { ...holding, qty, avg, ltp, investment, currentValue, pnl, changePercent };
+          : holdingDayPercent || fallbackChangePercent;
+        return {
+          ...holding,
+          symbol,
+          qty,
+          avg,
+          ltp,
+          investment,
+          currentValue,
+          pnl,
+          changePercent,
+        };
       }),
     [holdings, liveQuotes]
   );
@@ -148,7 +190,11 @@ const Summary = () => {
   const topMovers = useMemo(
     () =>
       [...holdingsWithMetrics]
-        .map((item) => ({ symbol: item.name, changePercent: item.changePercent }))
+        .map((item) => ({
+          symbol: item.symbol || item.name,
+          changePercent: Number(item.changePercent || 0),
+        }))
+        .filter((item) => item.symbol)
         .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
         .slice(0, 3),
     [holdingsWithMetrics]
