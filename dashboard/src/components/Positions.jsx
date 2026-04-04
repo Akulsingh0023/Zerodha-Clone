@@ -352,31 +352,15 @@ const Positions = () => {
         </div>
       )}
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "16px",
-        }}
-      >
-        <span>Positions — Today</span>
-        <div style={{ display: "flex", gap: "8px" }}>
+      <div className="pos-header">
+        <span className="pos-header-label">Positions - Today</span>
+        <div className="pos-tabs">
           <button
             onClick={() => {
               setActiveTab("open");
               setSelectedPosition(null);
             }}
-            style={{
-              padding: "6px 16px",
-              borderRadius: "20px",
-              fontSize: "13px",
-              cursor: "pointer",
-              background: activeTab === "open" ? "#2563eb" : "transparent",
-              color: activeTab === "open" ? "#fff" : "#888",
-              border: activeTab === "open" ? "none" : "1px solid #ccc",
-              fontWeight: "500",
-            }}
+            className={`pos-tab-btn ${activeTab === "open" ? "active" : ""}`}
           >
             Open ({openPositions.length})
           </button>
@@ -385,16 +369,7 @@ const Positions = () => {
               setActiveTab("closed");
               setSelectedPosition(null);
             }}
-            style={{
-              padding: "6px 16px",
-              borderRadius: "20px",
-              fontSize: "13px",
-              cursor: "pointer",
-              background: activeTab === "closed" ? "#2563eb" : "transparent",
-              color: activeTab === "closed" ? "#fff" : "#888",
-              border: activeTab === "closed" ? "none" : "1px solid #ccc",
-              fontWeight: "500",
-            }}
+            className={`pos-tab-btn ${activeTab === "closed" ? "active" : ""}`}
           >
             Closed ({closedPositions.length})
           </button>
@@ -524,11 +499,11 @@ const Positions = () => {
           )}
         </>
       ) : (
-        <div style={{ textAlign: "center", padding: "60px 0" }}>
-          <p style={{ fontSize: "16px", fontWeight: "500", color: "#aaa" }}>
+        <div className="pos-empty-state">
+          <p className="pos-empty-title">
             {activeTab === "open" ? "No Open Positions" : "No Closed Positions"}
           </p>
-          <p style={{ fontSize: "13px", color: "#999", marginTop: "8px" }}>
+          <p className="pos-empty-subtitle">
             {activeTab === "open"
               ? "Buy stocks with MIS product type to open intraday positions."
               : "Your closed positions for today will appear here."}

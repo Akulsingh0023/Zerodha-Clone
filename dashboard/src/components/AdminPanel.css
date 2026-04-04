@@ -1140,3 +1140,65 @@
     display: flex;
   }
 }
+
+@media (max-width: 768px) {
+  .admin-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-search-input {
+    max-width: none;
+    min-width: 0;
+  }
+
+  .admin-actions-cell {
+    flex-wrap: wrap;
+  }
+
+  .admin-modal {
+    width: 94%;
+    padding: 18px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .admin-modal-actions,
+  .delete-modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .delete-confirm-btn {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .delete-user-card,
+  .delete-warning-box,
+  .delete-confirm-input {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-page {
+    padding: 16px 12px;
+  }
+
+  .admin-btn,
+  .admin-btn-sm {
+    width: 100%;
+    text-align: center;
+  }
+
+  .admin-filter-group {
+    width: 100%;
+  }
+
+  .admin-filter-group .admin-btn-sm {
+    width: auto;
+    flex: 1;
+  }
+}

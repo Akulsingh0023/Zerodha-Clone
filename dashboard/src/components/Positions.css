@@ -101,6 +101,65 @@
   animation: pos-fadein 0.3s ease;
 }
 
+.pos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pos-header-label {
+  font-size: 0.9rem;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.pos-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pos-tab-btn {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  background: transparent;
+  color: #888;
+  border: 1px solid #ccc;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.pos-tab-btn.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.positions-table {
+  min-width: 900px;
+}
+
+.pos-empty-state {
+  text-align: center;
+  padding: 60px 0;
+}
+
+.pos-empty-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #aaa;
+}
+
+.pos-empty-subtitle {
+  font-size: 13px;
+  color: #999;
+  margin-top: 8px;
+}
+
 @keyframes pos-fadein {
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -108,11 +167,37 @@
 
 /* ── Responsive ── */
 @media (max-width: 640px) {
+  .positions-table {
+    min-width: 760px;
+  }
+
+  .pos-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pos-tab-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
   .positions-table th:nth-child(6),
   .positions-table td:nth-child(6) {
     display: none;
   }
   .pos-mis-badge {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .positions-table th:nth-child(3),
+  .positions-table td:nth-child(3) {
+    display: none;
+  }
+
+  .pos-exit-btn {
+    padding: 5px 10px;
+    font-size: 11px;
   }
 }

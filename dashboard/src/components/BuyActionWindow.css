@@ -321,10 +321,16 @@
 @media (max-width: 576px) {
   .container {
     width: 92vw;
+    max-height: 88vh;
+    overflow-y: auto;
   }
 
   .regular-order {
     padding: 18px;
+  }
+
+  .stock-info h4 {
+    font-size: 1rem;
   }
 
   .inputs {
@@ -332,18 +338,24 @@
     gap: 12px;
   }
 
+  .buy-breakdown {
+    padding: 12px;
+  }
+
   .buttons {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    padding: 14px 18px;
   }
 
   .buttons span {
     text-align: center;
+    font-size: 0.82rem;
   }
 
   .buttons div {
     width: 100%;
+    flex-direction: column;
   }
 
   .btn {
@@ -351,3 +363,4 @@
     text-align: center;
   }
 }
+

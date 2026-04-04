@@ -29,6 +29,10 @@
   color: #333;
 }
 
+.ord-table {
+  min-width: 760px;
+}
+
 /* ── Badges ── */
 .ord-badge {
   display: inline-block;
@@ -73,8 +77,19 @@
 
 /* ── Responsive ── */
 @media (max-width: 640px) {
+  .ord-table {
+    min-width: 620px;
+  }
+
   .ord-table th:nth-child(7),
   .ord-table td:nth-child(7) {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .ord-table th:nth-child(6),
+  .ord-table td:nth-child(6) {
     display: none;
   }
 }

@@ -79,6 +79,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
@@ -764,6 +771,7 @@ hr {
 .topbar-container {
   width: 100%;
   height: 10vh;
+  min-height: 64px;
   display: flex;
   align-items: center;
   box-shadow: 0px 0px 4px 2px rgb(236, 235, 235);
@@ -771,7 +779,7 @@ hr {
   position: sticky;
   top: 0;
   z-index: 3000;
-  background: inherit;
+  background: #fff;
 }
 
 .watchlist-toggle {
@@ -1141,6 +1149,7 @@ hr {
 
   .content {
     padding: 20px 16px;
+    overflow-x: auto;
   }
 
   .watchlist-container {
@@ -1150,6 +1159,7 @@ hr {
   .row {
     flex-direction: column;
     gap: 20px;
+    align-items: stretch;
   }
 
   .col {
@@ -1160,6 +1170,7 @@ hr {
     width: 100%;
     flex-direction: column;
     gap: 20px;
+    align-items: flex-start;
   }
 
   .watchlist-number {
@@ -1178,6 +1189,7 @@ hr {
   .topbar-container {
     flex-direction: column;
     height: auto;
+    min-height: 64px;
     padding: 10px 0;
   }
 
@@ -1188,8 +1200,10 @@ hr {
   }
 
   .indices-container {
+    width: 100%;
     border-right: none;
     border-bottom: 1px solid rgb(224, 224, 224);
+    padding: 8px 12px;
   }
 
   .menus ul {
@@ -1205,6 +1219,7 @@ hr {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    max-width: 100%;
   }
 
   .profile .username {
@@ -1221,12 +1236,12 @@ hr {
 
   .watchlist-shell {
     position: fixed;
-    top: 10vh;
+    top: 64px;
     left: 0;
     bottom: 0;
     width: 88vw;
     max-width: 360px;
-    height: calc(100vh - 10vh);
+    height: calc(100vh - 64px);
     transform: translateX(-100%);
     transition: transform 0.25s ease;
     z-index: 3500;
@@ -1241,7 +1256,7 @@ hr {
   .watchlist-overlay.show {
     display: block;
     position: fixed;
-    top: 10vh;
+    top: 64px;
     left: 0;
     right: 0;
     bottom: 0;
@@ -1251,6 +1266,8 @@ hr {
 
   .content {
     padding: 16px 12px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .order-table {
@@ -1278,6 +1295,29 @@ hr {
   .watchlist-number ul li {
     padding: 8px 10px;
     font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-container {
+    gap: 6px;
+  }
+
+  .menu {
+    font-size: 0.74rem;
+  }
+
+  .section .data {
+    gap: 10px;
+  }
+
+  .section .data .first h3 {
+    font-size: 2rem;
+  }
+
+  .funds {
+    justify-content: flex-start;
+    gap: 6px;
   }
 }
 

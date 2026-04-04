@@ -39,6 +39,10 @@
   white-space: nowrap;
 }
 
+.holdings-table {
+  min-width: 920px;
+}
+
 .holdings-table .stock-name {
   font-weight: 600;
   color: #333;
@@ -79,10 +83,26 @@
 
 /* ── Responsive ── */
 @media (max-width: 640px) {
+  .holdings-table {
+    min-width: 760px;
+  }
+
   .holdings-table th:nth-child(5),
   .holdings-table td:nth-child(5),
   .holdings-table th:nth-child(7),
   .holdings-table td:nth-child(7) {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .holdings-table th:nth-child(3),
+  .holdings-table td:nth-child(3) {
+    display: none;
+  }
+
+  .hld-sell-btn {
+    padding: 5px 10px;
+    font-size: 11px;
   }
 }
