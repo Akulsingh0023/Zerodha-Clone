@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
   Chart as ChartJS,
@@ -69,6 +69,7 @@ const Summary = () => {
   const [holdings, setHoldings] = useState([]);
   const [orders, setOrders] = useState([]);
   const [liveQuotes, setLiveQuotes] = useState({});
+  const [quotesLoading, setQuotesLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -107,25 +108,28 @@ const Summary = () => {
     return () => window.removeEventListener("walletUpdated", onTrade);
   }, []);
 
-  useEffect(() => {
-    const fetchQuotes = async () => {
-      if (!holdings.length) {
-        setLiveQuotes({});
-        return;
-      }
+  const fetchQuotes = useCallback(async () => {
+    if (!holdings.length) {
+      setLiveQuotes({});
+      return;
+    }
 
-      const results = await Promise.allSettled(
-        holdings.map(async (holding) => {
-          const symbol = getHoldingSymbol(holding);
-          if (!symbol) {
-            return {
-              symbol: "",
-              ltp: Number(holding?.price ?? 0),
-              changePercent: 0,
-              hasLiveChange: false,
-            };
-          }
+    setQuotesLoading(true);
 
+    const results = await Promise.allSettled(
+      holdings.map(async (holding) => {
+        const symbol = getHoldingSymbol(holding);
+        const dayPercent = parsePercent(holding?.day);
+        const fallback = {
+          symbol,
+          ltp: Number(holding?.price ?? 0),
+          changePercent: dayPercent,
+          hasLiveChange: false,
+        };
+
+        if (!symbol) return fallback;
+
+        try {
           const res = await axios.get(`${BASE_URL}/api/live-price/${encodeURIComponent(symbol)}`, {
             timeout: 7000,
           });
@@ -133,24 +137,34 @@ const Summary = () => {
           const rawChange = res.data?.changePercent ?? res.data?.pChange;
           return {
             symbol,
-            ltp: Number(res.data?.ltp ?? res.data?.lastPrice ?? res.data?.price ?? holding?.price ?? 0),
-            changePercent: Number(rawChange ?? 0),
+            ltp: Number(
+              res.data?.ltp ?? res.data?.lastPrice ?? res.data?.price ?? holding?.price ?? 0
+            ),
+            changePercent: Number(rawChange ?? dayPercent),
             hasLiveChange: rawChange !== null && rawChange !== undefined,
           };
-        })
-      );
-
-      const next = {};
-      results.forEach((item) => {
-        if (item.status === "fulfilled" && item.value?.symbol) {
-          next[item.value.symbol] = item.value;
+        } catch {
+          return fallback;
         }
-      });
-      setLiveQuotes(next);
-    };
+      })
+    );
 
-    fetchQuotes();
+    const next = {};
+    results.forEach((item) => {
+      if (item.status === "fulfilled" && item.value?.symbol) {
+        next[item.value.symbol] = item.value;
+      }
+    });
+
+    setLiveQuotes(next);
+    setQuotesLoading(false);
   }, [holdings]);
+
+  useEffect(() => {
+    fetchQuotes();
+    const timer = setInterval(fetchQuotes, 10000);
+    return () => clearInterval(timer);
+  }, [fetchQuotes]);
 
   const holdingsWithMetrics = useMemo(
     () =>
@@ -190,10 +204,12 @@ const Summary = () => {
   const topMovers = useMemo(
     () =>
       [...holdingsWithMetrics]
+        .filter((item) => Number(item.qty) > 0)
         .map((item) => ({
           symbol: item.symbol || item.name,
           changePercent: Number(item.changePercent || 0),
         }))
+        .filter((item) => Number.isFinite(item.changePercent))
         .filter((item) => item.symbol)
         .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
         .slice(0, 3),
@@ -325,7 +341,9 @@ const Summary = () => {
           <div className="card-head">
             <h4>Top movers</h4>
           </div>
-          {topMovers.length ? (
+          {quotesLoading && topMovers.length === 0 ? (
+            <div className="empty">Loading movers...</div>
+          ) : topMovers.length ? (
             <div className="movers-list">
               {topMovers.map((item, idx) => (
                 <div key={`${item.symbol}-${idx}`} className="mover-row">
