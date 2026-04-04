@@ -47,6 +47,7 @@ import Footer from "./landing_page/Footer";
 import NotFound from "./landing_page/NotFound";
 import Login from "./landing_page/login/Login";
 import AdminRoute from "./landing_page/adminroute/AdminRoute";
+import TradingDashboard from "./landing_page/trading_dashboard/TradingDashboard";
 
 // ✅ New Import
 import ForgotPassword from "./landing_page/forgotpassword/ForgotPassword";
@@ -81,6 +82,7 @@ createRoot(document.getElementById("root")).render(
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/support" element={<SupportPage />} />
       <Route path="/adminroute" element={<AdminRoute/>} />
+      <Route path="/trading-dashboard" element={<TradingDashboard />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
     <Footer />

@@ -259,6 +259,289 @@ button {
   align-items: center;
 }
 
+/* ================= TRADING DASHBOARD ================= */
+
+.td-page {
+  background: #f5f5f5;
+  min-height: calc(100vh - 140px);
+  padding: 24px 14px;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.td-container {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+}
+
+.td-card {
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+}
+
+.td-header {
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.td-head-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.td-head-left h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.td-head-left span {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.td-user-switch {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.td-user-pill {
+  border: 1px solid #e1e1e1;
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+}
+
+.td-user-pill.active {
+  background: #edf7ed;
+  border-color: #b9dfbc;
+  color: #2f7c34;
+}
+
+.td-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.td-stat-card {
+  padding: 14px;
+}
+
+.td-stat-card p {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.td-stat-card h3 {
+  margin: 7px 0 0;
+  font-size: 20px;
+  color: #111827;
+}
+
+.td-stat-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.td-new-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #e7f6e8;
+  color: #4caf50;
+  border: 1px solid #caebcd;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.td-middle-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.td-chart-card,
+.td-movers-card,
+.td-orders-card {
+  padding: 14px;
+}
+
+.td-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.td-card-head h2 {
+  margin: 0;
+  font-size: 16px;
+  color: #111827;
+}
+
+.td-add-btn {
+  border: 1px solid #b9dfbc;
+  border-radius: 999px;
+  background: #e7f6e8;
+  color: #2f7c34;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.td-bars {
+  height: 200px;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6px;
+  background: #ffffff;
+}
+
+.td-bar-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.td-bar {
+  width: 100%;
+  border-radius: 6px 6px 2px 2px;
+}
+
+.td-bar.light {
+  background: #9dd79f;
+}
+
+.td-bar.dark {
+  background: #4caf50;
+}
+
+.td-caption {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.td-list {
+  display: grid;
+}
+
+.td-list-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.td-list-row:last-child {
+  border-bottom: none;
+}
+
+.td-list-row span {
+  color: #111827;
+  font-weight: 600;
+}
+
+.td-gain {
+  color: #4caf50;
+}
+
+.td-loss {
+  color: #e8321a;
+}
+
+.td-orders-list {
+  display: grid;
+}
+
+.td-order-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr 0.5fr 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.td-order-row:last-child {
+  border-bottom: none;
+}
+
+.td-order-symbol {
+  color: #111827;
+  font-weight: 600;
+}
+
+.td-side-badge {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.td-side-badge.buy {
+  background: #ebf8ec;
+  color: #4caf50;
+}
+
+.td-side-badge.sell {
+  background: #ffeceb;
+  color: #e8321a;
+}
+
+.td-order-qty {
+  color: #4b5563;
+}
+
+.td-order-price {
+  text-align: right;
+  color: #111827;
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  .td-middle-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .td-page {
+    padding: 16px 10px;
+  }
+
+  .td-order-row {
+    grid-template-columns: 1fr 0.8fr 0.5fr 0.9fr;
+    gap: 8px;
+  }
+}
+
 .product-badge-link {
   display: inline-flex;
 }
