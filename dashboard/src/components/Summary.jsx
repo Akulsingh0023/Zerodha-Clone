@@ -1,63 +1,311 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
+import BASE_URL from "../config";
+import "./Summary.css";
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
+
+const money = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 2,
+});
+
+const prettyDate = (date) =>
+  new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+
+const getOrderTime = (order) =>
+  order?.createdAt || order?.updatedAt || order?.timestamp || order?.date || null;
+
+const getOrderSide = (order) =>
+  String(order?.mode || order?.transaction_type || order?.side || "").toUpperCase();
+
+const statusClass = (status) => {
+  const value = String(status || "").toLowerCase();
+  if (value === "rejected") return "status-rejected";
+  if (value === "pending" || value === "open") return "status-pending";
+  return "status-complete";
+};
 
 const Summary = () => {
+  const [userName, setUserName] = useState("");
+  const [marginAvailable, setMarginAvailable] = useState(0);
+  const [holdings, setHoldings] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [liveQuotes, setLiveQuotes] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const [profileRes, walletRes, holdingsRes, ordersRes] = await Promise.allSettled([
+        axios.get(`${BASE_URL}/api/auth/profile`, { withCredentials: true }),
+        axios.get(`${BASE_URL}/wallet/balance`),
+        axios.get(`${BASE_URL}/holdings`),
+        axios.get(`${BASE_URL}/newOrder`),
+      ]);
+
+      if (profileRes.status === "fulfilled") {
+        const user = profileRes.value?.data?.user || profileRes.value?.data || {};
+        setUserName(user.fullname || user.name || user.email || "User");
+      }
+
+      if (walletRes.status === "fulfilled") {
+        setMarginAvailable(Number(walletRes.value?.data?.balance || 0));
+      }
+
+      setHoldings(
+        holdingsRes.status === "fulfilled" && Array.isArray(holdingsRes.value?.data)
+          ? holdingsRes.value.data
+          : []
+      );
+
+      setOrders(
+        ordersRes.status === "fulfilled" && Array.isArray(ordersRes.value?.data)
+          ? ordersRes.value.data
+          : []
+      );
+    };
+
+    fetchData();
+    const onTrade = () => fetchData();
+    window.addEventListener("walletUpdated", onTrade);
+    return () => window.removeEventListener("walletUpdated", onTrade);
+  }, []);
+
+  useEffect(() => {
+    const fetchQuotes = async () => {
+      if (!holdings.length) {
+        setLiveQuotes({});
+        return;
+      }
+
+      const results = await Promise.allSettled(
+        holdings.map(async (holding) => {
+          const symbol = holding?.name;
+          const res = await axios.get(`${BASE_URL}/api/live-price/${encodeURIComponent(symbol)}`, {
+            timeout: 7000,
+          });
+          return {
+            symbol,
+            ltp: Number(res.data?.ltp ?? res.data?.lastPrice ?? res.data?.price ?? holding?.price ?? 0),
+            changePercent: Number(res.data?.changePercent ?? res.data?.pChange ?? 0),
+          };
+        })
+      );
+
+      const next = {};
+      results.forEach((item) => {
+        if (item.status === "fulfilled") {
+          next[item.value.symbol] = item.value;
+        }
+      });
+      setLiveQuotes(next);
+    };
+
+    fetchQuotes();
+  }, [holdings]);
+
+  const holdingsWithMetrics = useMemo(
+    () =>
+      holdings.map((holding) => {
+        const qty = Number(holding?.qty || 0);
+        const avg = Number(holding?.avg || 0);
+        const ltp = Number(liveQuotes[holding?.name]?.ltp ?? holding?.price ?? 0);
+        const investment = qty * avg;
+        const currentValue = qty * ltp;
+        const pnl = currentValue - investment;
+        const changePercent = Number(liveQuotes[holding?.name]?.changePercent ?? 0);
+        return { ...holding, qty, avg, ltp, investment, currentValue, pnl, changePercent };
+      }),
+    [holdings, liveQuotes]
+  );
+
+  const openingBalance = holdingsWithMetrics.reduce((sum, item) => sum + item.investment, 0);
+  const portfolioValue = holdingsWithMetrics.reduce((sum, item) => sum + item.currentValue, 0);
+  const pnlToday = portfolioValue - openingBalance;
+
+  const topMovers = useMemo(
+    () =>
+      [...holdingsWithMetrics]
+        .map((item) => ({ symbol: item.name, changePercent: item.changePercent }))
+        .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
+        .slice(0, 3),
+    [holdingsWithMetrics]
+  );
+
+  const chartSeries = useMemo(() => {
+    const sorted = [...orders].sort((a, b) => {
+      const aTime = new Date(getOrderTime(a) || 0).getTime();
+      const bTime = new Date(getOrderTime(b) || 0).getTime();
+      return aTime - bTime;
+    });
+
+    let running = 0;
+    return sorted.slice(-10).map((order) => {
+      const qty = Number(order?.qty || 0);
+      const price = Number(order?.price || 0);
+      const side = getOrderSide(order);
+      const value = qty * price;
+
+      if (side === "BUY") running -= value;
+      if (side === "SELL" || side === "AUTO SQUARE OFF") running += value;
+
+      return {
+        label: new Date(getOrderTime(order) || Date.now()).toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        value: running,
+      };
+    });
+  }, [orders]);
+
+  const barData = {
+    labels: chartSeries.map((p) => p.label),
+    datasets: [
+      {
+        data: chartSeries.map((p) => p.value),
+        borderRadius: 6,
+        maxBarThickness: 30,
+        backgroundColor: chartSeries.map((p) => (p.value >= 0 ? "#16a34a" : "#dc2626")),
+      },
+    ],
+  };
+
+  const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => money.format(Number(ctx.parsed.y || 0)),
+        },
+      },
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { display: false } },
+    },
+  };
+
+  const recentOrders = useMemo(
+    () =>
+      [...orders]
+        .sort((a, b) => new Date(getOrderTime(b) || 0).getTime() - new Date(getOrderTime(a) || 0).getTime())
+        .slice(0, 5),
+    [orders]
+  );
+
   return (
-    <>
-      <div className="username">
-        <h6>Hi, User!</h6>
-        <hr className="divider" />
+    <div className="summary-layout">
+      <div className="summary-head">
+        <h2>Hi, {userName || "User"}!</h2>
+        <p>{prettyDate(new Date())}</p>
       </div>
 
-      <div className="section">
-        <span>
-          <p>Equity</p>
-        </span>
+      <div className="stats-grid">
+        <article className="stat-card">
+          <small>Margin available</small>
+          <h3>{money.format(marginAvailable)}</h3>
+        </article>
+        <article className="stat-card">
+          <small>Opening balance</small>
+          <h3>{money.format(openingBalance)}</h3>
+        </article>
+        <article className="stat-card">
+          <small>P&amp;L today</small>
+          <h3 className={pnlToday >= 0 ? "value-pos" : "value-neg"}>
+            {pnlToday >= 0 ? "+" : ""}
+            {money.format(pnlToday)}
+          </h3>
+        </article>
+        <article className="stat-card">
+          <small>Portfolio value</small>
+          <h3>{money.format(portfolioValue)}</h3>
+        </article>
+      </div>
 
-        <div className="data">
-          <div className="first">
-            <h3>3.74k</h3>
-            <p>Margin available</p>
+      <div className="summary-grid-row">
+        <section className="summary-card pnl-card">
+          <div className="card-head">
+            <h4>P&amp;L chart</h4>
           </div>
-          <hr />
+          {chartSeries.length ? (
+            <div className="chart-wrap">
+              <Bar data={barData} options={barOptions} />
+            </div>
+          ) : (
+            <div className="empty">No chart data available</div>
+          )}
+          <p className="card-foot">Today's P&amp;L over time</p>
+        </section>
 
-          <div className="second">
-            <p>
-              Margins used <span>0</span>{" "}
-            </p>
-            <p>
-              Opening balance <span>3.74k</span>{" "}
-            </p>
+        <section className="summary-card movers-card">
+          <div className="card-head">
+            <h4>Top movers</h4>
           </div>
+          {topMovers.length ? (
+            <div className="movers-list">
+              {topMovers.map((item, idx) => (
+                <div key={`${item.symbol}-${idx}`} className="mover-row">
+                  <strong>{item.symbol}</strong>
+                  <span className={item.changePercent >= 0 ? "value-pos" : "value-neg"}>
+                    {item.changePercent >= 0 ? "+" : ""}
+                    {item.changePercent.toFixed(2)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty">No movers available</div>
+          )}
+        </section>
+      </div>
+
+      <section className="summary-card orders-card">
+        <div className="card-head">
+          <h4>Recent orders</h4>
         </div>
-        <hr className="divider" />
-      </div>
 
-      <div className="section">
-        <span>
-          <p>Holdings (13)</p>
-        </span>
-
-        <div className="data">
-          <div className="first">
-            <h3 className="profit">
-              1.55k <small>+5.20%</small>{" "}
-            </h3>
-            <p>P&L</p>
+        {recentOrders.length ? (
+          <div className="recent-list">
+            {recentOrders.map((order, idx) => {
+              const side = getOrderSide(order);
+              return (
+                <div className="recent-row" key={order?._id || idx}>
+                  <strong>{order?.name || "--"}</strong>
+                  <span className={`side-badge ${side === "BUY" ? "buy" : side === "SELL" ? "sell" : "auto"}`}>
+                    {side || "--"}
+                  </span>
+                  <span className="qty">{Number(order?.qty || 0)} qty</span>
+                  <span className="price">{money.format(Number(order?.price || 0))}</span>
+                  <span className={`status ${statusClass(order?.status)}`}>
+                    {String(order?.status || "complete").toLowerCase()}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-          <hr />
-
-          <div className="second">
-            <p>
-              Current Value <span>31.43k</span>{" "}
-            </p>
-            <p>
-              Investment <span>29.88k</span>{" "}
-            </p>
-          </div>
-        </div>
-        <hr className="divider" />
-      </div>
-    </>
+        ) : (
+          <div className="empty">No recent orders</div>
+        )}
+      </section>
+    </div>
   );
 };
 
