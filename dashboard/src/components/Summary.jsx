@@ -99,10 +99,13 @@ const Summary = () => {
           const res = await axios.get(`${BASE_URL}/api/live-price/${encodeURIComponent(symbol)}`, {
             timeout: 7000,
           });
+
+          const rawChange = res.data?.changePercent ?? res.data?.pChange;
           return {
             symbol,
             ltp: Number(res.data?.ltp ?? res.data?.lastPrice ?? res.data?.price ?? holding?.price ?? 0),
-            changePercent: Number(res.data?.changePercent ?? res.data?.pChange ?? 0),
+            changePercent: Number(rawChange ?? 0),
+            hasLiveChange: rawChange !== null && rawChange !== undefined,
           };
         })
       );
@@ -128,7 +131,11 @@ const Summary = () => {
         const investment = qty * avg;
         const currentValue = qty * ltp;
         const pnl = currentValue - investment;
-        const changePercent = Number(liveQuotes[holding?.name]?.changePercent ?? 0);
+        const liveQuote = liveQuotes[holding?.name];
+        const fallbackChangePercent = avg > 0 ? ((ltp - avg) / avg) * 100 : 0;
+        const changePercent = liveQuote?.hasLiveChange
+          ? Number(liveQuote?.changePercent ?? 0)
+          : fallbackChangePercent;
         return { ...holding, qty, avg, ltp, investment, currentValue, pnl, changePercent };
       }),
     [holdings, liveQuotes]
@@ -147,8 +154,20 @@ const Summary = () => {
     [holdingsWithMetrics]
   );
 
+  const todaysOrders = useMemo(
+    () =>
+      orders.filter((order) => {
+        const when = getOrderTime(order);
+        if (!when) return false;
+        const orderDate = new Date(when);
+        if (Number.isNaN(orderDate.getTime())) return false;
+        return orderDate.toDateString() === new Date().toDateString();
+      }),
+    [orders]
+  );
+
   const chartSeries = useMemo(() => {
-    const sorted = [...orders].sort((a, b) => {
+    const sorted = [...todaysOrders].sort((a, b) => {
       const aTime = new Date(getOrderTime(a) || 0).getTime();
       const bTime = new Date(getOrderTime(b) || 0).getTime();
       return aTime - bTime;
@@ -166,13 +185,14 @@ const Summary = () => {
 
       return {
         label: new Date(getOrderTime(order) || Date.now()).toLocaleTimeString("en-IN", {
-          hour: "2-digit",
+          hour: "numeric",
           minute: "2-digit",
+          hour12: false,
         }),
         value: running,
       };
     });
-  }, [orders]);
+  }, [todaysOrders]);
 
   const barData = {
     labels: chartSeries.map((p) => p.label),
@@ -205,10 +225,10 @@ const Summary = () => {
 
   const recentOrders = useMemo(
     () =>
-      [...orders]
+      [...todaysOrders]
         .sort((a, b) => new Date(getOrderTime(b) || 0).getTime() - new Date(getOrderTime(a) || 0).getTime())
         .slice(0, 5),
-    [orders]
+    [todaysOrders]
   );
 
   return (
@@ -250,7 +270,7 @@ const Summary = () => {
               <Bar data={barData} options={barOptions} />
             </div>
           ) : (
-            <div className="empty">No chart data available</div>
+            <div className="empty">No P&amp;L data for today</div>
           )}
           <p className="card-foot">Today's P&amp;L over time</p>
         </section>
@@ -302,7 +322,7 @@ const Summary = () => {
             })}
           </div>
         ) : (
-          <div className="empty">No recent orders</div>
+          <div className="empty">No orders placed today</div>
         )}
       </section>
     </div>
