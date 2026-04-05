@@ -53,6 +53,11 @@ const getHoldingSymbol = (holding) =>
     .trim()
     .toUpperCase();
 
+const getWatchlistSymbol = (item) =>
+  String(item?.symbol || item?.name || item?.tradingsymbol || "")
+    .trim()
+    .toUpperCase();
+
 const parsePercent = (value) => {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : 0;
@@ -63,20 +68,30 @@ const parsePercent = (value) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
+const safeNumber = (value, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 const Summary = () => {
   const [userName, setUserName] = useState("");
   const [marginAvailable, setMarginAvailable] = useState(0);
   const [holdings, setHoldings] = useState([]);
+  const [watchlist, setWatchlist] = useState([]);
   const [orders, setOrders] = useState([]);
   const [liveQuotes, setLiveQuotes] = useState({});
   const [quotesLoading, setQuotesLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      const [profileRes, walletRes, holdingsRes, ordersRes] = await Promise.allSettled([
+      setDataLoading(true);
+
+      const [profileRes, walletRes, holdingsRes, watchlistRes, ordersRes] = await Promise.allSettled([
         axios.get(`${BASE_URL}/api/auth/profile`, { withCredentials: true }),
         axios.get(`${BASE_URL}/wallet/balance`),
         axios.get(`${BASE_URL}/holdings`),
+        axios.get(`${BASE_URL}/watchlist`),
         axios.get(`${BASE_URL}/newOrder`),
       ]);
 
@@ -95,11 +110,19 @@ const Summary = () => {
           : []
       );
 
+      setWatchlist(
+        watchlistRes.status === "fulfilled" && Array.isArray(watchlistRes.value?.data)
+          ? watchlistRes.value.data
+          : []
+      );
+
       setOrders(
         ordersRes.status === "fulfilled" && Array.isArray(ordersRes.value?.data)
           ? ordersRes.value.data
           : []
       );
+
+      setDataLoading(false);
     };
 
     fetchData();
@@ -108,26 +131,55 @@ const Summary = () => {
     return () => window.removeEventListener("walletUpdated", onTrade);
   }, []);
 
+  const fallbackBySymbol = useMemo(() => {
+    const next = {};
+
+    holdings.forEach((holding) => {
+      const symbol = getHoldingSymbol(holding);
+      if (!symbol) return;
+
+      next[symbol] = {
+        symbol,
+        ltp: safeNumber(holding?.price, safeNumber(holding?.avg, 0)),
+        changePercent: parsePercent(holding?.day),
+        hasLiveChange: false,
+      };
+    });
+
+    watchlist.forEach((item) => {
+      const symbol = getWatchlistSymbol(item);
+      if (!symbol || next[symbol]) return;
+
+      next[symbol] = {
+        symbol,
+        ltp: 0,
+        changePercent: 0,
+        hasLiveChange: false,
+      };
+    });
+
+    return next;
+  }, [holdings, watchlist]);
+
+  const quoteSymbols = useMemo(() => Object.keys(fallbackBySymbol), [fallbackBySymbol]);
+
   const fetchQuotes = useCallback(async () => {
-    if (!holdings.length) {
+    if (!quoteSymbols.length) {
       setLiveQuotes({});
+      setQuotesLoading(false);
       return;
     }
 
     setQuotesLoading(true);
 
     const results = await Promise.allSettled(
-      holdings.map(async (holding) => {
-        const symbol = getHoldingSymbol(holding);
-        const dayPercent = parsePercent(holding?.day);
-        const fallback = {
+      quoteSymbols.map(async (symbol) => {
+        const fallback = fallbackBySymbol[symbol] || {
           symbol,
-          ltp: Number(holding?.price ?? 0),
-          changePercent: dayPercent,
+          ltp: 0,
+          changePercent: 0,
           hasLiveChange: false,
         };
-
-        if (!symbol) return fallback;
 
         try {
           const res = await axios.get(`${BASE_URL}/api/live-price/${encodeURIComponent(symbol)}`, {
@@ -137,10 +189,8 @@ const Summary = () => {
           const rawChange = res.data?.changePercent ?? res.data?.pChange;
           return {
             symbol,
-            ltp: Number(
-              res.data?.ltp ?? res.data?.lastPrice ?? res.data?.price ?? holding?.price ?? 0
-            ),
-            changePercent: Number(rawChange ?? dayPercent),
+            ltp: safeNumber(res.data?.ltp ?? res.data?.lastPrice ?? res.data?.price, fallback.ltp),
+            changePercent: safeNumber(rawChange, fallback.changePercent),
             hasLiveChange: rawChange !== null && rawChange !== undefined,
           };
         } catch {
@@ -158,7 +208,7 @@ const Summary = () => {
 
     setLiveQuotes(next);
     setQuotesLoading(false);
-  }, [holdings]);
+  }, [quoteSymbols, fallbackBySymbol]);
 
   useEffect(() => {
     fetchQuotes();
@@ -172,7 +222,7 @@ const Summary = () => {
         const symbol = getHoldingSymbol(holding);
         const qty = Number(holding?.qty || 0);
         const avg = Number(holding?.avg || 0);
-        const ltp = Number(liveQuotes[symbol]?.ltp ?? holding?.price ?? 0);
+        const ltp = safeNumber(liveQuotes[symbol]?.ltp, safeNumber(holding?.price, avg));
         const investment = qty * avg;
         const currentValue = qty * ltp;
         const pnl = currentValue - investment;
@@ -180,7 +230,7 @@ const Summary = () => {
         const fallbackChangePercent = avg > 0 ? ((ltp - avg) / avg) * 100 : 0;
         const holdingDayPercent = parsePercent(holding?.day);
         const changePercent = liveQuote?.hasLiveChange
-          ? Number(liveQuote?.changePercent ?? 0)
+          ? safeNumber(liveQuote?.changePercent, 0)
           : holdingDayPercent || fallbackChangePercent;
         return {
           ...holding,
@@ -200,20 +250,26 @@ const Summary = () => {
   const openingBalance = holdingsWithMetrics.reduce((sum, item) => sum + item.investment, 0);
   const portfolioValue = holdingsWithMetrics.reduce((sum, item) => sum + item.currentValue, 0);
   const pnlToday = portfolioValue - openingBalance;
+  const isPortfolioLoading =
+    dataLoading || (holdings.length > 0 && quotesLoading && Object.keys(liveQuotes).length === 0);
 
   const topMovers = useMemo(
     () =>
-      [...holdingsWithMetrics]
-        .filter((item) => Number(item.qty) > 0)
-        .map((item) => ({
-          symbol: item.symbol || item.name,
-          changePercent: Number(item.changePercent || 0),
-        }))
+      watchlist
+        .map((item) => {
+          const symbol = getWatchlistSymbol(item);
+          const quote = liveQuotes[symbol];
+
+          return {
+            symbol,
+            changePercent: safeNumber(quote?.changePercent, 0),
+          };
+        })
         .filter((item) => Number.isFinite(item.changePercent))
         .filter((item) => item.symbol)
         .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
         .slice(0, 3),
-    [holdingsWithMetrics]
+    [watchlist, liveQuotes]
   );
 
   const todaysOrders = useMemo(
@@ -311,14 +367,18 @@ const Summary = () => {
         </article>
         <article className="stat-card">
           <small>P&amp;L today</small>
-          <h3 className={pnlToday >= 0 ? "value-pos" : "value-neg"}>
-            {pnlToday >= 0 ? "+" : ""}
-            {money.format(pnlToday)}
-          </h3>
+          {isPortfolioLoading ? (
+            <h3>Loading...</h3>
+          ) : (
+            <h3 className={pnlToday >= 0 ? "value-pos" : "value-neg"}>
+              {pnlToday >= 0 ? "+" : ""}
+              {money.format(pnlToday)}
+            </h3>
+          )}
         </article>
         <article className="stat-card">
           <small>Portfolio value</small>
-          <h3>{money.format(portfolioValue)}</h3>
+          <h3>{isPortfolioLoading ? "Loading..." : money.format(portfolioValue)}</h3>
         </article>
       </div>
 
