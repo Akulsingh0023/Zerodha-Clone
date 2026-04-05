@@ -134,11 +134,7 @@ const Summary = () => {
             timeout: 7000,
           });
 
-          const rawChange =
-            res.data?.changePercent ??
-            res.data?.pChange ??
-            res.data?.dayChangePercent ??
-            res.data?.ChangePercent;
+          const rawChange = res.data?.changePercent ?? res.data?.pChange;
           return {
             symbol,
             ltp: Number(
