@@ -53,6 +53,13 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  align-items: flex-start;
+}
+
+.pnl-card,
+.movers-card {
+  padding: 12px;
+  align-self: start;
 }
 
 .card-head {
@@ -95,6 +102,7 @@
 
 .mover-row {
   grid-template-columns: 1fr auto;
+  padding: 8px 0;
 }
 
 .recent-row {

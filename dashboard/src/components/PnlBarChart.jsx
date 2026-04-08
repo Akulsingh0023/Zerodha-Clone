@@ -82,7 +82,7 @@ const PnlBarChart = () => {
           textAlign: "center",
           fontSize: "14px",
           fontWeight: 500,
-          marginBottom: "10px",
+          marginBottom: "4px",
         }}
       >
         P&amp;L chart
@@ -94,7 +94,7 @@ const PnlBarChart = () => {
           alignItems: "center",
           justifyContent: "center",
           gap: "8px",
-          marginBottom: "12px",
+          marginBottom: "4px",
           fontSize: "12px",
         }}
       >
@@ -109,7 +109,7 @@ const PnlBarChart = () => {
         <span>Current Value</span>
       </div>
 
-      <div style={{ position: "relative", width: "100%", height: "320px" }}>
+      <div style={{ position: "relative", width: "100%", height: "180px" }}>
         <Bar data={data} options={options} />
       </div>
 
@@ -118,7 +118,7 @@ const PnlBarChart = () => {
           textAlign: "center",
           fontSize: "12px",
           color: "#888",
-          marginTop: "10px",
+          marginTop: "4px",
         }}
       >
         Today&apos;s P&amp;L over time
