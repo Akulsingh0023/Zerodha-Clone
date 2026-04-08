@@ -1,19 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  ArcElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { Bar } from "react-chartjs-2";
 import BASE_URL from "../config";
+import PnlBarChart from "./PnlBarChart";
 import "./Summary.css";
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
 const money = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -228,63 +217,6 @@ const Summary = () => {
     [orders]
   );
 
-  const chartSeries = useMemo(() => {
-    const sorted = [...todaysOrders].sort((a, b) => {
-      const aTime = new Date(getOrderTime(a) || 0).getTime();
-      const bTime = new Date(getOrderTime(b) || 0).getTime();
-      return aTime - bTime;
-    });
-
-    let running = 0;
-    return sorted.slice(-10).map((order) => {
-      const qty = Number(order?.qty || 0);
-      const price = Number(order?.price || 0);
-      const side = getOrderSide(order);
-      const value = qty * price;
-
-      if (side === "BUY") running -= value;
-      if (side === "SELL" || side === "AUTO SQUARE OFF") running += value;
-
-      return {
-        label: new Date(getOrderTime(order) || Date.now()).toLocaleTimeString("en-IN", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: false,
-        }),
-        value: running,
-      };
-    });
-  }, [todaysOrders]);
-
-  const barData = {
-    labels: chartSeries.map((p) => p.label),
-    datasets: [
-      {
-        data: chartSeries.map((p) => p.value),
-        borderRadius: 6,
-        maxBarThickness: 30,
-        backgroundColor: chartSeries.map((p) => (p.value >= 0 ? "#16a34a" : "#dc2626")),
-      },
-    ],
-  };
-
-  const barOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => money.format(Number(ctx.parsed.y || 0)),
-        },
-      },
-    },
-    scales: {
-      x: { grid: { display: false } },
-      y: { grid: { display: false } },
-    },
-  };
-
   const recentOrders = useMemo(
     () =>
       [...todaysOrders]
@@ -324,17 +256,7 @@ const Summary = () => {
 
       <div className="summary-grid-row">
         <section className="summary-card pnl-card">
-          <div className="card-head">
-            <h4>P&amp;L chart</h4>
-          </div>
-          {chartSeries.length ? (
-            <div className="chart-wrap">
-              <Bar data={barData} options={barOptions} />
-            </div>
-          ) : (
-            <div className="empty">No P&amp;L data for today</div>
-          )}
-          <p className="card-foot">Today's P&amp;L over time</p>
+          <PnlBarChart />
         </section>
 
         <section className="summary-card movers-card">
