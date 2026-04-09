@@ -8,6 +8,7 @@ import "./WatchList.css";
 
 const MAX_WATCHLIST = 50;
 const PRICE_REFRESH_MS = 7000; // 7 seconds
+const PRICE_FETCH_CONCURRENCY = 6;
 
 // Seed-based pseudo-random price so each symbol gets a consistent base price
 const seedPrice = (symbol) => {
@@ -33,6 +34,12 @@ const WatchList = ({ onClose }) => {
   const [watchlist, setWatchlist] = useState([]);
   const [priceMap, setPriceMap] = useState({}); // { SYMBOL: { ltp, change, changePercent } }
   const intervalRef = useRef(null);
+  const isFetchingRef = useRef(false);
+  const priceMapRef = useRef({});
+
+  useEffect(() => {
+    priceMapRef.current = priceMap;
+  }, [priceMap]);
 
   /* ── fetch watchlist from backend ── */
   const fetchWatchlist = useCallback(async () => {
@@ -57,38 +64,53 @@ const WatchList = ({ onClose }) => {
   /* ── fetch live prices for all stocks ── */
   const fetchPrices = useCallback(async () => {
     if (watchlist.length === 0) return;
-
-    const results = await Promise.allSettled(
-      watchlist.map(async (stock) => {
-        try {
-          const res = await axios.get(
-            `${BASE_URL}/api/live-price/${encodeURIComponent(stock.symbol)}`,
-            { timeout: 8000 }
-          );
-          const d = res.data;
-          if (d?.success === false) throw new Error("fallback");
-          const ltp = d.ltp ?? d.lastPrice ?? d.price ?? d.LTP ?? null;
-          if (ltp === null) throw new Error("no ltp");
-          return {
-            symbol: stock.symbol,
-            ltp,
-            change: d.change ?? d.dayChange ?? d.Change ?? 0,
-            changePercent:
-              d.changePercent ?? d.pChange ?? d.dayChangePercent ?? d.ChangePercent ?? 0,
-          };
-        } catch {
-          // API failed → use mock price so UI isn't blank
-          return mockPrice(stock.symbol);
-        }
-      })
-    );
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
 
     const newMap = {};
-    results.forEach((r) => {
-      if (r.status === "fulfilled" && r.value) {
-        newMap[r.value.symbol] = r.value;
+
+    try {
+      for (let i = 0; i < watchlist.length; i += PRICE_FETCH_CONCURRENCY) {
+        const chunk = watchlist.slice(i, i + PRICE_FETCH_CONCURRENCY);
+
+        const results = await Promise.allSettled(
+          chunk.map(async (stock) => {
+            const symbol = stock.symbol;
+            try {
+              const res = await axios.get(
+                `${BASE_URL}/api/live-price/${encodeURIComponent(symbol)}`,
+                { timeout: 8000 }
+              );
+              const d = res.data;
+              if (d?.success === false) throw new Error("fallback");
+              const ltp = d.ltp ?? d.lastPrice ?? d.price ?? d.LTP ?? null;
+              if (ltp === null) throw new Error("no ltp");
+              return {
+                symbol,
+                ltp: Number(ltp),
+                change: Number(d.change ?? d.dayChange ?? d.Change ?? 0),
+                changePercent: Number(
+                  d.changePercent ?? d.pChange ?? d.dayChangePercent ?? d.ChangePercent ?? 0
+                ),
+              };
+            } catch {
+              // If network fails (e.g., Render 502 / CORS-like), keep last known price if we have one
+              const last = priceMapRef.current?.[symbol];
+              return last ? { ...last, symbol } : mockPrice(symbol);
+            }
+          })
+        );
+
+        results.forEach((r) => {
+          if (r.status === "fulfilled" && r.value?.symbol) {
+            newMap[r.value.symbol] = r.value;
+          }
+        });
       }
-    });
+    } finally {
+      isFetchingRef.current = false;
+    }
+
     setPriceMap((prev) => ({ ...prev, ...newMap }));
   }, [watchlist]);
 
