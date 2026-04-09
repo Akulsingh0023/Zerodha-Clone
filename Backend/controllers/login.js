@@ -24,10 +24,9 @@
 import User from "../model/User.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { Resend } from "resend";
 import jwt from "jsonwebtoken";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { getResendClient } from "../services/resendClient.js";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -153,12 +152,19 @@ export const forgotPassword = async (req, res) => {
       process.env.FRONTEND_URL || "https://zerodha-clone-gamma-rose.vercel.app";
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
-    resend.emails
-      .send({
-        from: "Akul Singh <onboarding@resend.dev>",
-        to: email,
-        subject: "Password Reset Link",
-        html: `
+    const resend = getResendClient();
+    if (!resend) {
+      console.warn(
+        "[Resend] RESEND_API_KEY not set; skipping reset email for:",
+        email
+      );
+    } else {
+      resend.emails
+        .send({
+          from: "Akul Singh <onboarding@resend.dev>",
+          to: email,
+          subject: "Password Reset Link",
+          html: `
     <p>Hi,</p>
     
     <p>Click the link below to reset your password:</p>
@@ -169,13 +175,14 @@ export const forgotPassword = async (req, res) => {
     
     <p>If you did not request this, ignore this email.</p>
   `,
-      })
-      .then(() => {
-        console.log("✅ Email sent to:", email);
-      })
-      .catch((err) => {
-        console.log("❌ Resend error:", err.message);
-      });
+        })
+        .then(() => {
+          console.log("✅ Email sent to:", email);
+        })
+        .catch((err) => {
+          console.log("❌ Resend error:", err.message);
+        });
+    }
 
     res.status(200).json({
       message:
