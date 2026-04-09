@@ -188,7 +188,7 @@ const Summary = () => {
 
   const openingBalance = holdingsWithMetrics.reduce((sum, item) => sum + item.investment, 0);
   const portfolioValue = holdingsWithMetrics.reduce((sum, item) => sum + item.currentValue, 0);
-  const pnlToday = portfolioValue - openingBalance;
+  const pnlToday = marginAvailable - openingBalance;
 
   const topMovers = useMemo(
     () =>
@@ -248,39 +248,6 @@ const Summary = () => {
             {money.format(pnlToday)}
           </h3>
         </article>
-        <article className="stat-card">
-          <small>Portfolio value</small>
-          <h3>{money.format(portfolioValue)}</h3>
-        </article>
-      </div>
-
-      <div className="summary-grid-row">
-        <section className="summary-card pnl-card">
-          <PnlBarChart />
-        </section>
-
-        <section className="summary-card movers-card">
-          <div className="card-head">
-            <h4>Top movers</h4>
-          </div>
-          {quotesLoading && topMovers.length === 0 ? (
-            <div className="empty">Loading movers...</div>
-          ) : topMovers.length ? (
-            <div className="movers-list">
-              {topMovers.map((item, idx) => (
-                <div key={`${item.symbol}-${idx}`} className="mover-row">
-                  <strong>{item.symbol}</strong>
-                  <span className={item.changePercent >= 0 ? "value-pos" : "value-neg"}>
-                    {item.changePercent >= 0 ? "+" : ""}
-                    {item.changePercent.toFixed(2)}%
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty">No movers available</div>
-          )}
-        </section>
       </div>
 
       <section className="summary-card orders-card">
