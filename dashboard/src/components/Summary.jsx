@@ -59,9 +59,18 @@ const Summary = () => {
   const [orders, setOrders] = useState([]);
   const [liveQuotes, setLiveQuotes] = useState({});
   const [quotesLoading, setQuotesLoading] = useState(false);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(true);
+  const [dashboardErrors, setDashboardErrors] = useState({
+    profile: false,
+    wallet: false,
+    holdings: false,
+    orders: false,
+  });
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsDashboardLoading(true);
+
       const [profileRes, walletRes, holdingsRes, ordersRes] = await Promise.allSettled([
         axios.get(`${BASE_URL}/api/auth/profile`, { withCredentials: true }),
         axios.get(`${BASE_URL}/wallet/balance`),
@@ -69,13 +78,24 @@ const Summary = () => {
         axios.get(`${BASE_URL}/newOrder`),
       ]);
 
+      const nextErrors = {
+        profile: profileRes.status !== "fulfilled",
+        wallet: walletRes.status !== "fulfilled",
+        holdings: holdingsRes.status !== "fulfilled",
+        orders: ordersRes.status !== "fulfilled",
+      };
+
       if (profileRes.status === "fulfilled") {
         const user = profileRes.value?.data?.user || profileRes.value?.data || {};
         setUserName(user.fullname || user.name || user.email || "User");
+      } else {
+        setUserName("User");
       }
 
       if (walletRes.status === "fulfilled") {
         setMarginAvailable(Number(walletRes.value?.data?.balance || 0));
+      } else {
+        setMarginAvailable(0);
       }
 
       setHoldings(
@@ -89,6 +109,9 @@ const Summary = () => {
           ? ordersRes.value.data
           : []
       );
+
+      setDashboardErrors(nextErrors);
+      setIsDashboardLoading(false);
     };
 
     fetchData();
@@ -228,24 +251,58 @@ const Summary = () => {
   return (
     <div className="summary-layout">
       <div className="summary-head">
-        <h2>Hi, {userName || "User"}!</h2>
+        <h2>
+          Hi, {isDashboardLoading ? <span className="skeleton-line skeleton-name" /> : userName || "User"}!
+        </h2>
         <p>{prettyDate(new Date())}</p>
       </div>
 
       <div className="stats-grid">
         <article className="stat-card">
           <small>Margin available</small>
-          <h3>{money.format(marginAvailable)}</h3>
+          <h3>
+            {isDashboardLoading ? (
+              <span className="skeleton-line skeleton-lg" />
+            ) : dashboardErrors.wallet ? (
+              "--"
+            ) : (
+              money.format(marginAvailable)
+            )}
+          </h3>
         </article>
         <article className="stat-card">
           <small>Opening balance</small>
-          <h3>{money.format(openingBalance)}</h3>
+          <h3>
+            {isDashboardLoading ? (
+              <span className="skeleton-line skeleton-lg" />
+            ) : dashboardErrors.holdings ? (
+              "--"
+            ) : (
+              money.format(openingBalance)
+            )}
+          </h3>
         </article>
         <article className="stat-card">
           <small>P&amp;L today</small>
-          <h3 className={pnlToday >= 0 ? "value-pos" : "value-neg"}>
-            {pnlToday >= 0 ? "+" : ""}
-            {money.format(pnlToday)}
+          <h3
+            className={
+              !isDashboardLoading && !dashboardErrors.wallet && !dashboardErrors.holdings
+                ? pnlToday >= 0
+                  ? "value-pos"
+                  : "value-neg"
+                : undefined
+            }
+          >
+            {isDashboardLoading ? (
+              <span className="skeleton-line skeleton-lg" />
+            ) : dashboardErrors.wallet || dashboardErrors.holdings ? (
+              "--"
+            ) : (
+              <>
+                {pnlToday >= 0 ? "+" : ""}
+                {money.format(pnlToday)}
+              </>
+            )}
           </h3>
         </article>
       </div>
@@ -255,7 +312,11 @@ const Summary = () => {
           <h4>Recent orders</h4>
         </div>
 
-        {recentOrders.length ? (
+        {isDashboardLoading ? (
+          <div className="empty">Loading...</div>
+        ) : dashboardErrors.orders ? (
+          <div className="empty">Error</div>
+        ) : recentOrders.length ? (
           <div className="recent-list">
             {recentOrders.map((order, idx) => {
               const side = getOrderSide(order);
