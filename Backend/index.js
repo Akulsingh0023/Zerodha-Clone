@@ -1061,6 +1061,64 @@ const writeLivePriceCache = (symbol, data) => {
   livePriceCache.set(symbol, { timestamp: Date.now(), data });
 };
 
+const NSE_BASE_URL = "https://www.nseindia.com";
+const NSE_COMMON_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+  Accept: "application/json, text/plain, */*",
+  "Accept-Language": "en-US,en;q=0.9",
+  Referer: `${NSE_BASE_URL}/`,
+};
+
+const buildCookieHeader = (setCookieHeader) => {
+  if (!Array.isArray(setCookieHeader) || setCookieHeader.length === 0) return "";
+  return setCookieHeader
+    .map((value) => String(value).split(";")[0])
+    .filter(Boolean)
+    .join("; ");
+};
+
+const fetchNseQuoteWithRetries = async (symbol, retries = 2) => {
+  let lastError;
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const homeRes = await axios.get(`${NSE_BASE_URL}/`, {
+        headers: {
+          ...NSE_COMMON_HEADERS,
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        },
+        timeout: 7000,
+        validateStatus: () => true,
+      });
+
+      const cookie = buildCookieHeader(homeRes.headers?.["set-cookie"]);
+
+      const quoteRes = await axios.get(
+        `${NSE_BASE_URL}/api/quote-equity?symbol=${encodeURIComponent(symbol)}`,
+        {
+          headers: {
+            ...NSE_COMMON_HEADERS,
+            Cookie: cookie,
+          },
+          timeout: 7000,
+          validateStatus: () => true,
+        }
+      );
+
+      if (quoteRes.status !== 200) {
+        throw new Error(`NSE quote request failed: HTTP ${quoteRes.status}`);
+      }
+
+      return quoteRes;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw lastError;
+};
+
 app.get("/api/live-price/:symbol", async (req, res) => {
   const symbol = normalizeSymbol(req.params.symbol);
 
@@ -1080,17 +1138,7 @@ app.get("/api/live-price/:symbol", async (req, res) => {
   }
 
   try {
-    const response = await axios.get(
-      `https://www.nseindia.com/api/quote-equity?symbol=${symbol}`,
-      {
-        headers: {
-          "User-Agent": "Mozilla/5.0",
-          Accept: "application/json",
-          Referer: "https://www.nseindia.com/",
-        },
-        timeout: 5000,
-      }
-    );
+    const response = await fetchNseQuoteWithRetries(symbol, 2);
 
     const priceInfo = response?.data?.priceInfo;
     if (!priceInfo) throw new Error("Missing priceInfo");
