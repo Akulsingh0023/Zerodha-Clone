@@ -1062,12 +1062,16 @@ const writeLivePriceCache = (symbol, data) => {
 };
 
 const NSE_BASE_URL = "https://www.nseindia.com";
+const NSE_COOKIE_TTL_MS = 2 * 60 * 1000; // reuse cookies for 2 minutes to avoid extra homepage calls
+let nseCookieCache = { cookie: "", timestamp: 0 };
+
 const NSE_COMMON_HEADERS = {
   "User-Agent":
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
   Accept: "application/json, text/plain, */*",
   "Accept-Language": "en-US,en;q=0.9",
   Referer: `${NSE_BASE_URL}/`,
+  Connection: "keep-alive",
 };
 
 const buildCookieHeader = (setCookieHeader) => {
@@ -1078,22 +1082,42 @@ const buildCookieHeader = (setCookieHeader) => {
     .join("; ");
 };
 
+const getNseCookie = async ({ forceRefresh = false } = {}) => {
+  const hasFreshCookie =
+    nseCookieCache.cookie && Date.now() - nseCookieCache.timestamp < NSE_COOKIE_TTL_MS;
+
+  if (!forceRefresh && hasFreshCookie) return nseCookieCache.cookie;
+
+  const homeRes = await axios.get(`${NSE_BASE_URL}/`, {
+    headers: {
+      ...NSE_COMMON_HEADERS,
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    },
+    timeout: 4000,
+    validateStatus: () => true,
+  });
+
+  const cookie = buildCookieHeader(homeRes.headers?.["set-cookie"]);
+  if (cookie) {
+    nseCookieCache = { cookie, timestamp: Date.now() };
+  }
+
+  return cookie;
+};
+
 const fetchNseQuoteWithRetries = async (symbol, retries = 2) => {
   let lastError;
 
+  // Fetch cookie once up-front; if NSE blocks, we still proceed and let retries handle refresh.
+  let cookie = "";
+  try {
+    cookie = await getNseCookie();
+  } catch {
+    cookie = "";
+  }
+
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
-      const homeRes = await axios.get(`${NSE_BASE_URL}/`, {
-        headers: {
-          ...NSE_COMMON_HEADERS,
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        },
-        timeout: 7000,
-        validateStatus: () => true,
-      });
-
-      const cookie = buildCookieHeader(homeRes.headers?.["set-cookie"]);
-
       const quoteRes = await axios.get(
         `${NSE_BASE_URL}/api/quote-equity?symbol=${encodeURIComponent(symbol)}`,
         {
@@ -1101,12 +1125,20 @@ const fetchNseQuoteWithRetries = async (symbol, retries = 2) => {
             ...NSE_COMMON_HEADERS,
             Cookie: cookie,
           },
-          timeout: 7000,
+          timeout: 5000,
           validateStatus: () => true,
         }
       );
 
       if (quoteRes.status !== 200) {
+        // For common anti-bot / throttling responses, refresh cookie once and retry.
+        if ([401, 403, 429, 500, 502, 503, 504].includes(quoteRes.status) && attempt < retries) {
+          try {
+            cookie = await getNseCookie({ forceRefresh: true });
+          } catch {
+            // ignore and keep retrying with existing cookie
+          }
+        }
         throw new Error(`NSE quote request failed: HTTP ${quoteRes.status}`);
       }
 
