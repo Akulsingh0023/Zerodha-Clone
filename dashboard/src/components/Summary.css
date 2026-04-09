@@ -184,53 +184,6 @@
   justify-content: center;
 }
 
-/* ================= SKELETON LOADERS ================= */
-.skeleton {
-  background: #f3f4f6;
-  border-radius: 10px;
-}
-
-.skeleton-title {
-  width: 220px;
-  height: 32px;
-}
-
-.skeleton-date {
-  width: 160px;
-  height: 16px;
-}
-
-.skeleton-label {
-  width: 120px;
-  height: 14px;
-}
-
-.skeleton-money {
-  width: 180px;
-  height: 34px;
-  margin-top: 10px;
-}
-
-.skeleton-h4 {
-  width: 160px;
-  height: 24px;
-}
-
-.recent-row-skeleton {
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.skeleton-cell {
-  height: 18px;
-  width: 100%;
-}
-
-.skeleton-pill {
-  height: 18px;
-  width: 72px;
-  border-radius: 999px;
-}
-
 @media (max-width: 1100px) {
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

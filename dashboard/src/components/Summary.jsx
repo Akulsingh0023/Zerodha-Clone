@@ -59,54 +59,42 @@ const Summary = () => {
   const [orders, setOrders] = useState([]);
   const [liveQuotes, setLiveQuotes] = useState({});
   const [quotesLoading, setQuotesLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [initialLoadError, setInitialLoadError] = useState("");
 
   useEffect(() => {
-    let isMounted = true;
+    const fetchData = async () => {
+      const [profileRes, walletRes, holdingsRes, ordersRes] = await Promise.allSettled([
+        axios.get(`${BASE_URL}/api/auth/profile`, { withCredentials: true }),
+        axios.get(`${BASE_URL}/wallet/balance`),
+        axios.get(`${BASE_URL}/holdings`),
+        axios.get(`${BASE_URL}/newOrder`),
+      ]);
 
-    const fetchData = async ({ showSkeleton } = { showSkeleton: false }) => {
-      if (showSkeleton) {
-        setInitialLoading(true);
-        setInitialLoadError("");
-      }
-
-      try {
-        const [profileRes, walletRes, holdingsRes, ordersRes] = await Promise.all([
-          axios.get(`${BASE_URL}/api/auth/profile`, { withCredentials: true }),
-          axios.get(`${BASE_URL}/wallet/balance`),
-          axios.get(`${BASE_URL}/holdings`),
-          axios.get(`${BASE_URL}/newOrder`),
-        ]);
-
-        if (!isMounted) return;
-
-        const user = profileRes?.data?.user || profileRes?.data || {};
+      if (profileRes.status === "fulfilled") {
+        const user = profileRes.value?.data?.user || profileRes.value?.data || {};
         setUserName(user.fullname || user.name || user.email || "User");
-
-        setMarginAvailable(Number(walletRes?.data?.balance || 0));
-
-        setHoldings(Array.isArray(holdingsRes?.data) ? holdingsRes.data : []);
-        setOrders(Array.isArray(ordersRes?.data) ? ordersRes.data : []);
-
-        if (showSkeleton) setInitialLoading(false);
-      } catch {
-        if (!isMounted) return;
-
-        if (showSkeleton) {
-          setInitialLoadError("Failed to load dashboard data. Please refresh.");
-          setInitialLoading(false);
-        }
       }
+
+      if (walletRes.status === "fulfilled") {
+        setMarginAvailable(Number(walletRes.value?.data?.balance || 0));
+      }
+
+      setHoldings(
+        holdingsRes.status === "fulfilled" && Array.isArray(holdingsRes.value?.data)
+          ? holdingsRes.value.data
+          : []
+      );
+
+      setOrders(
+        ordersRes.status === "fulfilled" && Array.isArray(ordersRes.value?.data)
+          ? ordersRes.value.data
+          : []
+      );
     };
 
-    fetchData({ showSkeleton: true });
-    const onTrade = () => fetchData({ showSkeleton: false });
+    fetchData();
+    const onTrade = () => fetchData();
     window.addEventListener("walletUpdated", onTrade);
-    return () => {
-      isMounted = false;
-      window.removeEventListener("walletUpdated", onTrade);
-    };
+    return () => window.removeEventListener("walletUpdated", onTrade);
   }, []);
 
   const fetchQuotes = useCallback(async () => {
@@ -236,63 +224,6 @@ const Summary = () => {
         .slice(0, 5),
     [todaysOrders]
   );
-
-  if (initialLoadError) {
-    return (
-      <div className="summary-layout">
-        <div className="summary-head">
-          <h2>Dashboard</h2>
-          <p>{prettyDate(new Date())}</p>
-        </div>
-        <section className="summary-card">
-          <div className="empty">{initialLoadError}</div>
-        </section>
-      </div>
-    );
-  }
-
-  if (initialLoading) {
-    return (
-      <div className="summary-layout">
-        <div className="summary-head">
-          <div className="skeleton skeleton-title" />
-          <div className="skeleton skeleton-date" />
-        </div>
-
-        <div className="stats-grid">
-          <article className="stat-card">
-            <div className="skeleton skeleton-label" />
-            <div className="skeleton skeleton-money" />
-          </article>
-          <article className="stat-card">
-            <div className="skeleton skeleton-label" />
-            <div className="skeleton skeleton-money" />
-          </article>
-          <article className="stat-card">
-            <div className="skeleton skeleton-label" />
-            <div className="skeleton skeleton-money" />
-          </article>
-        </div>
-
-        <section className="summary-card orders-card">
-          <div className="card-head">
-            <div className="skeleton skeleton-h4" />
-          </div>
-          <div className="recent-list">
-            {Array.from({ length: 5 }).map((_, idx) => (
-              <div key={idx} className="recent-row recent-row-skeleton">
-                <div className="skeleton skeleton-cell" />
-                <div className="skeleton skeleton-pill" />
-                <div className="skeleton skeleton-cell" />
-                <div className="skeleton skeleton-cell" />
-                <div className="skeleton skeleton-cell" />
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-    );
-  }
 
   return (
     <div className="summary-layout">
