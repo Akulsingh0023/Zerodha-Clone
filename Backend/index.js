@@ -906,10 +906,29 @@ app.use("/api/support", supportRoutes);
 app.use("/api/square-off", squareOffRoutes);
 app.use("/api/payment", paymentRoutes);
 /* ================= DB CONNECT ================= */
-mongoose
-  .connect(process.env.MONGO_URL)
-  .then(() => console.log("✅ DB connected"))
-  .catch((err) => console.log("❌ DB error:", err));
+const MONGO_URL = process.env.MONGO_URL;
+
+const connectMongoWithRetry = async (attempt = 0) => {
+  if (!MONGO_URL) {
+    console.warn("⚠️ MONGO_URL is not set; skipping DB connection");
+    return;
+  }
+
+  try {
+    await mongoose.connect(MONGO_URL, {
+      serverSelectionTimeoutMS: 8000,
+      family: 4,
+    });
+    console.log("✅ DB connected");
+  } catch (err) {
+    const delayMs = Math.min(30_000, 1_000 * Math.pow(2, Math.min(attempt, 5)));
+    console.log("❌ DB error:", err);
+    console.log(`🔁 Retrying DB connection in ${delayMs}ms`);
+    setTimeout(() => connectMongoWithRetry(attempt + 1), delayMs);
+  }
+};
+
+connectMongoWithRetry();
 
 /* ================= ROUTES ================= */
 
