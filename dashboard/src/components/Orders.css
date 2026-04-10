@@ -20,6 +20,12 @@
   color: #888;
   text-transform: uppercase;
 }
+
+/* Slight right shift for ACTION column (2nd column) */
+.ord-table th:nth-child(2),
+.ord-table td:nth-child(2) {
+  padding-left: 12px;
+}
 .ord-table td {
   text-align: center;
   font-size: 13px;
