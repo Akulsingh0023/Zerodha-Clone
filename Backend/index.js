@@ -1198,22 +1198,21 @@ const getFallbackQuote = (symbol) => {
   };
 };
 
-app.get("/api/live-price/:symbol", async (req, res) => {
-  const symbol = normalizeSymbol(req.params.symbol);
+const getLiveQuoteForSymbol = async (inputSymbol) => {
+  const symbol = normalizeSymbol(inputSymbol);
 
   if (!symbol) {
     const fallback = getFallbackQuote("NSE");
-    return res.status(200).json({ success: true, symbol: "", ...fallback });
+    return { success: true, symbol: "", ...fallback };
   }
 
   const cached = readLivePriceCache(symbol);
   if (cached) {
-    return res.status(200).json({ success: true, symbol, ...cached });
+    return { success: true, symbol, ...cached };
   }
 
   try {
     const response = await fetchNseQuoteWithRetries(symbol, 2);
-
     const priceInfo = response?.data?.priceInfo;
     if (!priceInfo) throw new Error("Missing priceInfo");
 
@@ -1224,14 +1223,64 @@ app.get("/api/live-price/:symbol", async (req, res) => {
     };
 
     writeLivePriceCache(symbol, data);
-    return res.status(200).json({ success: true, symbol, ...data });
+    return { success: true, symbol, ...data };
   } catch (err) {
     console.error(`[LIVE_PRICE] Falling back for ${symbol}:`, err?.message || err);
-
     const fallbackData = getFallbackQuote(symbol);
     writeLivePriceCache(symbol, fallbackData);
+    return { success: true, symbol, ...fallbackData };
+  }
+};
 
-    return res.status(200).json({ success: true, symbol, ...fallbackData });
+app.get("/api/live-price/:symbol", async (req, res) => {
+  const data = await getLiveQuoteForSymbol(req.params.symbol);
+  return res.status(200).json(data);
+});
+
+app.get("/api/live-prices", async (req, res) => {
+  try {
+    const symbolsRaw = String(req.query.symbols || "");
+    const symbols = Array.from(
+      new Set(
+        symbolsRaw
+          .split(",")
+          .map((s) => normalizeSymbol(s))
+          .filter(Boolean)
+      )
+    ).slice(0, 50);
+
+    if (symbols.length === 0) {
+      return res.status(200).json({ success: true, prices: [] });
+    }
+
+    const PRICE_FETCH_CONCURRENCY = 5;
+    const prices = [];
+
+    for (let i = 0; i < symbols.length; i += PRICE_FETCH_CONCURRENCY) {
+      const chunk = symbols.slice(i, i + PRICE_FETCH_CONCURRENCY);
+      const results = await Promise.all(
+        chunk.map((symbol) => getLiveQuoteForSymbol(symbol))
+      );
+      prices.push(...results);
+    }
+
+    return res.status(200).json({ success: true, prices });
+  } catch (err) {
+    console.error("[LIVE_PRICES] Batch route failed:", err?.message || err);
+
+    const fallbackSymbols = String(req.query.symbols || "")
+      .split(",")
+      .map((s) => normalizeSymbol(s))
+      .filter(Boolean)
+      .slice(0, 50);
+
+    const prices = fallbackSymbols.map((symbol) => {
+      const fallbackData = getFallbackQuote(symbol);
+      writeLivePriceCache(symbol, fallbackData);
+      return { success: true, symbol, ...fallbackData };
+    });
+
+    return res.status(200).json({ success: true, prices });
   }
 });
 
