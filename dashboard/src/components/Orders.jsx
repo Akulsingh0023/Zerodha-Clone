@@ -49,7 +49,7 @@ const Orders = () => {
             <thead>
               <tr>
                 <th className="align-left">SYMBOL</th>
-                <th>ACTION</th>
+                <th className="action-header">ACTION</th>
                 <th>ORDER TYPE</th>
                 <th>QTY</th>
                 <th>PRICE</th>

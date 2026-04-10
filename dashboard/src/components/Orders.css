@@ -21,11 +21,9 @@
   text-transform: uppercase;
 }
 
-/* Ensure ACTION column header + cells align perfectly */
-.ord-table th:nth-child(2),
-.ord-table td:nth-child(2) {
-  text-align: center;
-  vertical-align: middle;
+/* Shift only the ACTION column header text to align over BUY/SELL badge */
+.ord-table th.action-header {
+  padding-left: 60px;
 }
 .ord-table td {
   text-align: center;
