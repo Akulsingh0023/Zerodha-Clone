@@ -23,7 +23,7 @@
 
 /* Shift only the ACTION column header text to align over BUY/SELL badge */
 .ord-table th.action-header {
-  padding-left: 78px;
+  padding-left: 83px;
 }
 .ord-table td {
   text-align: center;
