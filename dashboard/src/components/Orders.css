@@ -24,19 +24,18 @@
 /* Slight right shift for ACTION column (2nd column) */
 .ord-table th:nth-child(2),
 .ord-table td:nth-child(2) {
-  padding-left: 12px;
-}
-.ord-table td {
   text-align: center;
-  font-size: 13px;
-}
-.ord-symbol {
-  font-weight: 600;
-  color: #333;
+  padding: 0;
 }
 
-.ord-table {
-  min-width: 760px;
+.ord-table td:nth-child(2) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ord-table td:nth-child(2) button {
+  min-width: 70px;
 }
 
 /* ── Badges ── */
