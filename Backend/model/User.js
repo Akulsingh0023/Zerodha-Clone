@@ -62,6 +62,11 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
 
+    openingBalance: {
+      type: Number,
+      default: 0,
+    },
+
     // �🔐 Forgot Password
     resetToken: {
       type: String,

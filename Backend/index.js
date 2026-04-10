@@ -1499,6 +1499,35 @@ const getIstParts = () => {
   return map;
 };
 
+const resetOpeningBalanceAtMidnight = async () => {
+  try {
+    const result = await User.updateMany(
+      {},
+      [
+        {
+          $set: {
+            openingBalance: { $ifNull: ["$walletBalance", 0] },
+          },
+        },
+      ]
+    );
+
+    console.log(
+      `[Scheduler] Opening balance reset at midnight for ${result.modifiedCount ?? 0} users`
+    );
+  } catch (err) {
+    console.error("[Scheduler] Opening balance reset error:", err.message);
+  }
+};
+
+cron.schedule(
+  "0 0 * * *",
+  () => {
+    resetOpeningBalanceAtMidnight();
+  },
+  { timezone: IST_TIMEZONE }
+);
+
 cron.schedule(
   "* * * * *",
   () => {
