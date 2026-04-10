@@ -21,10 +21,11 @@
   text-transform: uppercase;
 }
 
-/* Slight right shift for ACTION column (2nd column) */
+/* Ensure ACTION column header + cells align perfectly */
 .ord-table th:nth-child(2),
 .ord-table td:nth-child(2) {
-  padding-left: 12px;
+  text-align: center;
+  vertical-align: middle;
 }
 .ord-table td {
   text-align: center;
