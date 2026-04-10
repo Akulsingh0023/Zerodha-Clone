@@ -36,7 +36,7 @@
 
 // export default GeneralContext;
 
-import { createContext, useCallback, useState } from "react";
+import { createContext, useState } from "react";
 import BuyActionWindow from "./BuyActionWindow";
 import SellActionWindow from "./SellActionWindow";
 
@@ -45,21 +45,12 @@ const GeneralContext = createContext();
 export const GeneralContextProvider = ({ children }) => {
   const [buyStock, setBuyStock] = useState(null);
   const [sellStock, setSellStock] = useState(null);
-  const [livePriceMap, setLivePriceMap] = useState({});
-
-  const mergeLivePrices = useCallback((incoming) => {
-    if (!incoming || typeof incoming !== "object") return;
-    setLivePriceMap((prev) => ({ ...prev, ...incoming }));
-  }, []);
 
   return (
     <GeneralContext.Provider
       value={{
         openBuyWindow: (stock) => setBuyStock(stock),
         openSellWindow: (stock) => setSellStock(stock),
-        livePriceMap,
-        setLivePriceMap,
-        mergeLivePrices,
       }}
     >
       {children}

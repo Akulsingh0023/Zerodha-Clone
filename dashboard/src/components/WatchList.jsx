@@ -1,23 +1,14 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-  useContext,
-} from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
 import SearchBar from "./SearchBar";
 import WatchlistItem from "./WatchlistItem";
 import { DoughnutChart } from "./DoughnutChart";
 import BASE_URL from "../config";
-import GeneralContext from "./GeneralContext";
 import "./WatchList.css";
 
 const MAX_WATCHLIST = 50;
-const PRICE_REFRESH_MS = 8000;
-const PRICE_DEBOUNCE_MS = 400;
+const PRICE_REFRESH_MS = 7000; // 7 seconds
+const PRICE_FETCH_CONCURRENCY = 6;
 
 // Seed-based pseudo-random price so each symbol gets a consistent base price
 const seedPrice = (symbol) => {
@@ -38,38 +29,17 @@ const mockPrice = (symbol) => {
   return { symbol, ltp, change, changePercent };
 };
 
-const useDebouncedValue = (value, delayMs) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delayMs);
-
-    return () => clearTimeout(timeoutId);
-  }, [value, delayMs]);
-
-  return debouncedValue;
-};
-
 /* ================= MAIN WATCHLIST ================= */
 const WatchList = ({ onClose }) => {
   const [watchlist, setWatchlist] = useState([]);
-  const [isTabVisible, setIsTabVisible] = useState(
-    typeof document === "undefined" ? true : !document.hidden
-  );
-  const { livePriceMap, setLivePriceMap, mergeLivePrices } = useContext(GeneralContext);
-  const priceMapRef = useRef(livePriceMap);
+  const [priceMap, setPriceMap] = useState({}); // { SYMBOL: { ltp, change, changePercent } }
+  const intervalRef = useRef(null);
+  const isFetchingRef = useRef(false);
+  const priceMapRef = useRef({});
 
   useEffect(() => {
-    priceMapRef.current = livePriceMap;
-  }, [livePriceMap]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => setIsTabVisible(!document.hidden);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, []);
+    priceMapRef.current = priceMap;
+  }, [priceMap]);
 
   /* ── fetch watchlist from backend ── */
   const fetchWatchlist = useCallback(async () => {
@@ -91,73 +61,66 @@ const WatchList = ({ onClose }) => {
     fetchWatchlist();
   }, [fetchWatchlist]);
 
-  const symbolsCsv = useMemo(
-    () => watchlist.map((s) => s.symbol).filter(Boolean).join(","),
-    [watchlist]
-  );
+  /* ── fetch live prices for all stocks ── */
+  const fetchPrices = useCallback(async () => {
+    if (watchlist.length === 0) return;
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
 
-  const debouncedSymbolsCsv = useDebouncedValue(symbolsCsv, PRICE_DEBOUNCE_MS);
+    const newMap = {};
 
-  const { data: fetchedPriceMap = {} } = useQuery({
-    queryKey: ["live-prices", debouncedSymbolsCsv],
-    enabled: Boolean(debouncedSymbolsCsv),
-    staleTime: PRICE_REFRESH_MS,
-    refetchInterval: isTabVisible ? PRICE_REFRESH_MS : false,
-    refetchIntervalInBackground: false,
-    queryFn: async () => {
-      const symbols = debouncedSymbolsCsv
-        .split(",")
-        .map((s) => s.trim().toUpperCase())
-        .filter(Boolean);
+    try {
+      for (let i = 0; i < watchlist.length; i += PRICE_FETCH_CONCURRENCY) {
+        const chunk = watchlist.slice(i, i + PRICE_FETCH_CONCURRENCY);
 
-      if (symbols.length === 0) return {};
+        const results = await Promise.allSettled(
+          chunk.map(async (stock) => {
+            const symbol = stock.symbol;
+            try {
+              const res = await axios.get(
+                `${BASE_URL}/api/live-price/${encodeURIComponent(symbol)}`,
+                { timeout: 8000 }
+              );
+              const d = res.data;
+              if (d?.success === false) throw new Error("fallback");
+              const ltp = d.ltp ?? d.lastPrice ?? d.price ?? d.LTP ?? null;
+              if (ltp === null) throw new Error("no ltp");
+              return {
+                symbol,
+                ltp: Number(ltp),
+                change: Number(d.change ?? d.dayChange ?? d.Change ?? 0),
+                changePercent: Number(
+                  d.changePercent ?? d.pChange ?? d.dayChangePercent ?? d.ChangePercent ?? 0
+                ),
+              };
+            } catch {
+              // If network fails (e.g., Render 502 / CORS-like), keep last known price if we have one
+              const last = priceMapRef.current?.[symbol];
+              return last ? { ...last, symbol } : mockPrice(symbol);
+            }
+          })
+        );
 
-      try {
-        const res = await axios.get(`${BASE_URL}/api/live-prices`, {
-          params: { symbols: symbols.join(",") },
-          timeout: 3500,
-        });
-
-        const prices = Array.isArray(res.data?.prices) ? res.data.prices : [];
-        const map = {};
-
-        for (const item of prices) {
-          const symbol = String(item?.symbol || "")
-            .trim()
-            .toUpperCase();
-          if (!symbol) continue;
-          map[symbol] = {
-            symbol,
-            ltp: Number(item?.ltp ?? 0),
-            change: Number(item?.change ?? 0),
-            changePercent: Number(item?.changePercent ?? 0),
-          };
-        }
-
-        for (const symbol of symbols) {
-          if (!map[symbol]) {
-            const last = priceMapRef.current?.[symbol];
-            map[symbol] = last ? { ...last, symbol } : mockPrice(symbol);
+        results.forEach((r) => {
+          if (r.status === "fulfilled" && r.value?.symbol) {
+            newMap[r.value.symbol] = r.value;
           }
-        }
-
-        return map;
-      } catch (err) {
-        console.error("Batch live price fetch failed:", err);
-        const map = {};
-        for (const symbol of symbols) {
-          const last = priceMapRef.current?.[symbol];
-          map[symbol] = last ? { ...last, symbol } : mockPrice(symbol);
-        }
-        return map;
+        });
       }
-    },
-  });
+    } finally {
+      isFetchingRef.current = false;
+    }
 
+    setPriceMap((prev) => ({ ...prev, ...newMap }));
+  }, [watchlist]);
+
+  /* ── start / restart interval when watchlist changes ── */
   useEffect(() => {
-    if (!fetchedPriceMap || Object.keys(fetchedPriceMap).length === 0) return;
-    mergeLivePrices(fetchedPriceMap);
-  }, [fetchedPriceMap, mergeLivePrices]);
+    fetchPrices(); // immediate first call
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(fetchPrices, PRICE_REFRESH_MS);
+    return () => clearInterval(intervalRef.current);
+  }, [fetchPrices]);
 
   /* ── add stock ── */
   const handleAddStock = (stock) => {
@@ -192,7 +155,7 @@ const WatchList = ({ onClose }) => {
         // fallback: update UI even if API fails
         setWatchlist((prev) => prev.filter((s) => s.symbol !== symbol));
       } finally {
-        setLivePriceMap((prev) => {
+        setPriceMap((prev) => {
           const copy = { ...prev };
           delete copy[symbol];
           return copy;
@@ -228,7 +191,7 @@ const WatchList = ({ onClose }) => {
   const chartData = (() => {
     if (watchlist.length === 0) return null;
 
-    const hasLivePrices = watchlist.some((s) => livePriceMap[s.symbol]?.ltp);
+    const hasLivePrices = watchlist.some((s) => priceMap[s.symbol]?.ltp);
 
     return {
       labels: watchlist.map((s) => s.symbol),
@@ -236,7 +199,7 @@ const WatchList = ({ onClose }) => {
         {
           label: hasLivePrices ? "LTP" : "Stocks",
           data: watchlist.map((s) =>
-            hasLivePrices ? (livePriceMap[s.symbol]?.ltp || 0) : 1
+            hasLivePrices ? (priceMap[s.symbol]?.ltp || 0) : 1
           ),
           backgroundColor: [
             "rgba(65,132,243,0.6)",
@@ -303,7 +266,7 @@ const WatchList = ({ onClose }) => {
               >
                 <WatchlistItem
                   stock={stock}
-                  priceData={livePriceMap[stock.symbol]}
+                  priceData={priceMap[stock.symbol]}
                   onRemove={handleRemoveStock}
                 />
               </div>
