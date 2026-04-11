@@ -22,6 +22,7 @@ ChartJS.register(
 
 const baseOptions = {
   responsive: true,
+  maintainAspectRatio: false,
   plugins: {
     legend: {
       position: "top",
@@ -45,5 +46,9 @@ export function VerticalGraph({ data, title = "Holdings" }) {
     },
   };
 
-  return <Bar options={options} data={data} />;
+  return (
+    <div className="vertical-graph-wrap">
+      <Bar options={options} data={data} />
+    </div>
+  );
 }

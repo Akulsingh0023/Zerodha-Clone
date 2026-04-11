@@ -25,7 +25,7 @@
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -119,6 +119,9 @@
   color: #1f2937;
   font-size: 18px;
   font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .value-pos {
@@ -205,12 +208,30 @@
     gap: 4px;
   }
 
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card,
+  .summary-card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .stat-card h3 {
     font-size: 20px;
   }
 
   .recent-row {
     grid-template-columns: 1fr;
-    gap: 4px;
+    gap: 6px;
+    padding: 12px 0;
+  }
+
+  .recent-row .side-badge,
+  .recent-row .qty,
+  .recent-row .price,
+  .recent-row .status {
+    width: fit-content;
   }
 }

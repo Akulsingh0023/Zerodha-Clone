@@ -810,6 +810,12 @@ hr {
   cursor: pointer;
 }
 
+.mobile-nav-toggle,
+.mobile-nav-overlay,
+.mobile-nav-drawer {
+  display: none;
+}
+
 .watchlist-toggle-line {
   width: 18px;
   height: 2px;
@@ -1086,6 +1092,12 @@ hr {
   background: rgb(243, 243, 243);
 }
 
+.vertical-graph-wrap {
+  width: 100%;
+  height: 280px;
+  margin-top: 12px;
+}
+
 .settings:hover {
   cursor: pointer;
 }
@@ -1164,7 +1176,7 @@ hr {
 
   .content {
     padding: 20px 16px;
-    overflow-x: auto;
+    overflow-x: hidden;
   }
 
   .watchlist-container {
@@ -1245,6 +1257,10 @@ hr {
     flex-direction: column;
   }
 
+  .content {
+    padding: 14px 12px;
+  }
+
   .watchlist-container {
     height: auto;
   }
@@ -1285,21 +1301,174 @@ hr {
     box-sizing: border-box;
   }
 
-  .order-table {
-    overflow-x: auto;
+  .topbar-container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 58px;
+    height: 58px;
+    padding: 0 12px;
+    position: sticky;
   }
 
+  .indices-container {
+    flex-basis: auto;
+    border: none;
+    padding: 0;
+    width: calc(100% - 64px);
+    justify-content: flex-start;
+    gap: 14px;
+    overflow: hidden;
+  }
+
+  .index,
+  .index-points,
+  .percent {
+    font-size: 0.7rem;
+  }
+
+  .watchlist-toggle {
+    display: none;
+  }
+
+  .menu-container {
+    flex-basis: auto;
+    width: auto;
+    min-width: 44px;
+    padding: 0;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .menu-container > img {
+    display: none;
+  }
+
+  .menus {
+    display: none;
+  }
+
+  .mobile-nav-toggle {
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #111827;
+    border-radius: 10px;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .mobile-nav-overlay.show {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3900;
+    background: rgba(15, 23, 42, 0.42);
+  }
+
+  .mobile-nav-drawer {
+    display: block;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 84vw;
+    max-width: 320px;
+    background: #fff;
+    z-index: 4000;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    box-shadow: -14px 0 34px rgba(15, 23, 42, 0.22);
+    padding: 14px 14px 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+
+  .mobile-nav-drawer.open {
+    transform: translateX(0);
+  }
+
+  .mobile-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 12px;
+  }
+
+  .mobile-drawer-close {
+    border: none;
+    background: #f3f4f6;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    color: #111827;
+  }
+
+  .mobile-drawer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .mobile-drawer-link {
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #111827;
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-decoration: none;
+    font-size: 0.87rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .mobile-drawer-watchlist {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+    color: #3730a3;
+  }
+
+  .mobile-drawer-user {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f9fafb;
+    color: #4b5563;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .order-table,
   .order-table table {
-    min-width: 600px;
+    min-width: 0;
+    width: 100%;
+    overflow: visible;
   }
 
   .row {
     flex-direction: column;
     text-align: center;
+    gap: 10px;
   }
 
   .col h5 {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
   }
 
   .btn {
@@ -1310,6 +1479,10 @@ hr {
   .watchlist-number ul li {
     padding: 8px 10px;
     font-size: 0.7rem;
+  }
+
+  .vertical-graph-wrap {
+    height: 220px;
   }
 }
 

@@ -238,23 +238,23 @@ const Holdings = () => {
                         cursor: "pointer",
                       }}
                     >
-                      <td className="stock-name align-left">{stock.name}</td>
-                      <td className="quantity">{qty}</td>
-                      <td>₹{avg.toFixed(2)}</td>
-                      <td className={profClass}>₹{ltp.toFixed(2)}</td>
-                      <td>₹{curValue.toFixed(2)}</td>
-                      <td className={profClass}>
+                      <td className="stock-name align-left" data-label="Instrument">{stock.name}</td>
+                      <td className="quantity" data-label="Qty">{qty}</td>
+                      <td data-label="Avg. Cost">₹{avg.toFixed(2)}</td>
+                      <td className={profClass} data-label="LTP">₹{ltp.toFixed(2)}</td>
+                      <td data-label="Cur. Val">₹{curValue.toFixed(2)}</td>
+                      <td className={profClass} data-label="P&L">
                         {pnl >= 0 ? "+" : ""}₹{pnl.toFixed(2)}
                         <span className="hld-pnl-pct">
                           ({pnl >= 0 ? "+" : ""}
                           {pnlPercent}%)
                         </span>
                       </td>
-                      <td className={dayClass}>
+                      <td className={dayClass} data-label="Day Chg.">
                         {dayChange >= 0 ? "+" : ""}
                         {dayChange.toFixed(2)}%
                       </td>
-                      <td>
+                      <td data-label="Action">
                         <button
                           type="button"
                           className="hld-sell-btn"

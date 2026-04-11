@@ -64,21 +64,21 @@ const Orders = () => {
 
                 return (
                   <tr key={order._id || i}>
-                    <td className="align-left ord-symbol">{order.name}</td>
-                    <td>
+                    <td className="align-left ord-symbol" data-label="Symbol">{order.name}</td>
+                    <td data-label="Action">
                       <span className={`ord-badge ${isBuy ? "buy" : "sell"}`}>
                         {order.mode}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Order Type">
                       <span className={`ord-badge ${orderType === "MIS" ? "mis" : "cnc"}`}>
                         {orderType}
                       </span>
                     </td>
-                    <td>{order.qty}</td>
-                    <td>₹{Number(order.price).toFixed(2)}</td>
-                    <td>{formatDate(order.createdAt)}</td>
-                    <td>{formatTime(order.createdAt)}</td>
+                    <td data-label="Qty">{order.qty}</td>
+                    <td data-label="Price">₹{Number(order.price).toFixed(2)}</td>
+                    <td data-label="Date">{formatDate(order.createdAt)}</td>
+                    <td data-label="Time">{formatTime(order.createdAt)}</td>
                   </tr>
                 );
               })}

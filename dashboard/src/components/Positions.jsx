@@ -430,18 +430,18 @@ const Positions = () => {
                         cursor: "pointer",
                       }}
                     >
-                      <td className="stock-name align-left">
+                      <td className="stock-name align-left" data-label="Instrument">
                         {stock.name}
                         <span className="pos-product-tag">MIS</span>
                       </td>
-                      <td className="quantity">{qty}</td>
-                      <td>₹{avg.toFixed(2)}</td>
+                      <td className="quantity" data-label="Qty">{qty}</td>
+                      <td data-label="Avg.">₹{avg.toFixed(2)}</td>
                       {activeTab === "open" ? (
-                        <td className={profClass}>₹{ltp.toFixed(2)}</td>
+                        <td className={profClass} data-label="LTP">₹{ltp.toFixed(2)}</td>
                       ) : (
-                        <td className={profClass}>₹{sellPrice.toFixed(2)}</td>
+                        <td className={profClass} data-label="Sell Price">₹{sellPrice.toFixed(2)}</td>
                       )}
-                      <td className={profClass}>
+                      <td className={profClass} data-label="P&L">
                         {pnl >= 0 ? "+" : ""}₹{pnl.toFixed(2)}
                         {activeTab === "open" && (
                           <span className="pos-pnl-pct">
@@ -449,12 +449,12 @@ const Positions = () => {
                           </span>
                         )}
                       </td>
-                      <td className={dayClass}>
+                      <td className={dayClass} data-label="Day Chg.">
                         {dayChange >= 0 ? "+" : ""}{dayChange.toFixed(2)}%
                       </td>
-                      {activeTab === "closed" && <td>{closedDate}</td>}
+                      {activeTab === "closed" && <td data-label="Date">{closedDate}</td>}
                       {activeTab === "open" && (
-                        <td>
+                        <td data-label="Action">
                           <button
                             type="button"
                             className="pos-exit-btn"

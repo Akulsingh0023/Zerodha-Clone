@@ -196,8 +196,9 @@ import API, { SITE_URL } from "../config";
 
 const BASE_URL = API;
 
-const Menu = () => {
+const Menu = ({ onToggleWatchlist }) => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
 
   const dropdownRef = useRef();
@@ -241,6 +242,11 @@ const Menu = () => {
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setIsProfileDropdownOpen(false);
+  }, [location.pathname]);
+
   /* ================= LOGOUT ================= */
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -250,6 +256,16 @@ const Menu = () => {
   return (
     <div className="menu-container">
       <img src="logo.png" alt="logo" style={{ width: "50px" }} />
+
+      <button
+        type="button"
+        className="mobile-nav-toggle"
+        aria-label="Open navigation menu"
+        aria-expanded={isMobileMenuOpen}
+        onClick={() => setIsMobileMenuOpen(true)}
+      >
+        ☰
+      </button>
 
       <div className="menus">
         <ul>
@@ -356,6 +372,78 @@ const Menu = () => {
         </div>
       </div>
 
+      <div
+        className={`mobile-nav-overlay ${isMobileMenuOpen ? "show" : ""}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+        aria-hidden
+      />
+
+      <aside className={`mobile-nav-drawer ${isMobileMenuOpen ? "open" : ""}`}>
+        <div className="mobile-drawer-head">
+          <span>Menu</span>
+          <button
+            type="button"
+            className="mobile-drawer-close"
+            aria-label="Close navigation menu"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            ×
+          </button>
+        </div>
+
+        <nav className="mobile-drawer-links">
+          <Link to="/" className="mobile-drawer-link" onClick={() => setIsMobileMenuOpen(false)}>
+            Dashboard
+          </Link>
+          <Link to="/orders" className="mobile-drawer-link" onClick={() => setIsMobileMenuOpen(false)}>
+            Orders
+          </Link>
+          <Link to="/holdings" className="mobile-drawer-link" onClick={() => setIsMobileMenuOpen(false)}>
+            Holdings
+          </Link>
+          <Link to="/positions" className="mobile-drawer-link" onClick={() => setIsMobileMenuOpen(false)}>
+            Positions
+          </Link>
+          {user?.role === "admin" && (
+            <Link to="/admin" className="mobile-drawer-link" onClick={() => setIsMobileMenuOpen(false)}>
+              Admin Panel
+            </Link>
+          )}
+          <Link to="/profile" className="mobile-drawer-link" onClick={() => setIsMobileMenuOpen(false)}>
+            My Profile
+          </Link>
+          <Link to="/wallet" className="mobile-drawer-link" onClick={() => setIsMobileMenuOpen(false)}>
+            Wallet
+          </Link>
+          {user?.role === "user" && (
+            <Link to="/support" className="mobile-drawer-link" onClick={() => setIsMobileMenuOpen(false)}>
+              Customer Support
+            </Link>
+          )}
+          <button
+            type="button"
+            className="mobile-drawer-link mobile-drawer-watchlist"
+            onClick={() => {
+              if (typeof onToggleWatchlist === "function") {
+                onToggleWatchlist();
+              }
+              setIsMobileMenuOpen(false);
+            }}
+          >
+            Open Watchlist
+          </button>
+          <button
+            type="button"
+            className="mobile-drawer-link"
+            onClick={handleLogout}
+          >
+            Log Out
+          </button>
+        </nav>
+
+        <div className="mobile-drawer-user">{user?.name || "User"}</div>
+      </aside>
+
       {/* ================= STYLE ================= */}
       <style>{`
         .link {
@@ -387,6 +475,7 @@ const Menu = () => {
           background: white;
           color: black;
         }
+
       `}</style>
     </div>
   );

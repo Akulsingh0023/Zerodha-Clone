@@ -29,7 +29,7 @@ const TopBar = ({ onToggleWatchlist, isWatchlistOpen }) => {
         </div>
       </div>
 
-      <Menu />
+      <Menu onToggleWatchlist={onToggleWatchlist} />
     </div>
   );
 };
