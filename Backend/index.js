@@ -1520,10 +1520,35 @@ const resetOpeningBalanceAtMidnight = async () => {
   }
 };
 
+const setOpeningBalanceAtMarketOpen = async () => {
+  try {
+    const users = await User.find({});
+
+    for (const user of users) {
+      user.openingBalance = user.walletBalance ?? 0;
+      await user.save();
+    }
+
+    console.log(
+      `[Scheduler] Opening balance synced at 9:15 AM for ${users.length} users`
+    );
+  } catch (err) {
+    console.error("[Scheduler] Opening balance 9:15 sync error:", err.message);
+  }
+};
+
 cron.schedule(
   "0 0 * * *",
   () => {
     resetOpeningBalanceAtMidnight();
+  },
+  { timezone: IST_TIMEZONE }
+);
+
+cron.schedule(
+  "15 9 * * *",
+  () => {
+    setOpeningBalanceAtMarketOpen();
   },
   { timezone: IST_TIMEZONE }
 );
