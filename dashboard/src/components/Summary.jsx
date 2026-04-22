@@ -54,6 +54,7 @@ const parsePercent = (value) => {
 
 const Summary = () => {
   const [userName, setUserName] = useState("");
+  const [openingBalance, setOpeningBalance] = useState(0);
   const [marginAvailable, setMarginAvailable] = useState(0);
   const [holdings, setHoldings] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -72,6 +73,7 @@ const Summary = () => {
       if (profileRes.status === "fulfilled") {
         const user = profileRes.value?.data?.user || profileRes.value?.data || {};
         setUserName(user.fullname || user.name || user.email || "User");
+        setOpeningBalance(Number(user.openingBalance || 0));
       }
 
       if (walletRes.status === "fulfilled") {
@@ -186,7 +188,6 @@ const Summary = () => {
     [holdings, liveQuotes]
   );
 
-  const openingBalance = holdingsWithMetrics.reduce((sum, item) => sum + item.investment, 0);
   const portfolioValue = holdingsWithMetrics.reduce((sum, item) => sum + item.currentValue, 0);
   const pnlToday = marginAvailable - openingBalance;
 
