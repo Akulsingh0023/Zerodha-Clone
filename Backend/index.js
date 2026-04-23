@@ -1518,8 +1518,8 @@ const setOpeningBalanceAtMarketOpen = async () => {
 
 cron.schedule(
   "15 9 * * *",
-  () => {
-    setOpeningBalanceAtMarketOpen();
+  async () => {
+    await setOpeningBalanceAtMarketOpen();
   },
   { timezone: IST_TIMEZONE }
 );

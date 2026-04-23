@@ -10,11 +10,16 @@ export const getProfile = async (req, res) => {
     }
 
     res.json({
-      _id: user._id,
-      fullname: user.fullname,
-      name: user.fullname,
-      email: user.email,
-      role: user.role,
+      user: {
+        _id: user._id,
+        id: user._id,
+        fullname: user.fullname,
+        name: user.fullname,
+        email: user.email,
+        role: user.role,
+        walletBalance: Number(user.walletBalance || 0),
+        openingBalance: Number(user.openingBalance || 0),
+      },
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
