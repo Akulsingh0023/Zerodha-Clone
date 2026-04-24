@@ -9,12 +9,14 @@ export const getProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    const displayName = user.fullname || user.name || "";
+
     res.json({
       user: {
         _id: user._id,
         id: user._id,
-        fullname: user.fullname,
-        name: user.fullname,
+        fullname: displayName,
+        name: displayName,
         email: user.email,
         role: user.role,
         walletBalance: Number(user.walletBalance || 0),
