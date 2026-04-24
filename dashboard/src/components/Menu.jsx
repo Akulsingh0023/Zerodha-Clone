@@ -215,7 +215,7 @@ const Menu = ({ onToggleWatchlist }) => {
           `${BASE_URL}/api/auth/profile`,
           { withCredentials: true }
         );
-        setUser(res.data);
+        setUser(res.data.user);
       } catch (error) {
         if (error.response?.status === 401) {
           window.location.href = `${SITE_URL}/login`;
